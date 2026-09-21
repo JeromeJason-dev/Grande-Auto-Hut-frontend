@@ -53,6 +53,30 @@ const WHY_US = [
   },
 ];
 
+const REVIEWS = [
+  {
+    name: "Joseph Mwangi",
+    role: "Fleet Manager, Mwangi Logistics",
+    quote:
+      "We run 40+ Isuzu trucks and used to lose a full day whenever a part came back wrong. Fitment Konnect has cut that to almost zero — everything we've ordered has bolted straight on.",
+    rating: 5,
+  },
+  {
+    name: "Amina Yusuf",
+    role: "Operations Lead, Yusuf Transporters",
+    quote:
+      "The M-Pesa checkout alone is worth it, but what keeps us ordering is the freight speed. Parts land within two days even when we're dispatching to Mombasa.",
+    rating: 5,
+  },
+  {
+    name: "Peter Kariuki",
+    role: "Workshop Owner, Kariuki Auto Care",
+    quote:
+      "I was skeptical about ordering OEM parts online without seeing them first, but the fitment check against exact model years has been spot on every time.",
+    rating: 4,
+  },
+];
+
 function Icon({ children, className = "h-6 w-6" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}>
@@ -95,90 +119,56 @@ export default function HomePage() {
 
   return (
     <div className="bg-[#FAF7F2]">
-      {/* Hero */}
+      {/* Hero — full-bleed shop photo with centered copy */}
+      <section
+        className="relative isolate overflow-hidden bg-[#101B2C] bg-cover bg-center py-24 md:py-32"
+        style={{ backgroundImage: "url('/public/grande_auto_hut_shop.jpg')" }}
+      >
+        {/* soft scrim, kept light so the glass panel does the readability work */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0B121F]/40 via-[#0B121F]/25 to-[#0B121F]/45" />
+
+        <div className="relative mx-auto flex max-w-2xl flex-col items-center px-6 text-center">
+          <div className="flex flex-col items-center rounded-2xl border border-white/20 bg-white/10 px-8 py-10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl md:px-14 md:py-14">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium tracking-wide text-white backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#BF9A63]" />
+              Built for the Kenyan fleet
+            </span>
+
+            <h1 className="mt-6 max-w-[18ch] text-4xl font-semibold leading-tight text-white md:text-5xl">
+              The right part, confirmed to fit — before you pay for it.
+            </h1>
+            <p className="mt-5 max-w-[42ch] text-[15px] leading-relaxed text-white/80">
+              Genuine OEM assemblies and factory-matched components, checked
+              against your vehicle's exact specification before an order
+              ever leaves the warehouse.
+            </p>
+
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Link
+                to="/catalog"
+                className="rounded-md bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-[#101B2C] shadow-[0_10px_25px_rgba(0,0,0,0.35)] transition-all hover:-translate-y-0.5 hover:bg-[#A9834E]"
+              >
+                Explore the catalog
+              </Link>
+              <Link
+                to="/fitment-concierge"
+                className="rounded-md border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:border-white hover:bg-white/20"
+              >
+                Talk to a fitment specialist
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stat strip + fitment finder */}
       <section className="relative overflow-hidden border-b border-[#E7E2D8]">
-        {/* soft decorative glow, echoes the dark-theme hero without switching palette */}
         <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#BF9A63]/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-[#101B2C]/5 blur-3xl" />
 
-        <div className="relative max-w-6xl pl-20 pr-6 pt-14 md:pt-20">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#E7E2D8] bg-white px-3 py-1 text-[11px] font-medium tracking-wide text-[#7C7669]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#BF9A63]" />
-            Built for the Kenyan fleet
-          </span>
-
-          <div className="mt-6 grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:items-center">
-            <div>
-              <h1 className="max-w-[16ch] text-4xl font-semibold leading-tight text-[#101B2C] md:text-5xl">
-                The right part, confirmed to fit — before you pay for it.
-              </h1>
-              <p className="mt-5 max-w-[48ch] text-[15px] leading-relaxed text-[#7C7669]">
-                Genuine OEM assemblies and factory-matched components, checked
-                against your vehicle's exact specification before an order
-                ever leaves the warehouse.
-              </p>
-
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link
-                  to="/catalog"
-                  className="rounded-md bg-[#101B2C] px-5 py-2.5 text-sm font-medium text-white shadow-[0_10px_25px_rgba(16,27,44,0.25)] transition-all hover:-translate-y-0.5 hover:bg-[#1B2C46]"
-                >
-                  Explore the catalog
-                </Link>
-                <Link
-                  to="/fitment-concierge"
-                  className="rounded-md border border-[#E7E2D8] bg-white px-5 py-2.5 text-sm font-medium text-[#101B2C] transition-colors hover:border-[#BF9A63] hover:text-[#A9834E]"
-                >
-                  Talk to a fitment specialist
-                </Link>
-              </div>
-            </div>
-
-            <div className="relative hidden overflow-hidden rounded-xl border border-[#E7E2D8] bg-gradient-to-br from-[#101B2C] to-[#1B2C46] shadow-[0_20px_45px_rgba(16,27,44,0.18)] md:block">
-              <div className="flex h-full flex-col justify-between p-6 text-white/90">
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium tracking-wide text-white">
-                  Live warehouse feed
-                </span>
-                <div>
-                  <p className="text-sm text-white/60">Currently dispatching</p>
-                  <p className="mt-1 text-lg font-semibold">
-                    Sealed factory components
-                  </p>
-                </div>
-              </div>
-
-              {/* floating trust badge, gold-accented like the HTML hero's floating cards */}
-              <div className="absolute -bottom-5 -left-5 hidden items-center gap-3 rounded-lg border border-[#E7E2D8] bg-white px-4 py-3 shadow-[0_14px_30px_rgba(16,27,44,0.15)] md:flex">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#BF9A63]/15 text-[#A9834E]">
-                  <Icon className="h-5 w-5">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="m5 13 4 4L19 7"
-                    />
-                  </Icon>
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-[#101B2C]">
-                    Fitment guaranteed
-                  </p>
-                  <p className="text-xs text-[#7C7669]">Or your money back</p>
-                </div>
-              </div>
-
-              <div className="absolute -top-4 -right-4 hidden items-center gap-0.5 rounded-lg border border-[#E7E2D8] bg-white px-3 py-2 text-[#BF9A63] shadow-[0_14px_30px_rgba(16,27,44,0.15)] md:flex">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Icon key={i} className="h-4 w-4 fill-current">
-                    <path d="M12 2.5l2.9 6 6.6.6-5 4.4 1.5 6.5L12 16.9 6 20l1.5-6.5-5-4.4 6.6-.6L12 2.5Z" />
-                  </Icon>
-                ))}
-              </div>
-            </div>
-          </div>
-
+        <div className="relative max-w-7xl mx-auto px-8 py-14">
           {/* Stat strip */}
-          <dl className="mt-10 grid grid-cols-1 divide-y divide-[#E7E2D8] border border-[#E7E2D8] bg-white sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <dl className="grid grid-cols-1 divide-y divide-[#E7E2D8] border border-[#E7E2D8] bg-white sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             {TRUST_MARKERS.map(({ value, label }) => (
               <div key={label} className="px-6 py-5">
                 <dt className="text-xl font-semibold text-[#101B2C]">{value}</dt>
@@ -188,7 +178,7 @@ export default function HomePage() {
           </dl>
 
           {/* Fitment finder — the flagship feature, given a gold-glow treatment */}
-          <div className="my-10 rounded-xl border-2 border-[#BF9A63]/30 bg-white p-6 shadow-[0_20px_45px_rgba(191,154,99,0.12)] transition-shadow hover:shadow-[0_25px_55px_rgba(191,154,99,0.2)] md:p-7">
+          <div className="mt-10 rounded-xl border-2 border-[#BF9A63]/30 bg-white p-6 shadow-[0_20px_45px_rgba(191,154,99,0.12)] transition-shadow hover:shadow-[0_25px_55px_rgba(191,154,99,0.2)] md:p-7">
             <div className="mb-5 flex items-center gap-2">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#A9834E]">
                 Flagship feature
@@ -209,7 +199,7 @@ export default function HomePage() {
 
       {/* Trusted fleet band */}
       <section className="border-b border-[#E7E2D8] bg-white py-12">
-        <div className="max-w-6xl pl-20 pr-6">
+        <div className="max-w-7xl mx-auto px-8">
           <p className="text-center text-xs font-medium uppercase tracking-wide text-[#7C7669]">
             Stocked for the fleet
           </p>
@@ -228,7 +218,7 @@ export default function HomePage() {
       </section>
 
       {/* Recently added */}
-      <section className="max-w-6xl pl-20 pr-6 py-14">
+      <section className="max-w-7xl mx-auto px-8 py-14">
         <div className="mb-6 flex items-end justify-between">
           <div>
             <h2 className="text-2xl font-semibold text-[#101B2C]">
@@ -267,7 +257,7 @@ export default function HomePage() {
 
       {/* Why fleets order from us — dark contrast band, matching the HTML page's payment/delivery section */}
       <section className="bg-[#101B2C] py-16 text-white">
-        <div className="max-w-6xl pl-20 pr-6">
+        <div className="max-w-7xl mx-auto px-8">
           <h2 className="text-2xl font-semibold">Why fleets order from us</h2>
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {WHY_US.map(({ title, body, icon }) => (
@@ -282,6 +272,49 @@ export default function HomePage() {
                 <p className="mt-2 text-sm leading-relaxed text-white/60">
                   {body}
                 </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews */}
+      <section className="bg-[#FAF7F2] py-16">
+        <div className="max-w-7xl mx-auto px-8">
+          <h2 className="text-2xl font-semibold text-[#101B2C]">
+            Trusted by fleets across the country
+          </h2>
+          <p className="mt-1 text-sm text-[#7C7669]">
+            A few words from the workshops and operators who order from us every week.
+          </p>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {REVIEWS.map(({ name, role, quote, rating }) => (
+              <div
+                key={name}
+                className="flex flex-col rounded-xl border border-[#E7E2D8] bg-white p-6 shadow-[0_10px_25px_rgba(16,27,44,0.05)]"
+              >
+                <div className="flex gap-0.5 text-[#BF9A63]">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Icon
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i < rating ? "fill-current" : "fill-none text-[#E7E2D8]"
+                      }`}
+                    >
+                      <path d="M12 2.5l2.9 6 6.6.6-5 4.4 1.5 6.5L12 16.9 6 20l1.5-6.5-5-4.4 6.6-.6L12 2.5Z" />
+                    </Icon>
+                  ))}
+                </div>
+
+                <p className="mt-4 flex-1 text-sm leading-relaxed text-[#1E2430]">
+                  "{quote}"
+                </p>
+
+                <div className="mt-6 border-t border-[#E7E2D8] pt-4">
+                  <p className="text-sm font-semibold text-[#101B2C]">{name}</p>
+                  <p className="text-xs text-[#7C7669]">{role}</p>
+                </div>
               </div>
             ))}
           </div>
