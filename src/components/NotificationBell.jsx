@@ -21,11 +21,25 @@ export default function NotificationBell() {
         <span
           className="mono"
           style={{
-            position: "absolute", top: -6, right: -8, background: "var(--accent)", color: "#fff",
-            borderRadius: "999px", fontSize: "0.65rem", padding: "1px 5px", lineHeight: 1.4,
+            position: "absolute",
+            top: -6,
+            right: -8,
+            minWidth: 16,
+            height: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#DC2626",
+            color: "#fff",
+            border: "1.5px solid #fff",
+            borderRadius: "999px",
+            fontSize: "0.65rem",
+            fontWeight: 700,
+            padding: "0 4px",
+            lineHeight: 1,
           }}
         >
-          {unread}
+          {unread > 9 ? "9+" : unread}
         </span>
       )}
     </Link>
