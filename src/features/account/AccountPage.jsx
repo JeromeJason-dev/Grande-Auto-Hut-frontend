@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import * as authApi from "../../api/auth";
@@ -6,6 +7,11 @@ import { unwrapList, extractErrorMessage } from "../../api/client";
 import ErrorAlert from "../../components/ErrorAlert";
 
 const EMPTY_ADDRESS = { label: "", recipient_name: "", phone_number: "", county: "", town: "", street_address: "", building_or_estate: "" };
+
+const fieldClasses =
+  "w-full rounded-md border border-[#E7E2D8] bg-white px-3 py-2 text-sm text-[#1E2430] transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25";
+
+const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669]";
 
 function ProfileForm() {
   const { user, refreshUser } = useAuth();
@@ -29,25 +35,55 @@ function ProfileForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card" style={{ padding: "1.25rem", marginBottom: "1.5rem" }}>
-      <h2>Profile</h2>
-      <ErrorAlert message={error} />
-      {saved && <div className="alert alert-success">Profile updated.</div>}
-      <div className="row" style={{ gap: "0.75rem" }}>
-        <div className="field" style={{ flex: 1 }}>
-          <label>First name</label>
-          <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
+    <form onSubmit={handleSubmit} className="mb-5 rounded-xl border border-[#E7E2D8] bg-white p-6">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669]">Profile</h2>
+
+      {error && (
+        <div className="mt-3">
+          <ErrorAlert message={error} />
         </div>
-        <div className="field" style={{ flex: 1 }}>
-          <label>Last name</label>
-          <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
+      )}
+      {saved && (
+        <div className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          Profile updated.
+        </div>
+      )}
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={labelClasses}>First name</label>
+          <input
+            value={form.first_name}
+            onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+            className={fieldClasses}
+          />
+        </div>
+        <div>
+          <label className={labelClasses}>Last name</label>
+          <input
+            value={form.last_name}
+            onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+            className={fieldClasses}
+          />
         </div>
       </div>
-      <div className="field">
-        <label>Phone number</label>
-        <input value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} />
+
+      <div className="mt-4">
+        <label className={labelClasses}>Phone number</label>
+        <input
+          value={form.phone_number}
+          onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
+          className={fieldClasses}
+        />
       </div>
-      <button type="submit" className="btn btn-secondary" disabled={saving}>{saving ? "Saving…" : "Save profile"}</button>
+
+      <button
+        type="submit"
+        disabled={saving}
+        className="mt-5 rounded-md border border-[#E7E2D8] bg-white px-4 py-2 text-sm font-medium text-[#101B2C] transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] disabled:cursor-not-allowed disabled:text-[#7C7669]"
+      >
+        {saving ? "Saving…" : "Save profile"}
+      </button>
     </form>
   );
 }
@@ -73,19 +109,49 @@ function PasswordForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card" style={{ padding: "1.25rem", marginBottom: "1.5rem" }}>
-      <h2>Change password</h2>
-      <ErrorAlert message={error} />
-      {saved && <div className="alert alert-success">Password changed.</div>}
-      <div className="field">
-        <label>Current password</label>
-        <input type="password" required value={form.current_password} onChange={(e) => setForm({ ...form, current_password: e.target.value })} />
+    <form onSubmit={handleSubmit} className="mb-5 rounded-xl border border-[#E7E2D8] bg-white p-6">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669]">Change password</h2>
+
+      {error && (
+        <div className="mt-3">
+          <ErrorAlert message={error} />
+        </div>
+      )}
+      {saved && (
+        <div className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          Password changed.
+        </div>
+      )}
+
+      <div className="mt-4">
+        <label className={labelClasses}>Current password</label>
+        <input
+          type="password"
+          required
+          value={form.current_password}
+          onChange={(e) => setForm({ ...form, current_password: e.target.value })}
+          className={fieldClasses}
+        />
       </div>
-      <div className="field">
-        <label>New password</label>
-        <input type="password" required value={form.new_password} onChange={(e) => setForm({ ...form, new_password: e.target.value })} />
+
+      <div className="mt-4">
+        <label className={labelClasses}>New password</label>
+        <input
+          type="password"
+          required
+          value={form.new_password}
+          onChange={(e) => setForm({ ...form, new_password: e.target.value })}
+          className={fieldClasses}
+        />
       </div>
-      <button type="submit" className="btn btn-secondary" disabled={saving}>{saving ? "Saving…" : "Change password"}</button>
+
+      <button
+        type="submit"
+        disabled={saving}
+        className="mt-5 rounded-md border border-[#E7E2D8] bg-white px-4 py-2 text-sm font-medium text-[#101B2C] transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] disabled:cursor-not-allowed disabled:text-[#7C7669]"
+      >
+        {saving ? "Saving…" : "Change password"}
+      </button>
     </form>
   );
 }
@@ -117,37 +183,91 @@ function AddressBook() {
   };
 
   return (
-    <div className="card" style={{ padding: "1.25rem" }}>
-      <div className="spread">
-        <h2>Saved addresses</h2>
-        <button className="btn btn-ghost btn-sm" onClick={() => setShowForm((s) => !s)}>{showForm ? "Cancel" : "Add address"}</button>
+    <div className="rounded-xl border border-[#E7E2D8] bg-white p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669]">Saved addresses</h2>
+        <button
+          onClick={() => setShowForm((s) => !s)}
+          className="text-sm font-medium text-[#A9834E] transition-colors hover:text-[#101B2C]"
+        >
+          {showForm ? "Cancel" : "Add address"}
+        </button>
       </div>
-      <ErrorAlert message={error} />
+
+      {error && (
+        <div className="mt-3">
+          <ErrorAlert message={error} />
+        </div>
+      )}
 
       {showForm && (
-        <form onSubmit={handleAdd} className="card" style={{ padding: "1rem", marginBottom: "1rem", background: "var(--paper)" }}>
-          <div className="field"><label>Label (e.g. Home, Office)</label><input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} /></div>
-          <div className="row" style={{ gap: "0.75rem" }}>
-            <div className="field" style={{ flex: 1 }}><label>Recipient name</label><input required value={form.recipient_name} onChange={(e) => setForm({ ...form, recipient_name: e.target.value })} /></div>
-            <div className="field" style={{ flex: 1 }}><label>Phone</label><input required value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} /></div>
+        <form onSubmit={handleAdd} className="mt-4 rounded-lg border border-[#E7E2D8] bg-[#FAF7F2] p-4">
+          <div>
+            <label className={labelClasses}>Label (e.g. Home, Office)</label>
+            <input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} className={fieldClasses} />
           </div>
-          <div className="row" style={{ gap: "0.75rem" }}>
-            <div className="field" style={{ flex: 1 }}><label>County</label><input required value={form.county} onChange={(e) => setForm({ ...form, county: e.target.value })} /></div>
-            <div className="field" style={{ flex: 1 }}><label>Town</label><input required value={form.town} onChange={(e) => setForm({ ...form, town: e.target.value })} /></div>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className={labelClasses}>Recipient name</label>
+              <input required value={form.recipient_name} onChange={(e) => setForm({ ...form, recipient_name: e.target.value })} className={fieldClasses} />
+            </div>
+            <div>
+              <label className={labelClasses}>Phone</label>
+              <input required value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} className={fieldClasses} />
+            </div>
           </div>
-          <div className="field"><label>Street address</label><input required value={form.street_address} onChange={(e) => setForm({ ...form, street_address: e.target.value })} /></div>
-          <div className="field"><label>Building / estate</label><input value={form.building_or_estate} onChange={(e) => setForm({ ...form, building_or_estate: e.target.value })} /></div>
-          <button type="submit" className="btn btn-primary btn-sm">Save address</button>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className={labelClasses}>County</label>
+              <input required value={form.county} onChange={(e) => setForm({ ...form, county: e.target.value })} className={fieldClasses} />
+            </div>
+            <div>
+              <label className={labelClasses}>Town</label>
+              <input required value={form.town} onChange={(e) => setForm({ ...form, town: e.target.value })} className={fieldClasses} />
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <label className={labelClasses}>Street address</label>
+            <input required value={form.street_address} onChange={(e) => setForm({ ...form, street_address: e.target.value })} className={fieldClasses} />
+          </div>
+
+          <div className="mt-3">
+            <label className={labelClasses}>Building / estate</label>
+            <input value={form.building_or_estate} onChange={(e) => setForm({ ...form, building_or_estate: e.target.value })} className={fieldClasses} />
+          </div>
+
+          <button
+            type="submit"
+            className="mt-4 rounded-md bg-[#101B2C] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46]"
+          >
+            Save address
+          </button>
         </form>
       )}
 
-      {!isLoading && addresses.length === 0 && !showForm && <p style={{ color: "var(--ink-soft)" }}>No saved addresses yet.</p>}
+      {!isLoading && addresses.length === 0 && !showForm && (
+        <p className="mt-4 text-sm text-[#7C7669]">No saved addresses yet.</p>
+      )}
 
-      <div className="stack" style={{ gap: "0.5rem" }}>
+      <div className="mt-2 flex flex-col">
         {addresses.map((a) => (
-          <div key={a.id} className="spread" style={{ padding: "0.6rem 0", borderBottom: "1px solid var(--line)" }}>
-            <span><strong>{a.label || "Address"}</strong> — {a.recipient_name}, {a.street_address}, {a.town}, {a.county}</span>
-            <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(a.id)}>Delete</button>
+          <div
+            key={a.id}
+            className="flex items-center justify-between gap-3 border-b border-[#E7E2D8] py-3 last:border-b-0"
+          >
+            <span className="text-sm text-[#1E2430]">
+              <strong className="text-[#101B2C]">{a.label || "Address"}</strong> — {a.recipient_name},{" "}
+              {a.street_address}, {a.town}, {a.county}
+            </span>
+            <button
+              onClick={() => handleDelete(a.id)}
+              className="flex-shrink-0 text-sm font-medium text-[#7C7669] transition-colors hover:text-red-600"
+            >
+              Delete
+            </button>
           </div>
         ))}
       </div>
@@ -156,12 +276,28 @@ function AddressBook() {
 }
 
 export default function AccountPage() {
+  const navigate = useNavigate();
+
   return (
-    <div className="container" style={{ padding: "2.5rem 1.5rem", maxWidth: 640 }}>
-      <h1>Account</h1>
-      <ProfileForm />
-      <PasswordForm />
-      <AddressBook />
+    <div className="min-h-full bg-[#FAF7F2]">
+      <div className="mx-auto max-w-2xl px-6 py-12">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#7C7669] transition-colors hover:text-[#101B2C]"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+          Back
+        </button>
+
+        <h1 className="mb-6 text-2xl font-semibold text-[#101B2C]">Account</h1>
+
+        <ProfileForm />
+        <PasswordForm />
+        <AddressBook />
+      </div>
     </div>
   );
 }
