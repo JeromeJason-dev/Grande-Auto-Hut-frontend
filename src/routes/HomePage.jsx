@@ -127,20 +127,20 @@ export default function HomePage() {
         {/* soft scrim, kept light so the glass panel does the readability work */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0B121F]/40 via-[#0B121F]/25 to-[#0B121F]/45" />
 
-        <div className="relative mx-auto flex max-w-2xl flex-col items-center px-6 text-center">
-          <div className="flex flex-col items-center rounded-2xl border border-white/20 bg-white/10 px-8 py-10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl md:px-14 md:py-14">
+        <div className="relative mx-auto flex max-w-[750px] flex-col items-center px-6 text-center">
+          <div className="flex flex-col items-center gap-[1.2rem] rounded-2xl border border-white/[0.15] bg-white/[0.08] px-6 py-10 shadow-[0_20px_40px_rgba(0,0,0,0.3)] backdrop-blur-[12px] md:px-12 md:py-16">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium tracking-wide text-white backdrop-blur-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-[#BF9A63]" />
               Built for the Kenyan fleet
             </span>
 
-            <h1 className="mt-6 max-w-[18ch] text-4xl font-semibold leading-tight text-white md:text-5xl">
-              The right part, confirmed to fit — before you pay for it.
+            <h1 className="mt-6 max-w-[20ch] text-4xl font-semibold leading-tight text-white md:text-5xl">
+              Genuine Parts. <span className="text-[#BF9A63]">Precise Fit.</span> Zero Guesswork.
             </h1>
-            <p className="mt-5 max-w-[42ch] text-[15px] leading-relaxed text-white/80">
-              Genuine OEM assemblies and factory-matched components, checked
-              against your vehicle's exact specification before an order
-              ever leaves the warehouse.
+            <p className="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-white/80">
+              We stock genuine, top-grade components at fair retail pricing —
+              checked against your vehicle's exact specification and backed
+              by counter staff who actually know what's under the hood.
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -148,13 +148,13 @@ export default function HomePage() {
                 to="/catalog"
                 className="rounded-md bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-[#101B2C] shadow-[0_10px_25px_rgba(0,0,0,0.35)] transition-all hover:-translate-y-0.5 hover:bg-[#A9834E]"
               >
-                Explore the catalog
+                View Catalog
               </Link>
               <Link
-                to="/fitment-concierge"
+                to="/register"
                 className="rounded-md border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:border-white hover:bg-white/20"
               >
-                Talk to a fitment specialist
+                Get Started
               </Link>
             </div>
           </div>
