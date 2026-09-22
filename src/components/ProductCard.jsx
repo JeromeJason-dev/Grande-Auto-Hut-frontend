@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Price from "./Price";
 import StockBadge from "./StockBadge";
 import {
@@ -11,6 +11,8 @@ import { getConditionVariants } from "../api/productVariants";
 
 export default function ProductCard({ product, onAddToCart }) {
   const { slug, name, brand, category, primary_image } = product;
+  const navigate = useNavigate();
+  const [isAdding, setIsAdding] = useState(false);
 
   const conditionVariants = useMemo(
     () => getConditionVariants(product),
@@ -31,6 +33,37 @@ export default function ProductCard({ product, onAddToCart }) {
     CONDITION_LABELS[activeVariant.condition] ?? "Genuine";
   const isOutOfStock = !activeVariant.is_in_stock;
   const hasMultipleConditions = conditionVariants.length > 1;
+
+  const handleAddToCart = async () => {
+    if (!onAddToCart || isAdding) return;
+
+   
+    if (!activeVariant.product_id) {
+      console.error("Missing product_id on active variant — cannot add to cart", activeVariant);
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      await onAddToCart({
+        id: activeVariant.product_id,
+        slug: activeVariant.product_slug ?? slug,
+        name,
+        brand,
+        category,
+        condition: activeVariant.condition,
+        sku: activeVariant.sku,
+        price: activeVariant.price,
+        is_in_stock: activeVariant.is_in_stock,
+        is_low_stock: activeVariant.is_low_stock,
+      });
+      navigate("/cart");
+    } catch (err) {
+      console.error("Failed to add item to cart:", err);
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border border-[#E7E2D8] bg-white text-[#1E2430] transition-all duration-200 hover:-translate-y-1 hover:border-[#BF9A63]/40 hover:shadow-[0_16px_32px_rgba(16,27,44,0.1)]">
@@ -119,20 +152,11 @@ export default function ProductCard({ product, onAddToCart }) {
         </Link>
         <button
           type="button"
-          disabled={isOutOfStock}
-          onClick={() =>
-            onAddToCart?.({
-              ...product,
-              condition: activeVariant.condition,
-              sku: activeVariant.sku,
-              price: activeVariant.price,
-              is_in_stock: activeVariant.is_in_stock,
-              is_low_stock: activeVariant.is_low_stock,
-            })
-          }
+          disabled={isOutOfStock || isAdding}
+          onClick={handleAddToCart}
           className="flex-1 rounded-md bg-[#101B2C] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] disabled:text-[#7C7669]"
         >
-          Add to cart
+          {isAdding ? "Adding…" : "Add to cart"}
         </button>
       </div>
     </div>
