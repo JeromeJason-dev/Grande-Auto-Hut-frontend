@@ -15,8 +15,7 @@ function WrenchMark() {
 }
 
 const navLinkClasses = ({ isActive }) =>
-  `text-sm font-medium transition-colors ${
-    isActive ? "text-[#101B2C]" : "text-[#7C7669] hover:text-[#101B2C]"
+  `text-sm font-medium transition-colors ${isActive ? "text-[#101B2C]" : "text-[#7C7669] hover:text-[#101B2C]"
   }`;
 
 /**
@@ -52,8 +51,7 @@ export default function Navbar({ minimal = false }) {
           <NavLink to="/catalog" className={navLinkClasses}>Catalog</NavLink>
           {!minimal && (
             <>
-              <NavLink to="/fitment" className={navLinkClasses}>Fitment Finder</NavLink>
-              <NavLink to="/" className={navLinkClasses}>About</NavLink>
+              <NavLink to="/about" className={navLinkClasses}>About</NavLink>
               <NavLink to="/" className={navLinkClasses}>Contact</NavLink>
               {status === "authenticated" && (
                 <NavLink to="/orders" className={navLinkClasses}>My Orders</NavLink>
@@ -63,7 +61,7 @@ export default function Navbar({ minimal = false }) {
               )}
             </>
           )}
-          {user?.role !== "customer" && status === "authenticated" && isAccountPage && (
+          {user?.role !== "customer" && status === "authenticated" && (
             <NavLink to="/admin" className={navLinkClasses}>Admin</NavLink>
           )}
         </nav>
@@ -78,8 +76,10 @@ export default function Navbar({ minimal = false }) {
                 <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
               </svg>
               {itemCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#BF9A63] px-1 text-[10px] font-semibold text-white">
-                  {itemCount}
+                <span
+                  className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full border-[1.5px] border-white bg-[#DC2626] px-1 text-[10px] font-bold leading-none text-white"
+                >
+                  {itemCount > 9 ? "9+" : itemCount}
                 </span>
               )}
             </Link>
