@@ -18,14 +18,14 @@ export default function Layout() {
       </main>
 
       <footer className="mt-12 border-t border-[#E7E2D8] bg-white">
-        <div className="mx-auto max-w-6xl px-6 py-12">
-          <div className="grid gap-10 sm:grid-cols-3">
+        <div className="mx-12  px-6 py-10">
+          <div className="grid gap-15 sm:grid-cols-3">
             {/* Brand */}
             <div>
-              <h2 className="text-lg font-semibold text-[#101B2C]">
+              <h2 className="text-xl font-semibold text-[#101B2C]">
                 Grande <span className="text-[#BF9A63]">Auto</span> Hut
               </h2>
-              <p className="mt-3 max-w-[32ch] text-sm leading-relaxed text-[#7C7669]">
+              <p className="mt-3  text-sm leading-relaxed text-[#7C7669]">
                 Genuine and aftermarket parts for the Kenyan fleet — matched
                 to your vehicle before an order ever leaves the warehouse.
               </p>
@@ -33,10 +33,10 @@ export default function Layout() {
 
             {/* Quick links */}
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-[#101B2C]">
+              <h3 className="text-md font-semibold uppercase tracking-wide text-[#101B2C]">
                 Quick links
               </h3>
-              <ul className="mt-4 space-y-2.5">
+              <ul className="mt-4 space-y-2">
                 {QUICK_LINKS.map(({ label, to }) => (
                   <li key={to}>
                     <Link
@@ -52,7 +52,7 @@ export default function Layout() {
 
             {/* Contact info */}
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-[#101B2C]">
+              <h3 className="text-md font-semibold uppercase tracking-wide text-[#101B2C]">
                 Get in touch
               </h3>
               <ul className="mt-4 space-y-3">
@@ -102,7 +102,7 @@ export default function Layout() {
             </div>
           </div>
 
-          <div className="mt-10 border-t border-[#E7E2D8] pt-6 text-[13px] text-[#7C7669]">
+          <div className="mt-15 border-t border-[#E7E2D8] pt-6 text-center text-[13px] text-[#7C7669]">
             &copy; {new Date().getFullYear()} Grande Auto Hut — genuine and
             aftermarket parts for the Kenyan fleet.
           </div>
