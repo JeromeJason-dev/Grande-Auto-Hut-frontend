@@ -13,14 +13,14 @@ export default function AdminLayout() {
   const isAccountPage = pathname === "/admin/account";
 
   return (
-    <div className="flex min-h-full flex-col bg-[#FAF7F2]">
+    <div className="flex min-h-full flex-col bg-[#FAF7F2] dark:bg-[#0B1320] text-[#101B2C] dark:text-white transition-colors duration-200">
       <Navbar minimal />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-8 px-6 py-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-8 px-6 pt-8 pb-4">
         {/* Sidebar — hidden on the account page */}
         {!isAccountPage && (
           <aside className="w-56 shrink-0">
-            <h1 className="px-3 text-lg font-semibold text-[#101B2C]">Admin</h1>
+            <h1 className="px-3 text-lg font-semibold text-[#101B2C] dark:text-white">Admin</h1>
 
             <nav className="mt-6 flex flex-col gap-1">
               {NAV_ITEMS.map(({ to, label, end }) => (
@@ -31,8 +31,8 @@ export default function AdminLayout() {
                   className={({ isActive }) =>
                     `rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? "border-[#BF9A63] bg-white text-[#101B2C]"
-                        : "border-transparent text-[#7C7669] hover:bg-white/60 hover:text-[#101B2C]"
+                        ? "border-[#BF9A63] bg-white dark:bg-[#162235] text-[#101B2C] dark:text-white"
+                        : "border-transparent text-[#7C7669] dark:text-[#9FA8B8] hover:bg-white/60 dark:hover:bg-[#162235]/60 hover:text-[#101B2C] dark:hover:text-white"
                     }`
                   }
                 >

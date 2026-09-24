@@ -10,9 +10,9 @@ import { groupProductsByFamily } from "../../api/groupProducts";
 import { useCart } from "../cart/CartContext";
 
 const selectClasses =
-  "w-full rounded-md border border-[#E7E2D8] bg-white px-3 py-2 text-sm text-[#1E2430] transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25";
+  "w-full rounded-md border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-3 py-2 text-sm text-[#1E2430] dark:text-slate-100 transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25";
 
-const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669]";
+const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669] dark:text-slate-400";
 
 export default function CatalogPage() {
   const [params, setParams] = useSearchParams();
@@ -50,23 +50,20 @@ export default function CatalogPage() {
     setSearch("");
   };
 
-  // Fold separate genuine/aftermarket/refurbished rows into one card per
-  // physical part. See utils/groupProducts.js — this works whether or
-  // not `family_slug` exists on your API yet.
   const products = groupProductsByFamily(unwrapList(productsQuery.data));
 
   return (
-    <div className="min-h-full bg-[#FAF7F2]">
+    <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0B121F] text-[#1E2430] dark:text-slate-100 transition-colors duration-200">
       <div className="pl-12 pr-8 py-10">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold text-[#101B2C]">Catalog</h1>
-            <p className="mt-1 text-sm text-[#7C7669]">
+            <h1 className="text-2xl font-semibold text-[#101B2C] dark:text-white">Catalog</h1>
+            <p className="mt-1 text-sm text-[#7C7669] dark:text-slate-400">
               Genuine, aftermarket and refurbished parts, all fitment-verified.
             </p>
           </div>
           {productsQuery.data && (
-            <span className="text-sm text-[#7C7669]">
+            <span className="text-sm text-[#7C7669] dark:text-slate-400">
               {productsQuery.data.count ?? products.length} parts
             </span>
           )}
@@ -74,14 +71,14 @@ export default function CatalogPage() {
 
         <div className="grid gap-8 md:grid-cols-[240px_1fr]">
           {/* Filters */}
-          <aside className="h-fit rounded-xl border border-[#E7E2D8] bg-white p-5">
+          <aside className="h-fit rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] p-5 shadow-sm dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-[#101B2C]">Filters</h2>
+              <h2 className="text-sm font-semibold text-[#101B2C] dark:text-white">Filters</h2>
               {activeFilterCount > 0 && (
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="text-xs font-medium text-[#A9834E] transition-colors hover:text-[#101B2C]"
+                  className="text-xs font-medium text-[#A9834E] dark:text-[#BF9A63] transition-colors hover:text-[#101B2C] dark:hover:text-white"
                 >
                   Clear all
                 </button>
@@ -103,7 +100,7 @@ export default function CatalogPage() {
                 <button
                   type="submit"
                   aria-label="Search"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#7C7669] transition-colors hover:text-[#101B2C]"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#7C7669] dark:text-slate-400 transition-colors hover:text-[#101B2C] dark:hover:text-white"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="11" cy="11" r="7" />
@@ -151,14 +148,6 @@ export default function CatalogPage() {
               <label htmlFor="condition" className={labelClasses}>
                 Condition
               </label>
-              {/*
-                A product can carry multiple condition variants at once
-                (see groupProductsByFamily). This filter narrows to
-                products that offer at least the selected condition — it
-                does not hide a product's other variants, so a
-                genuine+aftermarket+refurbished part still shows all
-                three states on its card either way.
-              */}
               <select
                 id="condition"
                 value={params.get("condition") || ""}
@@ -199,7 +188,7 @@ export default function CatalogPage() {
             )}
 
             {productsQuery.data && products.length === 0 && (
-              <div className="rounded-xl border border-dashed border-[#E7E2D8] bg-white px-6 py-16">
+              <div className="rounded-xl border border-dashed border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-6 py-16">
                 <EmptyState
                   title="No parts match those filters"
                   body="Try clearing a filter or searching a different term."

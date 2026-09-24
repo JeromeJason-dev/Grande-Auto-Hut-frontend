@@ -6,11 +6,11 @@ import Spinner from "../../components/Spinner";
 
 function StatCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-[#E7E2D8] bg-white p-5">
-      <div className="text-xs font-medium uppercase tracking-wide text-[#7C7669]">
+    <div className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-5">
+      <div className="text-xs font-medium uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]">
         {label}
       </div>
-      <div className="mt-2 text-2xl font-semibold text-[#101B2C]">{value}</div>
+      <div className="mt-2 text-2xl font-semibold text-[#101B2C] dark:text-white">{value}</div>
     </div>
   );
 }
@@ -41,13 +41,13 @@ export default function AdminDashboardPage() {
         <StatCard label="Low stock parts" value={data.low_stock_count} />
       </div>
 
-      <div className="mt-8 rounded-xl border border-[#E7E2D8] bg-white p-6">
-        <h3 className="text-sm font-semibold text-[#101B2C]">Orders by status</h3>
+      <div className="mt-8 rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6">
+        <h3 className="text-sm font-semibold text-[#101B2C] dark:text-white">Orders by status</h3>
         <div className="mt-3 flex flex-wrap gap-2">
           {Object.entries(data.orders_by_status).map(([status, count]) => (
             <span
               key={status}
-              className="rounded-full border border-[#E7E2D8] bg-[#FAF7F2] px-3 py-1 text-xs font-medium capitalize text-[#101B2C]"
+              className="rounded-full border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#0B1320] px-3 py-1 text-xs font-medium capitalize text-[#101B2C] dark:text-slate-200"
             >
               {status.replace("_", " ")}: {count}
             </span>
@@ -56,16 +56,16 @@ export default function AdminDashboardPage() {
       </div>
 
       {data.low_stock_products.length > 0 && (
-        <div className="mt-6 rounded-xl border border-[#E7E2D8] bg-white p-6">
-          <h3 className="text-sm font-semibold text-[#101B2C]">Low stock</h3>
-          <div className="mt-3 divide-y divide-[#E7E2D8]">
+        <div className="mt-6 rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6">
+          <h3 className="text-sm font-semibold text-[#101B2C] dark:text-white">Low stock</h3>
+          <div className="mt-3 divide-y divide-[#E7E2D8] dark:divide-[#25344D]">
             {data.low_stock_products.map((p) => (
               <div key={p.id} className="flex items-center justify-between py-2.5">
-                <span className="text-sm text-[#1E2430]">
+                <span className="text-sm text-[#1E2430] dark:text-slate-200">
                   {p.name}{" "}
-                  <span className="font-mono text-xs text-[#7C7669]">{p.sku}</span>
+                  <span className="font-mono text-xs text-[#7C7669] dark:text-[#9FA8B8]">{p.sku}</span>
                 </span>
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                <span className="rounded-full bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
                   {p.stock_quantity} left
                 </span>
               </div>
@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
           </div>
           <Link
             to="/admin/products"
-            className="mt-4 inline-block rounded-md border border-[#E7E2D8] px-3.5 py-1.5 text-sm font-medium text-[#101B2C] transition-colors hover:border-[#BF9A63] hover:text-[#A9834E]"
+            className="mt-4 inline-block rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-3.5 py-1.5 text-sm font-medium text-[#101B2C] dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
           >
             Manage stock
           </Link>

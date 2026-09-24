@@ -98,17 +98,6 @@ function CarIcon({ className }) {
   );
 }
 
-/*
-
-  cream:   "#FAF7F2"   page background
-  hairline:"#E7E2D8"   borders / dividers
-  navy:    "#101B2C"   dark panels, footer, primary heading ink
-  gold:    "#BF9A63"   accent — CTAs, links, small marks
-  gold-dk: "#A9834E"   gold hover state
-  ink:     "#1E2430"   body copy
-  ink-soft:"#7C7669"   secondary / muted copy
-*/
-
 export default function HomePage() {
   const { data, isLoading } = useQuery({
     queryKey: ["products", { ordering: "-created_at", page_size: 8 }],
@@ -118,18 +107,17 @@ export default function HomePage() {
   const products = isLoading ? [] : unwrapList(data).slice(0, 8);
 
   return (
-    <div className="bg-[#FAF7F2]">
-      {/* Hero — full-bleed shop photo with centered copy */}
+    <div className="bg-slate-50 text-slate-900 dark:bg-[#0B121F] dark:text-slate-100 min-h-screen transition-colors duration-200">
+      {/* Hero */}
       <section
-        className="relative isolate overflow-hidden bg-[#101B2C] bg-cover bg-center py-24 md:py-32"
+        className="relative isolate overflow-hidden bg-slate-900 dark:bg-[#101B2C] bg-cover bg-center py-24 md:py-32"
         style={{ backgroundImage: "url('/public/grande_auto_hut_shop.jpg')" }}
       >
-        {/* soft scrim, kept light so the glass panel does the readability work */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B121F]/40 via-[#0B121F]/25 to-[#0B121F]/45" />
+        <div className="absolute inset-0 bg-slate-950/70 dark:bg-gradient-to-b dark:from-[#0B121F]/70 dark:via-[#0B121F]/60 dark:to-[#0B121F]/85" />
 
         <div className="relative mx-auto flex max-w-[750px] flex-col items-center px-6 text-center">
-          <div className="flex flex-col items-center gap-[1.2rem] rounded-2xl border border-white/[0.15] bg-white/[0.08] px-6 py-10 shadow-[0_20px_40px_rgba(0,0,0,0.3)] backdrop-blur-[12px] md:px-12 md:py-16">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium tracking-wide text-white backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-[1.2rem] rounded-2xl border border-white/[0.15] bg-slate-900/80 dark:bg-[#101B2C]/70 px-6 py-10 shadow-xl backdrop-blur-[12px] md:px-10 md:py-14">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3 py-1 text-[11px] font-medium tracking-wide text-white backdrop-blur-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-[#BF9A63]" />
               Built for the Kenyan fleet
             </span>
@@ -137,7 +125,7 @@ export default function HomePage() {
             <h1 className="mt-6 max-w-[20ch] text-4xl font-semibold leading-tight text-white md:text-5xl">
               Genuine Parts. <span className="text-[#BF9A63]">Precise Fit.</span> Zero Guesswork.
             </h1>
-            <p className="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-white/80">
+            <p className="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-slate-200 dark:text-slate-300">
               We stock genuine, top-grade components at fair retail pricing —
               checked against your vehicle's exact specification and backed
               by counter staff who actually know what's under the hood.
@@ -146,7 +134,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
                 to="/catalog"
-                className="rounded-md bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-[#101B2C] shadow-[0_10px_25px_rgba(0,0,0,0.35)] transition-all hover:-translate-y-0.5 hover:bg-[#A9834E]"
+                className="rounded-md bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-slate-900 dark:text-[#101B2C] shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#A9834E]"
               >
                 View Catalog
               </Link>
@@ -162,32 +150,32 @@ export default function HomePage() {
       </section>
 
       {/* Stat strip + fitment finder */}
-      <section className="relative overflow-hidden border-b border-[#E7E2D8]">
+      <section className="relative overflow-hidden border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0B121F]">
         <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#BF9A63]/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-[#101B2C]/5 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-slate-200 dark:bg-white/5 blur-3xl" />
 
         <div className="relative max-w-7xl mx-auto px-8 py-14">
           {/* Stat strip */}
-          <dl className="grid grid-cols-1 divide-y divide-[#E7E2D8] border border-[#E7E2D8] bg-white sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <dl className="grid grid-cols-1 divide-y divide-slate-200 dark:divide-white/10 border border-slate-200 dark:border-white/10 bg-white dark:bg-[#101B2C] sm:grid-cols-3 sm:divide-x sm:divide-y-0 rounded-xl overflow-hidden shadow-sm">
             {TRUST_MARKERS.map(({ value, label }) => (
               <div key={label} className="px-6 py-5">
-                <dt className="text-xl font-semibold text-[#101B2C]">{value}</dt>
-                <dd className="mt-1 text-sm text-[#7C7669]">{label}</dd>
+                <dt className="text-xl font-semibold text-slate-900 dark:text-white">{value}</dt>
+                <dd className="mt-1 text-sm text-slate-600 dark:text-slate-400">{label}</dd>
               </div>
             ))}
           </dl>
 
-          {/* Fitment finder — the flagship feature, given a gold-glow treatment */}
-          <div className="mt-10 rounded-xl border-2 border-[#BF9A63]/30 bg-white p-6 shadow-[0_20px_45px_rgba(191,154,99,0.12)] transition-shadow hover:shadow-[0_25px_55px_rgba(191,154,99,0.2)] md:p-7">
+          {/* Fitment finder */}
+          <div className="mt-10 rounded-xl border-2 border-[#BF9A63]/30 bg-white dark:bg-[#101B2C] p-6 shadow-md transition-shadow hover:shadow-lg md:p-7">
             <div className="mb-5 flex items-center gap-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#A9834E]">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#BF9A63]">
                 Flagship feature
               </span>
             </div>
-            <h2 className="text-lg font-semibold text-[#101B2C]">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
               Find parts for your vehicle
             </h2>
-            <p className="mt-1 text-sm text-[#7C7669]">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Select your make, model and year — we'll only show parts confirmed to fit.
             </p>
             <div className="mt-5">
@@ -198,19 +186,19 @@ export default function HomePage() {
       </section>
 
       {/* Trusted fleet band */}
-      <section className="border-b border-[#E7E2D8] bg-white py-12">
+      <section className="border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#101B2C] py-12">
         <div className="max-w-7xl mx-auto px-8">
-          <p className="text-center text-xs font-medium uppercase tracking-wide text-[#7C7669]">
+          <p className="text-center text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Stocked for the fleet
           </p>
           <div className="mt-6 grid grid-cols-3 gap-4 sm:grid-cols-6">
             {FLEET.map((make) => (
               <div
                 key={make}
-                className="flex flex-col items-center gap-2 rounded-lg border border-[#E7E2D8] bg-[#FAF7F2] px-3 py-5 text-center transition-all duration-200 hover:-translate-y-1 hover:border-[#BF9A63]/40 hover:shadow-[0_12px_28px_rgba(191,154,99,0.15)]"
+                className="flex flex-col items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0B121F] px-3 py-5 text-center transition-all duration-200 hover:-translate-y-1 hover:border-[#BF9A63]/40 hover:shadow-sm"
               >
                 <CarIcon className="h-6 w-6 text-[#BF9A63]" />
-                <span className="text-sm font-medium text-[#101B2C]">{make}</span>
+                <span className="text-sm font-medium text-slate-900 dark:text-white">{make}</span>
               </div>
             ))}
           </div>
@@ -221,16 +209,16 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-8 py-14">
         <div className="mb-6 flex items-end justify-between">
           <div>
-            <h2 className="text-2xl font-semibold text-[#101B2C]">
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
               Recently added
             </h2>
-            <p className="mt-1 text-sm text-[#7C7669]">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Newest parts to land in the warehouse.
             </p>
           </div>
           <Link
             to="/catalog"
-            className="shrink-0 rounded-md border border-[#E7E2D8] bg-white px-4 py-2 text-sm font-medium text-[#101B2C] transition-colors hover:border-[#BF9A63] hover:text-[#A9834E]"
+            className="shrink-0 rounded-md border border-slate-300 dark:border-white/20 bg-white dark:bg-[#101B2C] px-4 py-2 text-sm font-medium text-slate-700 dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63]"
           >
             View full catalog
           </Link>
@@ -241,8 +229,8 @@ export default function HomePage() {
             <Spinner label="Loading products" />
           </div>
         ) : products.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[#E7E2D8] bg-white px-6 py-16 text-center">
-            <p className="text-sm text-[#7C7669]">
+          <div className="rounded-xl border border-dashed border-slate-300 dark:border-white/10 bg-white dark:bg-[#101B2C] px-6 py-16 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               No products yet — new stock will show up here as it's added.
             </p>
           </div>
@@ -255,21 +243,21 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Why fleets order from us — dark contrast band, matching the HTML page's payment/delivery section */}
-      <section className="bg-[#101B2C] py-16 text-white">
+      {/* Why fleets order from us */}
+      <section className="bg-white dark:bg-[#101B2C] border-t border-slate-200 dark:border-white/10 py-16 text-slate-900 dark:text-white">
         <div className="max-w-7xl mx-auto px-8">
-          <h2 className="text-2xl font-semibold">Why fleets order from us</h2>
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Why fleets order from us</h2>
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {WHY_US.map(({ title, body, icon }) => (
               <div
                 key={title}
-                className="rounded-xl border border-white/10 bg-white/[0.03] p-6 transition-colors hover:border-[#BF9A63]/40"
+                className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0B121F] p-6 transition-colors hover:border-[#BF9A63]/40"
               >
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#BF9A63]/15 text-[#BF9A63]">
                   <Icon className="h-6 w-6">{icon}</Icon>
                 </span>
-                <h3 className="mt-4 text-base font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/60">
+                <h3 className="mt-4 text-base font-semibold text-slate-900 dark:text-white">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                   {body}
                 </p>
               </div>
@@ -279,12 +267,12 @@ export default function HomePage() {
       </section>
 
       {/* Reviews */}
-      <section className="bg-[#FAF7F2] py-16">
+      <section className="bg-slate-50 dark:bg-[#0B121F] py-16">
         <div className="max-w-7xl mx-auto px-8">
-          <h2 className="text-2xl font-semibold text-[#101B2C]">
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
             Trusted by fleets across the country
           </h2>
-          <p className="mt-1 text-sm text-[#7C7669]">
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             A few words from the workshops and operators who order from us every week.
           </p>
 
@@ -292,14 +280,14 @@ export default function HomePage() {
             {REVIEWS.map(({ name, role, quote, rating }) => (
               <div
                 key={name}
-                className="flex flex-col rounded-xl border border-[#E7E2D8] bg-white p-6 shadow-[0_10px_25px_rgba(16,27,44,0.05)]"
+                className="flex flex-col rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#101B2C] p-6 shadow-sm dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]"
               >
                 <div className="flex gap-0.5 text-[#BF9A63]">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Icon
                       key={i}
                       className={`h-4 w-4 ${
-                        i < rating ? "fill-current" : "fill-none text-[#E7E2D8]"
+                        i < rating ? "fill-current" : "fill-none text-slate-300 dark:text-white/20"
                       }`}
                     >
                       <path d="M12 2.5l2.9 6 6.6.6-5 4.4 1.5 6.5L12 16.9 6 20l1.5-6.5-5-4.4 6.6-.6L12 2.5Z" />
@@ -307,13 +295,13 @@ export default function HomePage() {
                   ))}
                 </div>
 
-                <p className="mt-4 flex-1 text-sm leading-relaxed text-[#1E2430]">
+                <p className="mt-4 flex-1 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                   "{quote}"
                 </p>
 
-                <div className="mt-6 border-t border-[#E7E2D8] pt-4">
-                  <p className="text-sm font-semibold text-[#101B2C]">{name}</p>
-                  <p className="text-xs text-[#7C7669]">{role}</p>
+                <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{role}</p>
                 </div>
               </div>
             ))}

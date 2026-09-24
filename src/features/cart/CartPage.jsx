@@ -14,7 +14,7 @@ export default function CartPage() {
 
   if (loading && !cart)
     return (
-      <div className="flex min-h-[50vh] items-center justify-center bg-[#FAF7F2]">
+      <div className="flex min-h-[50vh] items-center justify-center bg-white dark:bg-[#0B1320]">
         <Spinner label="Loading your cart" />
       </div>
     );
@@ -41,9 +41,9 @@ export default function CartPage() {
   };
 
   return (
-    <div className="min-h-full bg-[#FAF7F2]">
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="text-2xl font-semibold text-[#101B2C]">Your cart</h1>
+    <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-10 transition-colors">
+      <div className="mx-auto max-w-3xl">
+        <h1 className="text-2xl font-semibold text-[#101B2C] dark:text-white">Your cart</h1>
 
         {error && (
           <div className="mt-4">
@@ -52,14 +52,14 @@ export default function CartPage() {
         )}
 
         {items.length === 0 ? (
-          <div className="mt-8 rounded-xl border border-dashed border-[#E7E2D8] bg-white px-6 py-16">
+          <div className="mt-8 rounded-xl border border-dashed border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] px-6 py-16">
             <EmptyState
               title="Your cart is empty"
               body="Use the Fitment Finder to find parts confirmed for your vehicle, or browse the full catalog."
               action={
                 <Link
                   to="/catalog"
-                  className="mt-3 inline-block rounded-md bg-[#101B2C] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46]"
+                  className="mt-3 inline-block rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
                 >
                   Browse catalog
                 </Link>
@@ -72,9 +72,9 @@ export default function CartPage() {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center gap-4 rounded-lg border border-[#E7E2D8] bg-white p-4"
+                  className="flex items-center gap-4 rounded-lg border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-4"
                 >
-                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-[#FAF7F2]">
+                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-white dark:bg-[#0B1320]">
                     {item.product.primary_image && (
                       <img
                         src={item.product.primary_image}
@@ -87,11 +87,11 @@ export default function CartPage() {
                   <div className="min-w-0 flex-1">
                     <Link
                       to={`/catalog/${item.product.slug}`}
-                      className="font-medium text-[#101B2C] transition-colors hover:text-[#A9834E]"
+                      className="font-medium text-[#101B2C] dark:text-white transition-colors hover:text-[#BF9A63]"
                     >
                       {item.product.name}
                     </Link>
-                    <div className="mt-0.5 font-mono text-xs text-[#7C7669]">
+                    <div className="mt-0.5 font-mono text-xs text-[#7C7669] dark:text-[#9FA8B8]">
                       {item.product.sku}
                     </div>
                   </div>
@@ -101,17 +101,17 @@ export default function CartPage() {
                     min={1}
                     value={item.quantity}
                     onChange={(e) => handleQtyChange(item.id, Number(e.target.value))}
-                    className="w-16 rounded-md border border-[#E7E2D8] bg-white px-2 py-1.5 text-center text-sm text-[#1E2430] transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25"
+                    className="w-16 rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#0B1320] px-2 py-1.5 text-center text-sm text-[#101B2C] dark:text-white transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25"
                   />
 
-                  <div className="w-24 text-right">
+                  <div className="w-24 text-right text-[#101B2C] dark:text-white">
                     <Price value={item.line_total} />
                   </div>
 
                   <button
                     onClick={() => handleRemove(item.id)}
                     aria-label="Remove item"
-                    className="rounded-md p-2 text-[#7C7669] transition-colors hover:bg-[#FAF7F2] hover:text-[#101B2C]"
+                    className="rounded-md p-2 text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-white dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                       <path d="M3 6h18" />
@@ -125,14 +125,14 @@ export default function CartPage() {
               ))}
             </div>
 
-            <div className="mt-6 flex items-center justify-between rounded-lg border border-[#E7E2D8] bg-white p-5">
-              <span className="text-sm font-medium text-[#7C7669]">Subtotal</span>
+            <div className="mt-6 flex items-center justify-between rounded-lg border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-5">
+              <span className="text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8]">Subtotal</span>
               <Price value={cart.subtotal} size="lg" />
             </div>
 
             <button
               onClick={() => navigate("/checkout")}
-              className="mt-4 w-full rounded-md bg-[#101B2C] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46]"
+              className="mt-4 w-full rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-3 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
             >
               Proceed to checkout
             </button>

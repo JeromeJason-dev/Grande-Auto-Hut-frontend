@@ -12,9 +12,9 @@ import ErrorAlert from "../../components/ErrorAlert";
 const EMPTY_ADDRESS = { recipient_name: "", phone_number: "", county: "", town: "", street_address: "", building_or_estate: "" };
 
 const fieldClasses =
-  "w-full rounded-md border border-[#E7E2D8] bg-white px-3 py-2 text-sm text-[#1E2430] transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25";
+  "w-full rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#0B1320] px-3 py-2 text-sm text-[#101B2C] dark:text-white transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25";
 
-const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669]";
+const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]";
 
 export default function CheckoutPage() {
   const { cart, refresh } = useCart();
@@ -32,11 +32,11 @@ export default function CheckoutPage() {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="min-h-full bg-[#FAF7F2]">
-        <div className="mx-auto max-w-3xl px-6 py-16 text-center">
-          <p className="text-[#7C7669]">
+      <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-16 text-center transition-colors">
+        <div className="mx-auto max-w-3xl">
+          <p className="text-[#7C7669] dark:text-[#9FA8B8]">
             Your cart is empty.{" "}
-            <Link to="/catalog" className="font-medium text-[#101B2C] hover:text-[#A9834E]">
+            <Link to="/catalog" className="font-medium text-[#101B2C] dark:text-white hover:text-[#BF9A63]">
               Browse the catalog
             </Link>{" "}
             first.
@@ -73,25 +73,25 @@ export default function CheckoutPage() {
 
   if (step === "awaiting-mpesa") {
     return (
-      <div className="min-h-full bg-[#FAF7F2]">
-        <div className="mx-auto max-w-lg px-6 py-16">
-          <div className="rounded-xl border border-[#E7E2D8] bg-white p-8 text-center shadow-[0_10px_25px_rgba(16,27,44,0.05)]">
+      <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-16 transition-colors">
+        <div className="mx-auto max-w-lg">
+          <div className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-8 text-center shadow-[0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#BF9A63]/15 text-[#BF9A63]">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <rect x="6" y="2" width="12" height="20" rx="2" />
                 <path d="M11 18h2" />
               </svg>
             </span>
-            <h1 className="mt-4 text-xl font-semibold text-[#101B2C]">Check your phone</h1>
-            <p className="mt-3 text-sm leading-relaxed text-[#7C7669]">
+            <h1 className="mt-4 text-xl font-semibold text-[#101B2C] dark:text-white">Check your phone</h1>
+            <p className="mt-3 text-sm leading-relaxed text-[#7C7669] dark:text-[#9FA8B8]">
               We've sent an M-Pesa prompt to{" "}
-              <strong className="text-[#101B2C]">{mpesaPhone || newAddress.phone_number}</strong> for order{" "}
-              <strong className="font-mono text-[#101B2C]">{placedOrder?.order_number}</strong>. Enter your M-Pesa
+              <strong className="text-[#101B2C] dark:text-white">{mpesaPhone || newAddress.phone_number}</strong> for order{" "}
+              <strong className="font-mono text-[#101B2C] dark:text-white">{placedOrder?.order_number}</strong>. Enter your M-Pesa
               PIN to complete payment — your order will confirm automatically once we hear back from Safaricom.
             </p>
             <Link
               to={`/orders/${placedOrder.id}`}
-              className="mt-6 inline-block rounded-md bg-[#101B2C] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46]"
+              className="mt-6 inline-block rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
             >
               Track this order
             </Link>
@@ -103,22 +103,22 @@ export default function CheckoutPage() {
 
   if (step === "done") {
     return (
-      <div className="min-h-full bg-[#FAF7F2]">
-        <div className="mx-auto max-w-lg px-6 py-16">
-          <div className="rounded-xl border border-[#E7E2D8] bg-white p-8 text-center shadow-[0_10px_25px_rgba(16,27,44,0.05)]">
+      <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-16 transition-colors">
+        <div className="mx-auto max-w-lg">
+          <div className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-8 text-center shadow-[0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#BF9A63]/15 text-[#BF9A63]">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M4 12.6 9 17l11-11" />
               </svg>
             </span>
-            <h1 className="mt-4 text-xl font-semibold text-[#101B2C]">Order placed</h1>
-            <p className="mt-3 text-sm leading-relaxed text-[#7C7669]">
-              Order <strong className="font-mono text-[#101B2C]">{placedOrder?.order_number}</strong> is confirmed
+            <h1 className="mt-4 text-xl font-semibold text-[#101B2C] dark:text-white">Order placed</h1>
+            <p className="mt-3 text-sm leading-relaxed text-[#7C7669] dark:text-[#9FA8B8]">
+              Order <strong className="font-mono text-[#101B2C] dark:text-white">{placedOrder?.order_number}</strong> is confirmed
               for Pay on Delivery. Our team will prepare it for dispatch.
             </p>
             <Link
               to={`/orders/${placedOrder.id}`}
-              className="mt-6 inline-block rounded-md bg-[#101B2C] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46]"
+              className="mt-6 inline-block rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
             >
               Track this order
             </Link>
@@ -129,9 +129,9 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#FAF7F2]">
-      <div className="mx-auto max-w-6xl px-6 py-12">
-        <h1 className="text-2xl font-semibold text-[#101B2C]">Checkout</h1>
+    <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-10 transition-colors">
+      <div className="mx-auto max-w-6xl">
+        <h1 className="text-2xl font-semibold text-[#101B2C] dark:text-white">Checkout</h1>
 
         {error && (
           <div className="mt-4">
@@ -141,7 +141,7 @@ export default function CheckoutPage() {
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
           <form onSubmit={handleSubmit}>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669]">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]">
               Delivery address
             </h2>
 
@@ -150,10 +150,10 @@ export default function CheckoutPage() {
                 {addresses.map((a) => (
                   <label
                     key={a.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-white p-3.5 text-sm transition-colors ${
+                    className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-[#FAF7F2] dark:bg-[#162235] p-3.5 text-sm transition-colors ${
                       addressId === a.id
-                        ? "border-[#BF9A63] ring-1 ring-[#BF9A63]/30"
-                        : "border-[#E7E2D8] hover:border-[#BF9A63]/40"
+                        ? "border-[#101B2C] dark:border-[#BF9A63] ring-1 ring-[#101B2C]/30 dark:ring-[#BF9A63]/30"
+                        : "border-[#E7E2D8] dark:border-[#25344D] hover:border-[#101B2C]/40 dark:hover:border-[#BF9A63]/40"
                     }`}
                   >
                     <input
@@ -161,19 +161,19 @@ export default function CheckoutPage() {
                       name="address"
                       checked={addressId === a.id}
                       onChange={() => setAddressId(a.id)}
-                      className="h-4 w-4 accent-[#BF9A63]"
+                      className="h-4 w-4 accent-[#101B2C] dark:accent-[#BF9A63]"
                     />
-                    <span className="text-[#1E2430]">
-                      <strong className="text-[#101B2C]">{a.label || "Address"}</strong> — {a.recipient_name},{" "}
+                    <span className="text-[#374151] dark:text-[#D1D5DB]">
+                      <strong className="text-[#101B2C] dark:text-white">{a.label || "Address"}</strong> — {a.recipient_name},{" "}
                       {a.street_address}, {a.town}, {a.county}
                     </span>
                   </label>
                 ))}
                 <label
-                  className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-white p-3.5 text-sm transition-colors ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-[#FAF7F2] dark:bg-[#162235] p-3.5 text-sm transition-colors ${
                     addressId === ""
-                      ? "border-[#BF9A63] ring-1 ring-[#BF9A63]/30"
-                      : "border-[#E7E2D8] hover:border-[#BF9A63]/40"
+                      ? "border-[#101B2C] dark:border-[#BF9A63] ring-1 ring-[#101B2C]/30 dark:ring-[#BF9A63]/30"
+                      : "border-[#E7E2D8] dark:border-[#25344D] hover:border-[#101B2C]/40 dark:hover:border-[#BF9A63]/40"
                   }`}
                 >
                   <input
@@ -181,15 +181,15 @@ export default function CheckoutPage() {
                     name="address"
                     checked={addressId === ""}
                     onChange={() => setAddressId("")}
-                    className="h-4 w-4 accent-[#BF9A63]"
+                    className="h-4 w-4 accent-[#101B2C] dark:accent-[#BF9A63]"
                   />
-                  <span className="text-[#1E2430]">Use a new address</span>
+                  <span className="text-[#374151] dark:text-[#D1D5DB]">Use a new address</span>
                 </label>
               </div>
             )}
 
             {addressId === "" && (
-              <div className="mt-4 rounded-xl border border-[#E7E2D8] bg-white p-5">
+              <div className="mt-4 rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className={labelClasses}>Recipient name</label>
@@ -254,16 +254,16 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-[#7C7669]">
+            <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]">
               Payment
             </h2>
 
             <div className="mt-3 flex flex-col gap-2">
               <label
-                className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-white p-3.5 text-sm transition-colors ${
+                className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-[#FAF7F2] dark:bg-[#162235] p-3.5 text-sm transition-colors ${
                   paymentMethod === "mpesa"
-                    ? "border-[#BF9A63] ring-1 ring-[#BF9A63]/30"
-                    : "border-[#E7E2D8] hover:border-[#BF9A63]/40"
+                    ? "border-[#101B2C] dark:border-[#BF9A63] ring-1 ring-[#101B2C]/30 dark:ring-[#BF9A63]/30"
+                    : "border-[#E7E2D8] dark:border-[#25344D] hover:border-[#101B2C]/40 dark:hover:border-[#BF9A63]/40"
                 }`}
               >
                 <input
@@ -271,17 +271,17 @@ export default function CheckoutPage() {
                   name="payment"
                   checked={paymentMethod === "mpesa"}
                   onChange={() => setPaymentMethod("mpesa")}
-                  className="h-4 w-4 accent-[#BF9A63]"
+                  className="h-4 w-4 accent-[#101B2C] dark:accent-[#BF9A63]"
                 />
-                <span className="text-[#1E2430]">
-                  <strong className="text-[#101B2C]">M-Pesa</strong> — pay now via STK push
+                <span className="text-[#374151] dark:text-[#D1D5DB]">
+                  <strong className="text-[#101B2C] dark:text-white">M-Pesa</strong> — pay now via STK push
                 </span>
               </label>
               <label
-                className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-white p-3.5 text-sm transition-colors ${
+                className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-[#FAF7F2] dark:bg-[#162235] p-3.5 text-sm transition-colors ${
                   paymentMethod === "cod"
-                    ? "border-[#BF9A63] ring-1 ring-[#BF9A63]/30"
-                    : "border-[#E7E2D8] hover:border-[#BF9A63]/40"
+                    ? "border-[#101B2C] dark:border-[#BF9A63] ring-1 ring-[#101B2C]/30 dark:ring-[#BF9A63]/30"
+                    : "border-[#E7E2D8] dark:border-[#25344D] hover:border-[#101B2C]/40 dark:hover:border-[#BF9A63]/40"
                 }`}
               >
                 <input
@@ -289,10 +289,10 @@ export default function CheckoutPage() {
                   name="payment"
                   checked={paymentMethod === "cod"}
                   onChange={() => setPaymentMethod("cod")}
-                  className="h-4 w-4 accent-[#BF9A63]"
+                  className="h-4 w-4 accent-[#101B2C] dark:accent-[#BF9A63]"
                 />
-                <span className="text-[#1E2430]">
-                  <strong className="text-[#101B2C]">Pay on Delivery</strong> — pay cash when your order arrives
+                <span className="text-[#374151] dark:text-[#D1D5DB]">
+                  <strong className="text-[#101B2C] dark:text-white">Pay on Delivery</strong> — pay cash when your order arrives
                 </span>
               </label>
             </div>
@@ -312,7 +312,7 @@ export default function CheckoutPage() {
             <button
               type="submit"
               disabled={step === "placing"}
-              className="mt-8 w-full rounded-md bg-[#101B2C] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] disabled:text-[#7C7669]"
+              className="mt-8 w-full rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-3 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] dark:disabled:bg-[#25344D] disabled:text-[#7C7669] dark:disabled:text-[#9FA8B8]"
             >
               {step === "placing"
                 ? "Placing order…"
@@ -320,22 +320,22 @@ export default function CheckoutPage() {
             </button>
           </form>
 
-          <aside className="h-fit rounded-xl border border-[#E7E2D8] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669]">
+          <aside className="h-fit rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-5">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]">
               Order summary
             </h3>
             <div className="mt-4 flex flex-col gap-2.5">
               {cart.items.map((item) => (
                 <div key={item.id} className="flex items-start justify-between gap-3 text-sm">
-                  <span className="text-[#1E2430]">
+                  <span className="text-[#374151] dark:text-[#D1D5DB]">
                     {item.quantity} × {item.product.name}
                   </span>
                   <Price value={item.line_total} size="sm" />
                 </div>
               ))}
             </div>
-            <div className="mt-4 flex items-center justify-between border-t border-[#E7E2D8] pt-4">
-              <strong className="text-[#101B2C]">Total</strong>
+            <div className="mt-4 flex items-center justify-between border-t border-[#E7E2D8] dark:border-[#25344D] pt-4">
+              <strong className="text-[#101B2C] dark:text-white">Total</strong>
               <Price value={cart.subtotal} size="lg" />
             </div>
           </aside>

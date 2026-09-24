@@ -18,8 +18,8 @@ function slugify(text) {
 }
 
 const inputClasses =
-  "w-full rounded-md border border-[#E7E2D8] bg-white px-3 py-2 text-sm text-[#1E2430] focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/20";
-const labelClasses = "mb-1.5 block text-xs font-medium text-[#7C7669]";
+  "w-full rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#0B1320] px-3 py-2 text-sm text-[#1E2430] dark:text-white focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/20";
+const labelClasses = "mb-1.5 block text-xs font-medium text-[#7C7669] dark:text-[#9FA8B8]";
 
 function Field({ label, className = "", children }) {
   return (
@@ -76,8 +76,8 @@ function ProductForm({ editing, onDone }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-[#E7E2D8] bg-white p-6">
-      <h3 className="text-base font-semibold text-[#101B2C]">
+    <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6">
+      <h3 className="text-base font-semibold text-[#101B2C] dark:text-white">
         {editing ? `Edit ${editing.name}` : "Add product"}
       </h3>
 
@@ -125,9 +125,6 @@ function ProductForm({ editing, onDone }) {
 
       <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Field label="Condition">
-          {/* "refurbished" was missing here even though the backend and
-              catalog filter both support it — added so admins can
-              actually create the third variant type. */}
           <select value={form.condition} onChange={set("condition")} className={inputClasses}>
             <option value="genuine">Genuine (OEM)</option>
             <option value="aftermarket">Aftermarket</option>
@@ -145,12 +142,12 @@ function ProductForm({ editing, onDone }) {
         </Field>
       </div>
 
-      <label className="mt-4 flex items-center gap-2 text-sm text-[#1E2430]">
+      <label className="mt-4 flex items-center gap-2 text-sm text-[#1E2430] dark:text-slate-200">
         <input
           type="checkbox"
           checked={form.is_active}
           onChange={set("is_active")}
-          className="h-4 w-4 rounded border-[#E7E2D8] text-[#101B2C] focus:ring-[#BF9A63]"
+          className="h-4 w-4 rounded border-[#E7E2D8] dark:border-[#25344D] text-[#101B2C] focus:ring-[#BF9A63]"
         />
         Active (visible in catalog)
       </label>
@@ -159,14 +156,14 @@ function ProductForm({ editing, onDone }) {
         <button
           type="submit"
           disabled={saving}
-          className="rounded-md bg-[#101B2C] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] disabled:text-[#7C7669]"
+          className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] dark:disabled:bg-[#25344D] disabled:text-[#7C7669] dark:disabled:text-[#9FA8B8]"
         >
           {saving ? "Saving…" : editing ? "Save changes" : "Create product"}
         </button>
         <button
           type="button"
           onClick={onDone}
-          className="rounded-md px-5 py-2 text-sm font-medium text-[#7C7669] transition-colors hover:bg-[#FAF7F2] hover:text-[#101B2C]"
+          className="rounded-md px-5 py-2 text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white"
         >
           Cancel
         </button>
@@ -208,11 +205,11 @@ export default function AdminProductsPage() {
   return (
     <div>
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-[#101B2C]">Products</h2>
+        <h2 className="text-lg font-semibold text-[#101B2C] dark:text-white">Products</h2>
         {!showForm && !editing && (
           <button
             onClick={() => setShowForm(true)}
-            className="rounded-md bg-[#101B2C] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46]"
+            className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
           >
             Add product
           </button>
@@ -232,26 +229,26 @@ export default function AdminProductsPage() {
           <Spinner label="Loading products" />
         </div>
       ) : products.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[#E7E2D8] bg-white px-6 py-16 text-center text-sm text-[#7C7669]">
+        <div className="rounded-xl border border-dashed border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] px-6 py-16 text-center text-sm text-[#7C7669] dark:text-[#9FA8B8]">
           No products yet.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-[#E7E2D8] bg-white">
-          <div className="divide-y divide-[#E7E2D8]">
+        <div className="overflow-hidden rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235]">
+          <div className="divide-y divide-[#E7E2D8] dark:divide-[#25344D]">
             {products.map((p) => (
               <div key={p.id} className="flex flex-wrap items-center gap-4 px-5 py-3.5">
-                <span className="rounded border border-[#E7E2D8] bg-[#FAF7F2] px-2 py-0.5 font-mono text-[11px] text-[#7C7669]">
+                <span className="rounded border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#0B1320] px-2 py-0.5 font-mono text-[11px] text-[#7C7669] dark:text-[#9FA8B8]">
                   {p.sku}
                 </span>
-                <strong className="flex-1 text-sm font-medium text-[#101B2C]">{p.name}</strong>
-                <span className="text-sm text-[#7C7669]">
+                <strong className="flex-1 text-sm font-medium text-[#101B2C] dark:text-white">{p.name}</strong>
+                <span className="text-sm text-[#7C7669] dark:text-[#9FA8B8]">
                   {p.category} · {p.brand}
                 </span>
                 <Price value={p.price} />
                 <StockBadge inStock={p.is_in_stock} lowStock={p.is_low_stock} />
                 <button
                   onClick={() => handleRestock(p)}
-                  className="rounded-md px-3 py-1.5 text-xs font-medium text-[#7C7669] transition-colors hover:bg-[#FAF7F2] hover:text-[#101B2C]"
+                  className="rounded-md px-3 py-1.5 text-xs font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white"
                 >
                   Restock
                 </button>
@@ -260,7 +257,7 @@ export default function AdminProductsPage() {
                     setEditing(p);
                     setShowForm(false);
                   }}
-                  className="rounded-md border border-[#E7E2D8] px-3 py-1.5 text-xs font-medium text-[#101B2C] transition-colors hover:border-[#BF9A63] hover:text-[#A9834E]"
+                  className="rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-3 py-1.5 text-xs font-medium text-[#101B2C] dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
                 >
                   Edit
                 </button>

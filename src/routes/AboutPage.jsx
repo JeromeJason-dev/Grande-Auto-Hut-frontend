@@ -59,32 +59,22 @@ function Icon({ children, className = "h-6 w-6" }) {
   );
 }
 
-/*
-  cream:   "#FAF7F2"   page background
-  hairline:"#E7E2D8"   borders / dividers
-  navy:    "#101B2C"   dark panels, footer, primary heading ink
-  gold:    "#BF9A63"   accent — CTAs, links, small marks
-  gold-dk: "#A9834E"   gold hover state
-  ink:     "#1E2430"   body copy
-  ink-soft:"#7C7669"   secondary / muted copy
-*/
-
 export default function AboutPage() {
   return (
-    <div className="bg-[#FAF7F2]">
+    <div className="bg-slate-50 text-slate-900 dark:bg-[#0B121F] dark:text-slate-100 min-h-screen transition-colors duration-200">
       {/* Intro */}
-      <section className="border-b border-[#E7E2D8] bg-white pt-6 pb-16 md:pb-20">
+      <section className="border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#101B2C] pt-6 pb-16 md:pb-20">
         <div className="pl-12 pr-8">
           <div className="flex justify-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#E7E2D8] bg-[#FAF7F2] px-3 py-1 text-[11px] font-medium tracking-wide text-[#7C7669]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-3 py-1 text-[11px] font-medium tracking-wide text-slate-600 dark:text-slate-400">
               <span className="h-1.5 w-1.5 rounded-full bg-[#BF9A63]" />
               10+ years in Nairobi
             </span>
           </div>
-          <h1 className="mx-auto mt-6 max-w-4xl text-center text-3xl font-semibold leading-tight text-[#101B2C] md:text-5xl">
+          <h1 className="mx-auto mt-6 max-w-4xl text-center text-3xl font-semibold leading-tight text-slate-900 dark:text-white md:text-5xl">
             Your ultimate source for quality auto parts &amp; accessories
           </h1>
-          <p className="mt-2 pt-10 pl-10 text-left text-[23px] leading-relaxed text-[#7C7669]">
+          <p className="mt-2 pt-10 pl-10 text-left text-[23px] leading-relaxed text-slate-700 dark:text-slate-300">
             Here at Grande Auto Hut Ltd, we know that the right part makes
             all the difference. For over a decade we've supplied the Nairobi
             community and drivers countrywide with a wide selection of
@@ -97,10 +87,10 @@ export default function AboutPage() {
       {/* Advantages */}
       <section className="pl-12 pr-8 py-16">
         <div>
-          <h2 className="text-center text-4xl font-semibold text-[#101B2C]">
+          <h2 className="text-center text-4xl font-semibold text-slate-900 dark:text-white">
             Why drivers and professionals choose us
           </h2>
-          <p className="mt-2 text-center text-md leading-relaxed text-[#7C7669]">
+          <p className="mt-2 text-center text-md leading-relaxed text-slate-600 dark:text-slate-400">
             Finding the exact part shouldn't be a guessing game.
           </p>
         </div>
@@ -109,15 +99,15 @@ export default function AboutPage() {
           {ADVANTAGES.map(({ title, body, icon }) => (
             <div
               key={title}
-              className="rounded-xl border border-[#E7E2D8] bg-white p-6 shadow-[0_10px_25px_rgba(16,27,44,0.05)] transition-colors hover:border-[#BF9A63]/40"
+              className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#101B2C] p-6 shadow-sm dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)] transition-all hover:border-[#BF9A63]/40"
             >
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#BF9A63]/15 text-[#BF9A63]">
                 <Icon className="h-6 w-6">{icon}</Icon>
               </span>
-              <h3 className="mt-4 text-lg font-semibold text-[#101B2C]">
+              <h3 className="mt-4 text-lg font-semibold text-slate-900 dark:text-white">
                 {title}
               </h3>
-              <p className="mt-2 text-md leading-relaxed text-[#7C7669]">
+              <p className="mt-2 text-md leading-relaxed text-slate-600 dark:text-slate-300">
                 {body}
               </p>
             </div>
@@ -125,13 +115,13 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Core commitment — dark contrast band, matching the home page's dark section */}
-      <section className="bg-[#101B2C] py-16 text-white">
+      {/* Core commitment */}
+      <section className="bg-white dark:bg-[#101B2C] border-y border-slate-200 dark:border-white/10 py-16 text-slate-900 dark:text-white">
         <div className="pl-12 pr-8">
           <span className="block text-center text-[45px] font-medium tracking-wide text-[#BF9A63]">
             Our core commitment
           </span>
-          <p className="mt-4 text-left text-xl font-semibold leading-relaxed md:text-2xl">
+          <p className="mt-4 text-left text-xl font-semibold leading-relaxed md:text-2xl text-slate-800 dark:text-slate-200">
             To empower drivers and mechanics by delivering premium-grade
             automotive parts with unmatched technical expertise, competitive
             pricing, and a commitment to keeping your vehicle safe on the
@@ -141,12 +131,12 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-[#E7E2D8] bg-white py-16">
+      <section className="bg-slate-50 dark:bg-[#0B121F] py-16">
         <div className="pl-12 pr-8">
-          <h2 className="text-center text-4xl font-semibold text-[#101B2C]">
+          <h2 className="text-center text-4xl font-semibold text-slate-900 dark:text-white">
             Find the right part today
           </h2>
-          <p className="mt-3 text-left text-xl leading-relaxed text-[#7C7669]">
+          <p className="mt-3 text-left text-xl leading-relaxed text-slate-700 dark:text-slate-300">
             Don't risk your safety or your vehicle's performance on subpar
             components. Browse our digital inventory to find exactly what
             your vehicle demands, or talk to a parts specialist first.
@@ -154,13 +144,13 @@ export default function AboutPage() {
           <div className="mt-5 flex justify-center gap-3">
             <Link
               to="/catalog"
-              className="inline-block rounded-md bg-[#BF9A63] px-5 py-2.5 text-md font-medium text-[#101B2C] shadow-[0_10px_25px_rgba(0,0,0,0.15)] transition-all hover:-translate-y-0.5 hover:bg-[#A9834E]"
+              className="inline-block rounded-md bg-[#BF9A63] px-5 py-2.5 text-md font-medium text-slate-900 dark:text-[#101B2C] shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#A9834E]"
             >
               Browse the catalog
             </Link>
             <Link
               to="/contact"
-              className="inline-block rounded-md border border-[#E7E2D8] bg-white px-5 py-2.5 text-md font-medium text-[#101B2C] transition-colors hover:border-[#BF9A63] hover:text-[#A9834E]"
+              className="inline-block rounded-md border border-slate-300 dark:border-white/20 bg-white dark:bg-white/5 px-5 py-2.5 text-md font-medium text-slate-800 dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63]"
             >
               Talk to a specialist
             </Link>

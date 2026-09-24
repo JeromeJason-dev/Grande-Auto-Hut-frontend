@@ -13,9 +13,9 @@ const CATEGORIES = [
 ];
 
 const fieldClasses =
-  "w-full rounded-md border border-[#E7E2D8] bg-white px-3 py-2 text-sm text-[#1E2430] transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25";
+  "w-full rounded-md border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-3 py-2 text-sm text-[#1E2430] dark:text-slate-100 transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25";
 
-const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669]";
+const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669] dark:text-slate-400";
 
 export default function NewTicketPage() {
   const navigate = useNavigate();
@@ -41,12 +41,12 @@ export default function NewTicketPage() {
   };
 
   return (
-    <div className="min-h-full bg-[#FAF7F2]">
+    <div className="min-h-full bg-[#FAF7F2] dark:bg-[#0B121F] transition-colors duration-200">
       <div className="mx-auto max-w-xl px-6 py-12">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#7C7669] transition-colors hover:text-[#101B2C]"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#7C7669] dark:text-slate-400 transition-colors hover:text-[#101B2C] dark:hover:text-white"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="m15 18-6-6 6-6" />
@@ -54,7 +54,7 @@ export default function NewTicketPage() {
           Back
         </button>
 
-        <h1 className="text-2xl font-semibold text-[#101B2C]">New support ticket</h1>
+        <h1 className="text-2xl font-semibold text-[#101B2C] dark:text-white">New support ticket</h1>
 
         {error && (
           <div className="mt-4">
@@ -64,11 +64,11 @@ export default function NewTicketPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="mt-6 rounded-xl border border-[#E7E2D8] bg-white p-6 shadow-[0_10px_25px_rgba(16,27,44,0.05)]"
+          className="mt-6 rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] p-6 shadow-[0_10px_25px_rgba(16,27,44,0.05)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]"
         >
           {orderId && (
-            <p className="mb-5 rounded-md bg-[#FAF7F2] px-3 py-2 text-sm text-[#7C7669]">
-              Linked to order <span className="font-mono text-[#101B2C]">{orderId}</span>
+            <p className="mb-5 rounded-md bg-[#FAF7F2] dark:bg-white/5 px-3 py-2 text-sm text-[#7C7669] dark:text-slate-400">
+              Linked to order <span className="font-mono text-[#101B2C] dark:text-white">{orderId}</span>
             </p>
           )}
 
@@ -120,7 +120,7 @@ export default function NewTicketPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-md bg-[#101B2C] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] disabled:text-[#7C7669]"
+            className="w-full rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2.5 text-sm font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] dark:disabled:bg-slate-700 disabled:text-[#7C7669] dark:disabled:text-slate-400"
           >
             {submitting ? "Sending…" : "Open ticket"}
           </button>

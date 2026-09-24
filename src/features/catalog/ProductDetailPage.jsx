@@ -14,7 +14,7 @@ import ErrorAlert from "../../components/ErrorAlert";
 
 function Stars({ value }) {
   return (
-    <span style={{ color: "var(--accent)", letterSpacing: "1px" }}>
+    <span className="text-[#BF9A63] tracking-[1px]">
       {"★".repeat(value)}{"☆".repeat(5 - value)}
     </span>
   );
@@ -42,19 +42,38 @@ function ReviewForm({ productId, onPosted }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card" style={{ padding: "1rem", marginBottom: "1.5rem" }}>
+    <form onSubmit={handleSubmit} className="rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] p-5 shadow-sm mb-6">
       <ErrorAlert message={error} />
-      <div className="field">
-        <label htmlFor="rating">Your rating</label>
-        <select id="rating" value={rating} onChange={(e) => setRating(e.target.value)}>
+      <div className="mb-4">
+        <label htmlFor="rating" className="block text-xs font-semibold uppercase tracking-wide text-[#7C7669] dark:text-slate-400 mb-1.5">
+          Your rating
+        </label>
+        <select
+          id="rating"
+          value={rating}
+          onChange={(e) => setRating(e.target.value)}
+          className="w-full rounded-md border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#0B121F] px-3 py-2 text-sm text-[#1E2430] dark:text-slate-100 focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25"
+        >
           {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} star{n !== 1 && "s"}</option>)}
         </select>
       </div>
-      <div className="field">
-        <label htmlFor="comment">Comment (optional)</label>
-        <textarea id="comment" rows={3} value={comment} onChange={(e) => setComment(e.target.value)} />
+      <div className="mb-4">
+        <label htmlFor="comment" className="block text-xs font-semibold uppercase tracking-wide text-[#7C7669] dark:text-slate-400 mb-1.5">
+          Comment (optional)
+        </label>
+        <textarea
+          id="comment"
+          rows={3}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="w-full rounded-md border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#0B121F] px-3 py-2 text-sm text-[#1E2430] dark:text-slate-100 focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25"
+        />
       </div>
-      <button type="submit" className="btn btn-secondary" disabled={submitting}>
+      <button
+        type="submit"
+        disabled={submitting}
+        className="rounded-md border border-[#E7E2D8] dark:border-white/20 bg-white dark:bg-white/5 px-4 py-2 text-sm font-medium text-[#1E2430] dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63]"
+      >
         {submitting ? "Posting…" : "Post review"}
       </button>
     </form>
@@ -80,8 +99,8 @@ export default function ProductDetailPage() {
   });
   const reviews = unwrapList(reviewsQuery.data);
 
-  if (productQuery.isLoading) return <div className="container" style={{ padding: "2.5rem 1.5rem" }}><Spinner label="Loading part" /></div>;
-  if (productQuery.isError || !product) return <div className="container" style={{ padding: "2.5rem 1.5rem" }}><ErrorAlert message="That part couldn't be found." /></div>;
+  if (productQuery.isLoading) return <div className="max-w-7xl mx-auto px-8 py-10"><Spinner label="Loading part" /></div>;
+  if (productQuery.isError || !product) return <div className="max-w-7xl mx-auto px-8 py-10"><ErrorAlert message="That part couldn't be found." /></div>;
 
   const handleAddToCart = async () => {
     setCartError("");
@@ -104,81 +123,116 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="container" style={{ padding: "2.5rem 1.5rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem" }}>
-      <div style={{ aspectRatio: "4/3", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "var(--radius)" }}>
-        {product.images?.[0]?.image ? (
-          <img src={product.images[0].image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : (
-          <div className="row" style={{ height: "100%", justifyContent: "center", color: "var(--line-strong)" }}>No image</div>
-        )}
-      </div>
-
-      <div>
-        <span className="badge badge-neutral mono">{product.sku}</span>
-        <h1 style={{ marginTop: "0.5rem" }}>{product.name}</h1>
-        <p style={{ color: "var(--ink-soft)" }}>{product.brand?.name} · {product.category?.name} · {product.condition === "genuine" ? "Genuine (OEM)" : "Aftermarket"}</p>
-
-        <div className="row" style={{ gap: "1rem", margin: "1rem 0" }}>
-          <Price value={product.price} size="lg" />
-          <StockBadge inStock={product.is_in_stock} lowStock={product.is_low_stock} />
+    <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0B121F] text-[#1E2430] dark:text-slate-100 transition-colors duration-200 py-12 px-8">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div className="aspect-[4/3] overflow-hidden rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-[#FAF7F2] dark:bg-[#101B2C]">
+          {product.images?.[0]?.image ? (
+            <img src={product.images[0].image} alt={product.name} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full items-center justify-center text-[#7C7669] dark:text-slate-500">No image</div>
+          )}
         </div>
 
-        <p>{product.description || "No description provided for this part yet."}</p>
+        <div>
+          <span className="inline-block rounded border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-2 py-0.5 font-mono text-[11px] text-[#7C7669] dark:text-slate-300">
+            {product.sku}
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold text-[#101B2C] dark:text-white">{product.name}</h1>
+          <p className="mt-1 text-sm text-[#7C7669] dark:text-slate-400">
+            {product.brand?.name} · {product.category?.name} · {product.condition === "genuine" ? "Genuine (OEM)" : "Aftermarket"}
+          </p>
 
-        {product.fitments?.length > 0 && (
-          <div style={{ margin: "1rem 0" }}>
-            <h3>Confirmed fitment</h3>
-            <div className="row" style={{ gap: "0.4rem", flexWrap: "wrap" }}>
-              {product.fitments.map((f, i) => (
-                <span key={i} className="badge badge-steel">{f.make} {f.model} {f.year}</span>
+          <div className="my-6 flex items-center gap-4">
+            <Price value={product.price} size="lg" />
+            <StockBadge inStock={product.is_in_stock} lowStock={product.is_low_stock} />
+          </div>
+
+          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 mb-6">
+            {product.description || "No description provided for this part yet."}
+          </p>
+
+          {product.fitments?.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#101B2C] dark:text-white mb-2">Confirmed fitment</h3>
+              <div className="flex flex-wrap gap-2">
+                {product.fitments.map((f, i) => (
+                  <span key={i} className="rounded-full border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-3 py-1 text-xs font-medium text-[#7C7669] dark:text-slate-300">
+                    {f.make} {f.model} {f.year}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <ErrorAlert message={cartError} />
+          {cartMessage && (
+            <div className="mb-4 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-3 text-sm text-emerald-800 dark:text-emerald-300">
+              {cartMessage}
+            </div>
+          )}
+
+          {status === "authenticated" ? (
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min={1}
+                value={qty}
+                onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
+                className="w-20 rounded-md border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-3 py-2 text-center text-sm text-[#1E2430] dark:text-slate-100 focus:border-[#BF9A63] focus:outline-none"
+              />
+              <button
+                disabled={!product.is_in_stock}
+                onClick={handleAddToCart}
+                className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {product.is_in_stock ? "Add to cart" : "Out of stock"}
+              </button>
+              <button
+                onClick={handleWishlist}
+                className="rounded-md border border-[#E7E2D8] dark:border-white/20 bg-white dark:bg-[#101B2C] px-4 py-2.5 text-sm font-medium text-[#1E2430] dark:text-slate-200 transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63]"
+              >
+                Save for later
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-[#7C7669] dark:text-slate-400">
+              <a href="/login" className="text-[#BF9A63] underline hover:text-[#A9834E]">Log in</a> to add this part to your cart.
+            </p>
+          )}
+        </div>
+
+        <div className="col-span-1 md:col-span-2 border-t border-[#E7E2D8] dark:border-white/10 pt-10 mt-6">
+          <h2 className="text-xl font-semibold text-[#101B2C] dark:text-white mb-6">
+            Reviews {reviews.length > 0 && `(${reviews.length})`}
+          </h2>
+
+          {status === "authenticated" && (
+            <ReviewForm productId={product.id} onPosted={() => queryClient.invalidateQueries({ queryKey: ["reviews", product.id] })} />
+          )}
+
+          {reviews.length === 0 ? (
+            <p className="text-sm text-[#7C7669] dark:text-slate-400">
+              No reviews yet. Reviews are only available from customers whose orders have been delivered.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((r) => (
+                <div key={r.id} className="rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <strong className="text-sm font-semibold text-[#101B2C] dark:text-white">{r.user_name}</strong>
+                    <Stars value={r.rating} />
+                  </div>
+                  {r.verified_purchase && (
+                    <span className="mt-2 inline-block rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                      Verified purchase
+                    </span>
+                  )}
+                  {r.comment && <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{r.comment}</p>}
+                </div>
               ))}
             </div>
-          </div>
-        )}
-
-        <ErrorAlert message={cartError} />
-        {cartMessage && <div className="alert alert-success">{cartMessage}</div>}
-
-        {status === "authenticated" ? (
-          <div className="row" style={{ gap: "0.75rem" }}>
-            <input
-              type="number" min={1} value={qty} style={{ width: 70 }}
-              onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
-              className="field" 
-            />
-            <button className="btn btn-primary" disabled={!product.is_in_stock} onClick={handleAddToCart}>
-              {product.is_in_stock ? "Add to cart" : "Out of stock"}
-            </button>
-            <button className="btn btn-secondary" onClick={handleWishlist}>Save for later</button>
-          </div>
-        ) : (
-          <p><a href="/login">Log in</a> to add this part to your cart.</p>
-        )}
-      </div>
-
-      <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--line)", paddingTop: "2rem" }}>
-        <h2>Reviews {reviews.length > 0 && `(${reviews.length})`}</h2>
-
-        {status === "authenticated" && (
-          <ReviewForm productId={product.id} onPosted={() => queryClient.invalidateQueries({ queryKey: ["reviews", product.id] })} />
-        )}
-
-        {reviews.length === 0 ? (
-          <p style={{ color: "var(--ink-soft)" }}>No reviews yet. Reviews are only available from customers whose orders have been delivered.</p>
-        ) : (
-          <div className="stack" style={{ gap: "1rem" }}>
-            {reviews.map((r) => (
-              <div key={r.id} className="card" style={{ padding: "1rem" }}>
-                <div className="spread">
-                  <strong>{r.user_name}</strong>
-                  <Stars value={r.rating} />
-                </div>
-                {r.verified_purchase && <span className="badge badge-success" style={{ marginTop: "0.35rem" }}>Verified purchase</span>}
-                {r.comment && <p style={{ marginTop: "0.5rem", marginBottom: 0 }}>{r.comment}</p>}
-              </div>
-            ))}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

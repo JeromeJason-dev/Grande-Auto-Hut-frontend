@@ -10,22 +10,22 @@ const QUICK_LINKS = [
 
 export default function Layout() {
   return (
-    <div className="flex min-h-full flex-col bg-[#FAF7F2]">
+    <div className="flex min-h-full flex-col bg-[#FAF7F2] dark:bg-gray-950 text-[#1E2430] dark:text-gray-100 transition-colors">
       <Navbar />
 
       <main className="flex-1">
         <Outlet />
       </main>
 
-      <footer className="mt-12 border-t border-[#E7E2D8] bg-white">
-        <div className="mx-12  px-6 py-10">
+      <footer className="mt-0 border-t border-[#E7E2D8] dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors">
+        <div className="mx-12 px-6 py-10">
           <div className="grid gap-15 sm:grid-cols-3">
             {/* Brand */}
             <div>
-              <h2 className="text-xl font-semibold text-[#101B2C]">
+              <h2 className="text-xl font-semibold text-[#101B2C] dark:text-white">
                 Grande <span className="text-[#BF9A63]">Auto</span> Hut
               </h2>
-              <p className="mt-3  text-sm leading-relaxed text-[#7C7669]">
+              <p className="mt-3 text-sm leading-relaxed text-[#7C7669] dark:text-gray-400">
                 Genuine and aftermarket parts for the Kenyan fleet — matched
                 to your vehicle before an order ever leaves the warehouse.
               </p>
@@ -33,7 +33,7 @@ export default function Layout() {
 
             {/* Quick links */}
             <div>
-              <h3 className="text-md font-semibold uppercase tracking-wide text-[#101B2C]">
+              <h3 className="text-md font-semibold uppercase tracking-wide text-[#101B2C] dark:text-gray-200">
                 Quick links
               </h3>
               <ul className="mt-4 space-y-2">
@@ -41,7 +41,7 @@ export default function Layout() {
                   <li key={to}>
                     <Link
                       to={to}
-                      className="text-sm text-[#7C7669] transition-colors hover:text-[#A9834E]"
+                      className="text-sm text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
                     >
                       {label}
                     </Link>
@@ -52,14 +52,14 @@ export default function Layout() {
 
             {/* Contact info */}
             <div>
-              <h3 className="text-md font-semibold uppercase tracking-wide text-[#101B2C]">
+              <h3 className="text-md font-semibold uppercase tracking-wide text-[#101B2C] dark:text-gray-200">
                 Get in touch
               </h3>
               <ul className="mt-4 space-y-3">
                 <li>
                   <a
                     href="mailto:hello@grandeautohut.co.ke"
-                    className="flex items-center gap-2.5 text-sm text-[#7C7669] transition-colors hover:text-[#A9834E]"
+                    className="flex items-center gap-2.5 text-sm text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -80,7 +80,7 @@ export default function Layout() {
                 <li>
                   <a
                     href="tel:+254700000000"
-                    className="flex items-center gap-2.5 text-sm text-[#7C7669] transition-colors hover:text-[#A9834E]"
+                    className="flex items-center gap-2.5 text-sm text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -102,7 +102,7 @@ export default function Layout() {
             </div>
           </div>
 
-          <div className="mt-15 border-t border-[#E7E2D8] pt-6 text-center text-[13px] text-[#7C7669]">
+          <div className="mt-15 border-t border-[#E7E2D8] dark:border-gray-800 pt-6 text-center text-[13px] text-[#7C7669] dark:text-gray-500">
             &copy; {new Date().getFullYear()} Grande Auto Hut — genuine and
             aftermarket parts for the Kenyan fleet.
           </div>
