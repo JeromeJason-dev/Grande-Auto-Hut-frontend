@@ -22,8 +22,14 @@ export default function LoginPage() {
     setError("");
     setSubmitting(true);
     try {
-      await login(form.email, form.password);
-      navigate(location.state?.from?.pathname || "/", { replace: true });
+      const user = await login(form.email, form.password);
+
+      // Determine default route based on admin privileges
+      const isAdmin = user?.is_staff || user?.is_superuser || user?.role === "admin";
+      const defaultRedirect = isAdmin ? "/admin" : "/";
+      const targetPath = location.state?.from?.pathname || defaultRedirect;
+
+      navigate(targetPath, { replace: true });
     } catch (err) {
       setError(extractErrorMessage(err, "Couldn't log in with those details."));
     } finally {

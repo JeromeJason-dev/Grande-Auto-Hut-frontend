@@ -28,8 +28,9 @@ export default function RegisterPage() {
     setError("");
     setSubmitting(true);
     try {
-      await register(form);
-      navigate("/", { replace: true });
+      const user = await register(form);
+      const isAdmin = user?.is_staff || user?.is_superuser || user?.role === "admin";
+      navigate(isAdmin ? "/admin" : "/", { replace: true });
     } catch (err) {
       setError(extractErrorMessage(err, "Couldn't create your account."));
     } finally {

@@ -60,7 +60,6 @@ export default function Navbar({ minimal = false }) {
           {!minimal && (
             <>
               <NavLink to="/about" className={navLinkClasses}>About</NavLink>
-              <NavLink to="/" className={navLinkClasses}>Contact</NavLink>
               {!isAdmin && status === "authenticated" && (
                 <>
                   <NavLink to="/orders" className={navLinkClasses}>My Orders</NavLink>
