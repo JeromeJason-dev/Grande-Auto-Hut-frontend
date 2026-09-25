@@ -35,6 +35,7 @@ import AdminDashboardPage from "./features/admin/AdminDashboardPage";
 import AdminProductsPage from "./features/admin/AdminProductsPage";
 import AdminOrdersPage from "./features/admin/AdminOrdersPage";
 import AdminTicketsPage from "./features/admin/AdminTicketsPage";
+import AdminFitmentPage from "./features/admin/AdminFitmentPage";
 
 export default function App() {
   return (
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="tickets" element={<AdminTicketsPage />} />
+          <Route path="fitment" element={<AdminFitmentPage />} />
           <Route path="account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
         </Route>
     </Routes>

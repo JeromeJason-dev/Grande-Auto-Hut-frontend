@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { to: "/admin/products", label: "Products" },
   { to: "/admin/orders", label: "Orders" },
   { to: "/admin/tickets", label: "Tickets" },
+  { to: "/admin/fitment", label: "Fitment Catalog" },
 ];
 
 export default function AdminLayout() {
