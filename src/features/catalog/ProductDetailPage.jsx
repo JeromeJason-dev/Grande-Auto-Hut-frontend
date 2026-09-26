@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as catalogApi from "../../api/catalog";
 import * as reviewsApi from "../../api/reviews";
@@ -17,6 +17,32 @@ function Stars({ value }) {
     <span className="text-[#BF9A63] tracking-[1px]">
       {"★".repeat(value)}{"☆".repeat(5 - value)}
     </span>
+  );
+}
+
+function BackButton() {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleBack}
+      className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-[#7C7669] dark:text-slate-400 transition-colors hover:text-[#BF9A63]"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 12H5" />
+        <path d="M12 19l-7-7 7-7" />
+      </svg>
+      Back
+    </button>
   );
 }
 
@@ -80,6 +106,86 @@ function ReviewForm({ productId, onPosted }) {
   );
 }
 
+function KeyFacts({ product }) {
+  const facts = [
+    product.oem_number && { label: "OEM #", value: product.oem_number, mono: true },
+    product.weight_kg && { label: "Weight", value: `${product.weight_kg} kg` },
+    product.warranty_months && { label: "Warranty", value: `${product.warranty_months} months` },
+  ].filter(Boolean);
+
+  if (facts.length === 0) return null;
+
+  return (
+    <dl className="mb-6 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+      {facts.map((f, i) => (
+        <div key={i} className="contents">
+          <dt className="text-[#7C7669] dark:text-slate-400">{f.label}</dt>
+          <dd className={`text-[#1E2430] dark:text-slate-200 ${f.mono ? "font-mono" : ""}`}>{f.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function Specifications({ product }) {
+  if (!product.specifications?.length) return null;
+
+  return (
+    <div className="mb-6">
+      <h3 className="text-sm font-semibold uppercase tracking-wider text-[#101B2C] dark:text-white mb-2">
+        Specifications
+      </h3>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+        {product.specifications.map((spec, i) => (
+          <div key={i} className="contents">
+            <dt className="text-[#7C7669] dark:text-slate-400">{spec.label}</dt>
+            <dd className="text-[#1E2430] dark:text-slate-200">{spec.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+function ImageGallery({ product, activeIndex, setActiveIndex }) {
+  const images = product.images ?? [];
+
+  return (
+    <div>
+      <div className="aspect-[4/3] overflow-hidden rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-[#FAF7F2] dark:bg-[#101B2C]">
+        {images[activeIndex]?.image ? (
+          <img
+            src={images[activeIndex].image}
+            alt={product.name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-[#7C7669] dark:text-slate-500">No image</div>
+        )}
+      </div>
+
+      {images.length > 1 && (
+        <div className="mt-3 flex gap-2">
+          {images.map((img, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setActiveIndex(i)}
+              className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border transition-colors ${
+                i === activeIndex
+                  ? "border-[#BF9A63]"
+                  : "border-[#E7E2D8] dark:border-white/10 hover:border-[#BF9A63]/50"
+              }`}
+            >
+              <img src={img.image} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const { status } = useAuth();
@@ -88,6 +194,7 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [cartMessage, setCartMessage] = useState("");
   const [cartError, setCartError] = useState("");
+  const [activeImage, setActiveImage] = useState(0);
 
   const productQuery = useQuery({ queryKey: ["product", slug], queryFn: () => catalogApi.getProduct(slug) });
   const product = productQuery.data;
@@ -99,8 +206,22 @@ export default function ProductDetailPage() {
   });
   const reviews = unwrapList(reviewsQuery.data);
 
-  if (productQuery.isLoading) return <div className="max-w-7xl mx-auto px-8 py-10"><Spinner label="Loading part" /></div>;
-  if (productQuery.isError || !product) return <div className="max-w-7xl mx-auto px-8 py-10"><ErrorAlert message="That part couldn't be found." /></div>;
+  if (productQuery.isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-8 py-10">
+        <BackButton />
+        <Spinner label="Loading part" />
+      </div>
+    );
+  }
+  if (productQuery.isError || !product) {
+    return (
+      <div className="max-w-7xl mx-auto px-8 py-10">
+        <BackButton />
+        <ErrorAlert message="That part couldn't be found." />
+      </div>
+    );
+  }
 
   const handleAddToCart = async () => {
     setCartError("");
@@ -124,114 +245,115 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0B121F] text-[#1E2430] dark:text-slate-100 transition-colors duration-200 py-12 px-8">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
-        <div className="aspect-[4/3] overflow-hidden rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-[#FAF7F2] dark:bg-[#101B2C]">
-          {product.images?.[0]?.image ? (
-            <img src={product.images[0].image} alt={product.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-[#7C7669] dark:text-slate-500">No image</div>
-          )}
-        </div>
+      <div className="max-w-7xl mx-auto">
+        <BackButton />
 
-        <div>
-          <span className="inline-block rounded border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-2 py-0.5 font-mono text-[11px] text-[#7C7669] dark:text-slate-300">
-            {product.sku}
-          </span>
-          <h1 className="mt-2 text-3xl font-semibold text-[#101B2C] dark:text-white">{product.name}</h1>
-          <p className="mt-1 text-sm text-[#7C7669] dark:text-slate-400">
-            {product.brand?.name} · {product.category?.name} · {product.condition === "genuine" ? "Genuine (OEM)" : "Aftermarket"}
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <ImageGallery product={product} activeIndex={activeImage} setActiveIndex={setActiveImage} />
 
-          <div className="my-6 flex items-center gap-4">
-            <Price value={product.price} size="lg" />
-            <StockBadge inStock={product.is_in_stock} lowStock={product.is_low_stock} />
+          <div>
+            <span className="inline-block rounded border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-2 py-0.5 font-mono text-[11px] text-[#7C7669] dark:text-slate-300">
+              {product.sku}
+            </span>
+            <h1 className="mt-2 text-3xl font-semibold text-[#101B2C] dark:text-white">{product.name}</h1>
+            <p className="mt-1 text-sm text-[#7C7669] dark:text-slate-400">
+              {product.brand?.name} · {product.category?.name} · {product.condition === "genuine" ? "Genuine (OEM)" : "Aftermarket"}
+            </p>
+
+            <div className="my-6 flex items-center gap-4">
+              <Price value={product.price} size="lg" />
+              <StockBadge inStock={product.is_in_stock} lowStock={product.is_low_stock} />
+            </div>
+
+            <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 mb-6">
+              {product.description || "No description provided for this part yet."}
+            </p>
+
+            <KeyFacts product={product} />
+            <Specifications product={product} />
+
+            {product.fitments?.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#101B2C] dark:text-white mb-2">Confirmed fitment</h3>
+                <div className="flex flex-wrap gap-2">
+                  {product.fitments.map((f, i) => (
+                    <span key={i} className="rounded-full border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-3 py-1 text-xs font-medium text-[#7C7669] dark:text-slate-300">
+                      {f.make} {f.model} {f.year}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <ErrorAlert message={cartError} />
+            {cartMessage && (
+              <div className="mb-4 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-3 text-sm text-emerald-800 dark:text-emerald-300">
+                {cartMessage}
+              </div>
+            )}
+
+            {status === "authenticated" ? (
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  min={1}
+                  value={qty}
+                  onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
+                  className="w-20 rounded-md border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-3 py-2 text-center text-sm text-[#1E2430] dark:text-slate-100 focus:border-[#BF9A63] focus:outline-none"
+                />
+                <button
+                  disabled={!product.is_in_stock}
+                  onClick={handleAddToCart}
+                  className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {product.is_in_stock ? "Add to cart" : "Out of stock"}
+                </button>
+                <button
+                  onClick={handleWishlist}
+                  className="rounded-md border border-[#E7E2D8] dark:border-white/20 bg-white dark:bg-[#101B2C] px-4 py-2.5 text-sm font-medium text-[#1E2430] dark:text-slate-200 transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63]"
+                >
+                  Save for later
+                </button>
+              </div>
+            ) : (
+              <p className="text-sm text-[#7C7669] dark:text-slate-400">
+                <a href="/login" className="text-[#BF9A63] underline hover:text-[#A9834E]">Log in</a> to add this part to your cart.
+              </p>
+            )}
           </div>
 
-          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 mb-6">
-            {product.description || "No description provided for this part yet."}
-          </p>
+          <div className="col-span-1 md:col-span-2 border-t border-[#E7E2D8] dark:border-white/10 pt-10 mt-6">
+            <h2 className="text-xl font-semibold text-[#101B2C] dark:text-white mb-6">
+              Reviews {reviews.length > 0 && `(${reviews.length})`}
+            </h2>
 
-          {product.fitments?.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#101B2C] dark:text-white mb-2">Confirmed fitment</h3>
-              <div className="flex flex-wrap gap-2">
-                {product.fitments.map((f, i) => (
-                  <span key={i} className="rounded-full border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-3 py-1 text-xs font-medium text-[#7C7669] dark:text-slate-300">
-                    {f.make} {f.model} {f.year}
-                  </span>
+            {status === "authenticated" && (
+              <ReviewForm productId={product.id} onPosted={() => queryClient.invalidateQueries({ queryKey: ["reviews", product.id] })} />
+            )}
+
+            {reviews.length === 0 ? (
+              <p className="text-sm text-[#7C7669] dark:text-slate-400">
+                No reviews yet. Reviews are only available from customers whose orders have been delivered.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {reviews.map((r) => (
+                  <div key={r.id} className="rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] p-5 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-sm font-semibold text-[#101B2C] dark:text-white">{r.user_name}</strong>
+                      <Stars value={r.rating} />
+                    </div>
+                    {r.verified_purchase && (
+                      <span className="mt-2 inline-block rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                        Verified purchase
+                      </span>
+                    )}
+                    {r.comment && <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{r.comment}</p>}
+                  </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          <ErrorAlert message={cartError} />
-          {cartMessage && (
-            <div className="mb-4 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-3 text-sm text-emerald-800 dark:text-emerald-300">
-              {cartMessage}
-            </div>
-          )}
-
-          {status === "authenticated" ? (
-            <div className="flex items-center gap-3">
-              <input
-                type="number"
-                min={1}
-                value={qty}
-                onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
-                className="w-20 rounded-md border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-3 py-2 text-center text-sm text-[#1E2430] dark:text-slate-100 focus:border-[#BF9A63] focus:outline-none"
-              />
-              <button
-                disabled={!product.is_in_stock}
-                onClick={handleAddToCart}
-                className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {product.is_in_stock ? "Add to cart" : "Out of stock"}
-              </button>
-              <button
-                onClick={handleWishlist}
-                className="rounded-md border border-[#E7E2D8] dark:border-white/20 bg-white dark:bg-[#101B2C] px-4 py-2.5 text-sm font-medium text-[#1E2430] dark:text-slate-200 transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63]"
-              >
-                Save for later
-              </button>
-            </div>
-          ) : (
-            <p className="text-sm text-[#7C7669] dark:text-slate-400">
-              <a href="/login" className="text-[#BF9A63] underline hover:text-[#A9834E]">Log in</a> to add this part to your cart.
-            </p>
-          )}
-        </div>
-
-        <div className="col-span-1 md:col-span-2 border-t border-[#E7E2D8] dark:border-white/10 pt-10 mt-6">
-          <h2 className="text-xl font-semibold text-[#101B2C] dark:text-white mb-6">
-            Reviews {reviews.length > 0 && `(${reviews.length})`}
-          </h2>
-
-          {status === "authenticated" && (
-            <ReviewForm productId={product.id} onPosted={() => queryClient.invalidateQueries({ queryKey: ["reviews", product.id] })} />
-          )}
-
-          {reviews.length === 0 ? (
-            <p className="text-sm text-[#7C7669] dark:text-slate-400">
-              No reviews yet. Reviews are only available from customers whose orders have been delivered.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {reviews.map((r) => (
-                <div key={r.id} className="rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] p-5 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <strong className="text-sm font-semibold text-[#101B2C] dark:text-white">{r.user_name}</strong>
-                    <Stars value={r.rating} />
-                  </div>
-                  {r.verified_purchase && (
-                    <span className="mt-2 inline-block rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                      Verified purchase
-                    </span>
-                  )}
-                  {r.comment && <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{r.comment}</p>}
-                </div>
-              ))}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
