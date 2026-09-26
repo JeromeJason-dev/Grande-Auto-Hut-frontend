@@ -172,11 +172,98 @@ function ProductForm({ editing, onDone }) {
   );
 }
 
+function RestockModal({ product, onClose, onSaved }) {
+  const [qty, setQty] = useState("1");
+  const [note, setNote] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const amount = Number(qty);
+    if (!amount || amount <= 0) {
+      setError("Enter a quantity greater than 0.");
+      return;
+    }
+    setError("");
+    setSaving(true);
+    try {
+      await adminApi.restock(product.id, amount, note);
+      onSaved();
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-sm rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6 shadow-xl"
+      >
+        <h3 className="text-base font-semibold text-[#101B2C] dark:text-white">
+          Restock {product.sku}
+        </h3>
+        <p className="mt-1 text-xs text-[#7C7669] dark:text-[#9FA8B8]">{product.name}</p>
+
+        {error && (
+          <div className="mt-3">
+            <ErrorAlert message={error} />
+          </div>
+        )}
+
+        <Field label="Quantity to add" className="mt-4">
+          <input
+            type="number"
+            min="1"
+            autoFocus
+            value={qty}
+            onChange={(e) => setQty(e.target.value)}
+            className={inputClasses}
+          />
+        </Field>
+
+        <Field label="Note" className="mt-4">
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className={inputClasses}
+          />
+        </Field>
+
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md px-4 py-2 text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] dark:disabled:bg-[#25344D] disabled:text-[#7C7669] dark:disabled:text-[#9FA8B8]"
+          >
+            {saving ? "Saving…" : "Add stock"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function AdminProductsPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [restockError, setRestockError] = useState("");
+  const [restocking, setRestocking] = useState(null);
   const { data, isLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: () => catalogApi.listProducts({ page_size: 100 }),
@@ -190,16 +277,9 @@ export default function AdminProductsPage() {
     queryClient.invalidateQueries({ queryKey: ["products"] });
   };
 
-  const handleRestock = async (product) => {
-    const qty = window.prompt(`Add how many units of ${product.sku} to stock?`, "10");
-    if (!qty || Number(qty) <= 0) return;
-    setRestockError("");
-    try {
-      await adminApi.restock(product.id, Number(qty), "Restock via admin dashboard");
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-    } catch (err) {
-      setRestockError(extractErrorMessage(err));
-    }
+  const handleRestockSaved = () => {
+    setRestocking(null);
+    queryClient.invalidateQueries({ queryKey: ["admin-products"] });
   };
 
   return (
@@ -215,12 +295,6 @@ export default function AdminProductsPage() {
           </button>
         )}
       </div>
-
-      {restockError && (
-        <div className="mb-4">
-          <ErrorAlert message={restockError} />
-        </div>
-      )}
 
       {(showForm || editing) && <ProductForm editing={editing} onDone={handleDone} />}
 
@@ -247,7 +321,7 @@ export default function AdminProductsPage() {
                 <Price value={p.price} />
                 <StockBadge inStock={p.is_in_stock} lowStock={p.is_low_stock} />
                 <button
-                  onClick={() => handleRestock(p)}
+                  onClick={() => setRestocking(p)}
                   className="rounded-md px-3 py-1.5 text-xs font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white"
                 >
                   Restock
@@ -265,6 +339,14 @@ export default function AdminProductsPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {restocking && (
+        <RestockModal
+          product={restocking}
+          onClose={() => setRestocking(null)}
+          onSaved={handleRestockSaved}
+        />
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { NotificationToastProvider } from "./features/notifications/NotificationToastContext";
 
 import HomePage from "./routes/HomePage";
 import AboutPage from "./routes/AboutPage";
@@ -39,43 +40,45 @@ import AdminFitmentPage from "./features/admin/AdminFitmentPage";
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route index element={<HomePage />} />
-        <Route path="about" element={<AboutPage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
+    <NotificationToastProvider>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<HomePage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
 
-        <Route path="catalog" element={<CatalogPage />} />
-        <Route path="catalog/:slug" element={<ProductDetailPage />} />
+          <Route path="catalog" element={<CatalogPage />} />
+          <Route path="catalog/:slug" element={<ProductDetailPage />} />
 
-        <Route path="fitment" element={<FitmentPage />} />
-        <Route path="fitment/results" element={<FitmentResultsPage />} />
+          <Route path="fitment" element={<FitmentPage />} />
+          <Route path="fitment/results" element={<FitmentResultsPage />} />
 
-        <Route path="cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-        <Route path="checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+          <Route path="cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+          <Route path="checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
 
-        <Route path="orders" element={<ProtectedRoute><OrdersListPage /></ProtectedRoute>} />
-        <Route path="orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+          <Route path="orders" element={<ProtectedRoute><OrdersListPage /></ProtectedRoute>} />
+          <Route path="orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
 
-        <Route path="wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
+          <Route path="wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
 
-        <Route path="support" element={<ProtectedRoute><TicketsPage /></ProtectedRoute>} />
-        <Route path="support/new" element={<ProtectedRoute><NewTicketPage /></ProtectedRoute>} />
-        <Route path="support/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
+          <Route path="support" element={<ProtectedRoute><TicketsPage /></ProtectedRoute>} />
+          <Route path="support/new" element={<ProtectedRoute><NewTicketPage /></ProtectedRoute>} />
+          <Route path="support/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
 
-        <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
 
-        <Route path="*" element={<NotFoundPage />} />
-      </Route>
-      <Route path="admin" element={<ProtectedRoute staffOnly><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<AdminDashboardPage />} />
-          <Route path="products" element={<AdminProductsPage />} />
-          <Route path="orders" element={<AdminOrdersPage />} />
-          <Route path="tickets" element={<AdminTicketsPage />} />
-          <Route path="fitment" element={<AdminFitmentPage />} />
-          <Route path="account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
-    </Routes>
+        <Route path="admin" element={<ProtectedRoute staffOnly><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="products" element={<AdminProductsPage />} />
+            <Route path="orders" element={<AdminOrdersPage />} />
+            <Route path="tickets" element={<AdminTicketsPage />} />
+            <Route path="fitment" element={<AdminFitmentPage />} />
+            <Route path="account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+          </Route>
+      </Routes>
+    </NotificationToastProvider>
   );
 }

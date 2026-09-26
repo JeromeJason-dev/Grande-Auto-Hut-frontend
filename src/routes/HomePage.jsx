@@ -111,7 +111,7 @@ export default function HomePage() {
       {/* Hero */}
       <section
         className="relative isolate overflow-hidden bg-slate-900 dark:bg-[#101B2C] bg-cover bg-center py-24 md:py-32"
-        style={{ backgroundImage: "url('/public/grande_auto_hut_shop.jpg')" }}
+        style={{ backgroundImage: "url('/grande_auto_hut_shop.jpg')" }}
       >
         <div className="absolute inset-0 bg-slate-950/70 dark:bg-gradient-to-b dark:from-[#0B121F]/70 dark:via-[#0B121F]/60 dark:to-[#0B121F]/85" />
 

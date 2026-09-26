@@ -26,6 +26,16 @@ export default function WishlistPage() {
     }
   };
 
+  const handleToggleWishlist = async (product) => {
+    setError("");
+    try {
+      await wishlistApi.removeFromWishlist(product.id);
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    }
+  };
+
   const handleAddToCart = async (productId) => {
     setError("");
     try {
@@ -73,11 +83,22 @@ export default function WishlistPage() {
                 className="flex flex-col justify-between rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-3"
               >
                 <div>
-                  <ProductCard product={item.product} />
+                  <ProductCard 
+                    product={item.product} 
+                    isWishlisted={true}
+                    onToggleWishlist={handleToggleWishlist}
+                    showFooterActions={false}
+                  />
                 </div>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex items-center gap-2">
+                  <Link
+                    to={`/catalog/${item.product.slug}`}
+                    className="rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-transparent px-3 py-2 text-center text-xs font-medium text-[#101B2C] dark:text-slate-200 transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63] dark:hover:border-[#BF9A63] dark:hover:text-[#BF9A63]"
+                  >
+                    View details
+                  </Link>
                   <button
-                    className="flex-1 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-3 py-2 text-xs font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
+                    className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-3 py-2 text-xs font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
                     onClick={() => handleAddToCart(item.product.id)}
                   >
                     Add to cart
