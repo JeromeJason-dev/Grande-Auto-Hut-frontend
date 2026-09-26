@@ -1,15 +1,8 @@
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import * as notificationsApi from "../api/notifications";
-import { unwrapList } from "../api/client";
+import { useNotifications } from "../features/notifications/Usenotifications";
 
 export default function NotificationBell() {
-  const { data } = useQuery({
-    queryKey: ["notifications", "bell"],
-    queryFn: notificationsApi.listNotifications,
-    refetchInterval: 30000,
-  });
-  const unread = unwrapList(data).filter((n) => !n.is_read).length;
+  const { unreadCount } = useNotifications();
 
   return (
     <Link to="/notifications" aria-label="Notifications" style={{ position: "relative", color: "var(--ink)" }}>
@@ -17,7 +10,7 @@ export default function NotificationBell() {
         <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
       </svg>
-      {unread > 0 && (
+      {unreadCount > 0 && (
         <span
           className="mono"
           style={{
@@ -39,7 +32,7 @@ export default function NotificationBell() {
             lineHeight: 1,
           }}
         >
-          {unread > 9 ? "9+" : unread}
+          {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       )}
     </Link>
