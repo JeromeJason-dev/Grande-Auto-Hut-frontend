@@ -7,8 +7,13 @@ export async function login(email, password) {
 }
 
 export async function register(payload) {
+  // RegisterView only creates the account - it doesn't issue tokens or set
+  // the refresh cookie ("Please log in to get your token" in its response).
+  // So a signup has to be followed by a real login to actually establish a
+  // session; otherwise the new user looks logged out immediately after
+  // registering.
   const { data } = await api.post("/auth/register/", payload);
-  setAccessToken(data.access);
+  await login(payload.email, payload.password);
   return data;
 }
 

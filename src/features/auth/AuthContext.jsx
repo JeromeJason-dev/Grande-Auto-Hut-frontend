@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import axios from "axios";
-import { API_BASE_URL, setAccessToken, setOnAuthLost } from "../../api/client";
+import { setOnAuthLost } from "../../api/client";
 import * as authApi from "../../api/auth";
 
 const AuthContext = createContext(null);
@@ -18,14 +17,15 @@ export function AuthProvider({ children }) {
     setOnAuthLost(clearSession);
   }, [clearSession]);
 
-  // On first load, there's no access token in memory yet (a hard refresh
-  // clears JS memory) - try the httpOnly refresh cookie silently before
-  // deciding the person is logged out.
+  // On first load there's no access token in memory yet (a hard refresh
+  // clears JS memory). fetchMe() will 401 with no Authorization header;
+  // client.js's response interceptor catches that, silently refreshes off
+  // the httpOnly cookie, and retries this same request - so we don't call
+  // any explicit refresh() here, we just ask for the user and let the
+  // interceptor do its job.
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh/`, {}, { withCredentials: true });
-        setAccessToken(data.access);
         const me = await authApi.fetchMe();
         setUser(me);
         setStatus("authenticated");

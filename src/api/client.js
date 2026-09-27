@@ -57,7 +57,10 @@ api.interceptors.response.use(
     const original = error.config;
     const isAuthEndpoint = original?.url?.includes("/auth/login") || original?.url?.includes("/auth/refresh");
 
-    if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
+    // original can be undefined for errors axios raises before a config
+    // exists (e.g. a cancelled request) - guard with optional chaining so
+    // those just reject cleanly instead of throwing here.
+    if (error.response?.status === 401 && !original?._retry && !isAuthEndpoint) {
       original._retry = true;
       try {
         const newToken = await refreshAccessToken();
