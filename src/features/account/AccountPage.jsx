@@ -9,9 +9,17 @@ import ErrorAlert from "../../components/ErrorAlert";
 const EMPTY_ADDRESS = { label: "", recipient_name: "", phone_number: "", county: "", town: "", street_address: "", building_or_estate: "" };
 
 const fieldClasses =
-  "w-full rounded-md border border-[#E7E2D8] bg-white px-3 py-2 text-sm text-[#1E2430] transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25";
+  "w-full rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#0B1320] px-3 py-2 text-sm text-[#1E2430] dark:text-slate-200 transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25";
 
-const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669]";
+const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]";
+
+const cardClasses = "mb-5 rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6";
+
+const primaryButtonClasses =
+  "mt-5 rounded-md bg-[#BF9A63] px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-[#A9834E] disabled:cursor-not-allowed disabled:bg-[#BF9A63]/50 disabled:text-slate-950/60";
+
+const successBannerClasses =
+  "mt-3 rounded-md bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400";
 
 function ProfileForm() {
   const { user, refreshUser } = useAuth();
@@ -35,19 +43,15 @@ function ProfileForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-5 rounded-xl border border-[#E7E2D8] bg-white p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669]">Profile</h2>
+    <form onSubmit={handleSubmit} className={cardClasses}>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]">Profile</h2>
 
       {error && (
         <div className="mt-3">
           <ErrorAlert message={error} />
         </div>
       )}
-      {saved && (
-        <div className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          Profile updated.
-        </div>
-      )}
+      {saved && <div className={successBannerClasses}>Profile updated.</div>}
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
@@ -77,11 +81,7 @@ function ProfileForm() {
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={saving}
-        className="mt-5 rounded-md border border-[#E7E2D8] bg-white px-4 py-2 text-sm font-medium text-[#101B2C] transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] disabled:cursor-not-allowed disabled:text-[#7C7669]"
-      >
+      <button type="submit" disabled={saving} className={primaryButtonClasses}>
         {saving ? "Saving…" : "Save profile"}
       </button>
     </form>
@@ -109,19 +109,15 @@ function PasswordForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-5 rounded-xl border border-[#E7E2D8] bg-white p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669]">Change password</h2>
+    <form onSubmit={handleSubmit} className={cardClasses}>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]">Change password</h2>
 
       {error && (
         <div className="mt-3">
           <ErrorAlert message={error} />
         </div>
       )}
-      {saved && (
-        <div className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          Password changed.
-        </div>
-      )}
+      {saved && <div className={successBannerClasses}>Password changed.</div>}
 
       <div className="mt-4">
         <label className={labelClasses}>Current password</label>
@@ -145,11 +141,7 @@ function PasswordForm() {
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={saving}
-        className="mt-5 rounded-md border border-[#E7E2D8] bg-white px-4 py-2 text-sm font-medium text-[#101B2C] transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] disabled:cursor-not-allowed disabled:text-[#7C7669]"
-      >
+      <button type="submit" disabled={saving} className={primaryButtonClasses}>
         {saving ? "Saving…" : "Change password"}
       </button>
     </form>
@@ -183,12 +175,12 @@ function AddressBook() {
   };
 
   return (
-    <div className="rounded-xl border border-[#E7E2D8] bg-white p-6">
+    <div className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669]">Saved addresses</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]">Saved addresses</h2>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="text-sm font-medium text-[#A9834E] transition-colors hover:text-[#101B2C]"
+          className="rounded-md bg-[#BF9A63] px-3 py-1.5 text-sm font-medium text-slate-950 transition-colors hover:bg-[#A9834E]"
         >
           {showForm ? "Cancel" : "Add address"}
         </button>
@@ -201,7 +193,7 @@ function AddressBook() {
       )}
 
       {showForm && (
-        <form onSubmit={handleAdd} className="mt-4 rounded-lg border border-[#E7E2D8] bg-[#FAF7F2] p-4">
+        <form onSubmit={handleAdd} className="mt-4 rounded-lg border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#0B1320] p-4">
           <div>
             <label className={labelClasses}>Label (e.g. Home, Office)</label>
             <input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} className={fieldClasses} />
@@ -241,7 +233,7 @@ function AddressBook() {
 
           <button
             type="submit"
-            className="mt-4 rounded-md bg-[#101B2C] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1B2C46]"
+            className="mt-4 rounded-md bg-[#BF9A63] px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-[#A9834E]"
           >
             Save address
           </button>
@@ -249,22 +241,22 @@ function AddressBook() {
       )}
 
       {!isLoading && addresses.length === 0 && !showForm && (
-        <p className="mt-4 text-sm text-[#7C7669]">No saved addresses yet.</p>
+        <p className="mt-4 text-sm text-[#7C7669] dark:text-[#9FA8B8]">No saved addresses yet.</p>
       )}
 
       <div className="mt-2 flex flex-col">
         {addresses.map((a) => (
           <div
             key={a.id}
-            className="flex items-center justify-between gap-3 border-b border-[#E7E2D8] py-3 last:border-b-0"
+            className="flex items-center justify-between gap-3 border-b border-[#E7E2D8] dark:border-[#25344D] py-3 last:border-b-0"
           >
-            <span className="text-sm text-[#1E2430]">
-              <strong className="text-[#101B2C]">{a.label || "Address"}</strong> — {a.recipient_name},{" "}
+            <span className="text-sm text-[#1E2430] dark:text-slate-200">
+              <strong className="text-[#101B2C] dark:text-white">{a.label || "Address"}</strong> — {a.recipient_name},{" "}
               {a.street_address}, {a.town}, {a.county}
             </span>
             <button
               onClick={() => handleDelete(a.id)}
-              className="flex-shrink-0 text-sm font-medium text-[#7C7669] transition-colors hover:text-red-600"
+              className="flex-shrink-0 text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:text-red-600 dark:hover:text-red-400"
             >
               Delete
             </button>
@@ -279,20 +271,9 @@ export default function AccountPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-full bg-[#FAF7F2]">
+    <div className="min-h-full bg-[#FAF7F2] dark:bg-[#0B1320] transition-colors duration-200">
       <div className="mx-auto max-w-2xl px-6 py-12">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#7C7669] transition-colors hover:text-[#101B2C]"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-          Back
-        </button>
-
-        <h1 className="mb-6 text-2xl font-semibold text-[#101B2C]">Account</h1>
+        <h1 className="mb-6 text-2xl font-semibold text-[#101B2C] dark:text-white">Account</h1>
 
         <ProfileForm />
         <PasswordForm />
