@@ -47,15 +47,15 @@ export default function Navbar({ minimal = false }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#E7E2D8] dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur transition-colors">
-      <div className="mx-auto grid h-16 max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-6 px-6">
+      <div className="relative mx-auto flex h-16 max-w-6xl items-center px-4">
         <Link to="/" className="flex flex-shrink-0 items-center gap-2">
           <WrenchMark />
-          <span className="text-[1.05rem] font-bold tracking-tight text-[#101B2C] dark:text-white">
+          <span className="text-xl font-bold tracking-tight text-[#101B2C] dark:text-white">
             Grande Auto Hut
           </span>
         </Link>
 
-        <nav className="flex items-center justify-center gap-6 justify-self-center">
+        <nav className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-6">
           <NavLink to="/catalog" className={navLinkClasses}>Catalog</NavLink>
           {!minimal && (
             <>
@@ -73,7 +73,7 @@ export default function Navbar({ minimal = false }) {
           )}
         </nav>
 
-        <div className="flex flex-shrink-0 items-center justify-self-end gap-4">
+        <div className="ml-auto flex flex-shrink-0 items-center gap-4">
           {/* Theme Toggle Button */}
           <ThemeToggle />
 

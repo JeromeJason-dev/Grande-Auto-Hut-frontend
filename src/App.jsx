@@ -68,6 +68,8 @@ export default function App() {
 
           <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
 
+          <Route path="account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+
           <Route path="*" element={<NotFoundPage />} />
         </Route>
         <Route path="admin" element={<ProtectedRoute staffOnly><AdminLayout /></ProtectedRoute>}>
