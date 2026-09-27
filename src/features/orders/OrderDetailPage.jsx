@@ -54,7 +54,11 @@ function Tracker({ status }) {
 export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: order, isLoading, isError } = useQuery({ queryKey: ["order", id], queryFn: () => ordersApi.getOrder(id) });
+  const { data: order, isLoading, isError } = useQuery({
+    queryKey: ["order", id],
+    queryFn: () => ordersApi.getOrder(id),
+    enabled: Boolean(id),
+  });
 
   if (isLoading)
     return (
@@ -157,7 +161,7 @@ export default function OrderDetailPage() {
 
         <Link
           to={`/support/new?order=${order.id}`}
-          className="inline-block rounded-md border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-5 py-2.5 text-sm font-medium text-[#101B2C] dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] dark:hover:border-[#BF9A63] dark:hover:text-[#BF9A63]"
+          className="inline-block rounded-md border border-transparent bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-slate-950 transition-colors hover:bg-[#A9834E]"
         >
           Get help with this order
         </Link>

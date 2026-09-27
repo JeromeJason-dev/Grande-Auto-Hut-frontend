@@ -56,12 +56,16 @@ export default function CheckoutPage() {
         : { ...newAddress, payment_method: paymentMethod };
 
       const order = await ordersApi.checkout(payload);
+      console.log("Checkout response object:", order);
+      
       setPlacedOrder(order);
       await refresh();
 
+      const orderIdentifier = order?.id || order?.order_number;
+
       if (paymentMethod === "mpesa") {
         setStep("awaiting-mpesa");
-        await paymentsApi.initiateMpesa(order.id, mpesaPhone || newAddress.phone_number);
+        await paymentsApi.initiateMpesa(orderIdentifier, mpesaPhone || newAddress.phone_number);
       } else {
         setStep("done");
       }
@@ -72,6 +76,7 @@ export default function CheckoutPage() {
   };
 
   if (step === "awaiting-mpesa") {
+    const orderIdentifier = placedOrder?.id || placedOrder?.order_number;
     return (
       <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-16 transition-colors">
         <div className="mx-auto max-w-lg">
@@ -90,7 +95,7 @@ export default function CheckoutPage() {
               PIN to complete payment — your order will confirm automatically once we hear back from Safaricom.
             </p>
             <Link
-              to={`/orders/${placedOrder.id}`}
+              to={`/orders/${orderIdentifier}`}
               className="mt-6 inline-block rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
             >
               Track this order
@@ -102,6 +107,7 @@ export default function CheckoutPage() {
   }
 
   if (step === "done") {
+    const orderIdentifier = placedOrder?.id || placedOrder?.order_number;
     return (
       <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-16 transition-colors">
         <div className="mx-auto max-w-lg">
@@ -117,7 +123,7 @@ export default function CheckoutPage() {
               for Pay on Delivery. Our team will prepare it for dispatch.
             </p>
             <Link
-              to={`/orders/${placedOrder.id}`}
+              to={`/orders/${orderIdentifier}`}
               className="mt-6 inline-block rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
             >
               Track this order
