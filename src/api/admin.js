@@ -5,6 +5,11 @@ export async function getAdminMetrics() {
   return data;
 }
 
+export async function listCustomers() {
+  const { data } = await api.get("/auth/admin/customers/");
+  return data;
+}
+
 export async function createProduct(payload) {
   const { data } = await api.post("/products/", payload);
   return data;

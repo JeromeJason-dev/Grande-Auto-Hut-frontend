@@ -5,7 +5,6 @@ const QUICK_LINKS = [
   { label: "Home", to: "/" },
   { label: "Products", to: "/catalog" },
   { label: "About", to: "/about" },
-  { label: "Contact", to: "/contact" },
 ];
 
 const SOCIAL_LINKS = [

@@ -35,8 +35,10 @@ import AdminLayout from "./features/admin/AdminLayout";
 import AdminDashboardPage from "./features/admin/AdminDashboardPage";
 import AdminProductsPage from "./features/admin/AdminProductsPage";
 import AdminOrdersPage from "./features/admin/AdminOrdersPage";
+import AdminCustomersPage from "./features/admin/AdminCustomersPage";
 import AdminTicketsPage from "./features/admin/AdminTicketsPage";
 import AdminFitmentPage from "./features/admin/AdminFitmentPage";
+import AdminAccountPage from "./features/admin/AdminAccountPage";
 
 export default function App() {
   return (
@@ -72,14 +74,16 @@ export default function App() {
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>
+
         <Route path="admin" element={<ProtectedRoute staffOnly><AdminLayout /></ProtectedRoute>}>
-            <Route index element={<AdminDashboardPage />} />
-            <Route path="products" element={<AdminProductsPage />} />
-            <Route path="orders" element={<AdminOrdersPage />} />
-            <Route path="tickets" element={<AdminTicketsPage />} />
-            <Route path="fitment" element={<AdminFitmentPage />} />
-            <Route path="account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
-          </Route>
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="products" element={<AdminProductsPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="customers" element={<AdminCustomersPage />} />
+          <Route path="tickets" element={<AdminTicketsPage />} />
+          <Route path="fitment" element={<AdminFitmentPage />} />
+          <Route path="account" element={<AdminAccountPage />} />
+        </Route>
       </Routes>
     </NotificationToastProvider>
   );
