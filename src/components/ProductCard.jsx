@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../features/auth/AuthContext";
 import Price from "./Price";
 import StockBadge from "./StockBadge";
 import {
@@ -20,6 +21,8 @@ export default function ProductCard({
 }) {
   const { slug, name, brand, category, primary_image } = product;
   const navigate = useNavigate();
+  const location = useLocation();
+  const { status } = useAuth();
   const queryClient = useQueryClient();
   const [isAdding, setIsAdding] = useState(false);
   const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
@@ -52,6 +55,17 @@ export default function ProductCard({
 
   const handleAddToCart = async () => {
     if (!onAddToCart || isAdding) return;
+
+    // Guests must log in before adding to cart
+    if (status !== "authenticated") {
+      if (status === "anonymous") {
+        navigate("/login", {
+          state: { from: location.pathname + location.search },
+        });
+      }
+      // If auth is still loading, do nothing rather than redirect a logged-in user
+      return;
+    }
 
     if (!activeVariant.product_id) {
       console.error("Missing product_id on active variant — cannot add to cart", activeVariant);
