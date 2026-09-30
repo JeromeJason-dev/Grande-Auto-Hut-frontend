@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "./Usenotifications";
-import ToastContainer from "../notifications/ToastContainer";
+import ToastContainer from "./ToastContainer";
 
 const NotificationToastContext = createContext(null);
 
