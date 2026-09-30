@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as catalogApi from "../../api/catalog";
 import * as adminApi from "../../api/admin";
 import { unwrapList, extractErrorMessage } from "../../api/client";
 import Price from "../../components/Price";
-import StockBadge from "../../components/StockBadge";
 import Spinner from "../../components/Spinner";
 import ErrorAlert from "../../components/ErrorAlert";
 
@@ -12,6 +11,8 @@ const EMPTY_FORM = {
   sku: "", name: "", slug: "", category: "", brand: "", description: "",
   condition: "aftermarket", price: "", stock_quantity: "", low_stock_threshold: "5", is_active: true,
 };
+
+const PAGE_SIZE = 10;
 
 function slugify(text) {
   return text.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -21,6 +22,64 @@ const inputClasses =
   "w-full rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#0B1320] px-3 py-2 text-sm text-[#1E2430] dark:text-white focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/20";
 const labelClasses = "mb-1.5 block text-xs font-medium text-[#7C7669] dark:text-[#9FA8B8]";
 
+/* ---------- status helpers ---------- */
+
+function getStatus(p) {
+  if (p.is_active === false) return "inactive";
+  if (!p.is_in_stock) return "out";
+  if (p.is_low_stock) return "low";
+  return "in";
+}
+
+const STATUS_META = {
+  in: {
+    label: "In stock",
+    badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+  },
+  low: {
+    label: "Low stock",
+    badge: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
+    dot: "bg-amber-500",
+  },
+  out: {
+    label: "Out of stock",
+    badge: "bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300",
+    dot: "bg-orange-500",
+  },
+  inactive: {
+    label: "Inactive",
+    badge: "bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300",
+    dot: "bg-rose-500",
+  },
+};
+
+function StatusPill({ status }) {
+  const m = STATUS_META[status];
+  return (
+    <span className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium ${m.badge}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${m.dot}`} />
+      {m.label}
+    </span>
+  );
+}
+
+const STATUS_FILTERS = [
+  { value: "all", label: "All status" },
+  { value: "in", label: "In stock" },
+  { value: "low", label: "Low stock" },
+  { value: "out", label: "Out of stock" },
+  { value: "inactive", label: "Inactive" },
+];
+
+const CONDITION_LABELS = {
+  genuine: "Genuine (OEM)",
+  aftermarket: "Aftermarket",
+  refurbished: "Refurbished",
+};
+
+/* ---------- small pieces ---------- */
+
 function Field({ label, className = "", children }) {
   return (
     <div className={className}>
@@ -29,6 +88,58 @@ function Field({ label, className = "", children }) {
     </div>
   );
 }
+
+function ProductThumb({ product }) {
+  const src = product.image || product.thumbnail || product.primary_image;
+  const [failed, setFailed] = useState(false);
+  if (src && !failed) {
+    return (
+      <img
+        src={src}
+        alt=""
+        onError={() => setFailed(true)}
+        className="h-9 w-9 shrink-0 rounded-md border border-[#E7E2D8] dark:border-[#25344D] object-cover"
+      />
+    );
+  }
+  return (
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#0B1320] text-xs font-semibold text-[#A9834E] dark:text-[#BF9A63]">
+      {(product.name || "?").slice(0, 2).toUpperCase()}
+    </span>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
+    </svg>
+  );
+}
+
+function StatCard({ label, value, hint, tone }) {
+  return (
+    <div className="px-5 first:pl-0 sm:border-l sm:border-[#E7E2D8] sm:dark:border-[#25344D] sm:first:border-l-0">
+      <p className="text-sm text-[#1E2430] dark:text-slate-200">{label}</p>
+      <div className="mt-1 flex items-center gap-2.5">
+        <span className="text-2xl font-semibold text-[#101B2C] dark:text-white">{value}</span>
+        <span className={`h-[3px] w-3 rounded-full ${tone}`} />
+      </div>
+      <p className="mt-1 text-xs text-[#9A9487] dark:text-[#9FA8B8]">{hint}</p>
+    </div>
+  );
+}
+
+/* ---------- product form (unchanged behaviour) ---------- */
 
 function ProductForm({ editing, onDone }) {
   const [form, setForm] = useState(
@@ -172,6 +283,8 @@ function ProductForm({ editing, onDone }) {
   );
 }
 
+/* ---------- restock modal (unchanged behaviour) ---------- */
+
 function RestockModal({ product, onClose, onSaved }) {
   const [qty, setQty] = useState("1");
   const [note, setNote] = useState("");
@@ -231,11 +344,7 @@ function RestockModal({ product, onClose, onSaved }) {
         </Field>
 
         <Field label="Note" className="mt-4">
-          <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className={inputClasses}
-          />
+          <input value={note} onChange={(e) => setNote(e.target.value)} className={inputClasses} />
         </Field>
 
         <div className="mt-5 flex justify-end gap-2">
@@ -259,16 +368,50 @@ function RestockModal({ product, onClose, onSaved }) {
   );
 }
 
+/* ---------- page ---------- */
+
 export default function AdminProductsPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [restocking, setRestocking] = useState(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: () => catalogApi.listProducts({ page_size: 100 }),
   });
   const products = unwrapList(data);
+
+  const stats = useMemo(() => {
+    const counts = { in: 0, low: 0, out: 0, inactive: 0 };
+    products.forEach((p) => {
+      counts[getStatus(p)] += 1;
+    });
+    return {
+      total: products.length,
+      active: products.length - counts.inactive,
+      inStock: counts.in + counts.low,
+      low: counts.low,
+      out: counts.out,
+    };
+  }, [products]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return products.filter((p) => {
+      if (statusFilter !== "all" && getStatus(p) !== statusFilter) return false;
+      if (!q) return true;
+      return [p.name, p.sku, String(p.category ?? ""), String(p.brand ?? "")]
+        .some((v) => (v || "").toLowerCase().includes(q));
+    });
+  }, [products, search, statusFilter]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const rows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const handleDone = () => {
     setShowForm(false);
@@ -282,64 +425,182 @@ export default function AdminProductsPage() {
     queryClient.invalidateQueries({ queryKey: ["admin-products"] });
   };
 
+  const th = "px-5 py-3 text-left text-sm font-medium text-[#101B2C] dark:text-white whitespace-nowrap";
+
   return (
     <div>
-      <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-[#101B2C] dark:text-white">Products</h2>
+      {/* breadcrumb */}
+      <nav className="mb-6 flex items-center gap-3 text-sm text-[#7C7669] dark:text-[#9FA8B8]" aria-label="Breadcrumb">
+        <HomeIcon />
+        <span>/</span>
+        <span className="font-medium text-[#A9834E] dark:text-[#BF9A63]">Products</span>
+      </nav>
+
+      {/* heading */}
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-[#101B2C] dark:text-white">Products list</h2>
+          <p className="mt-1 text-sm text-[#7C7669] dark:text-[#9FA8B8]">
+            Here you can find all of your products.
+          </p>
+        </div>
         {!showForm && !editing && (
           <button
             onClick={() => setShowForm(true)}
-            className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
+            className="inline-flex items-center gap-2 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
           >
-            Add product
+            <span className="text-lg leading-none">+</span> Add product
           </button>
         )}
       </div>
 
+      {/* stats */}
+      <div className="mb-6 grid grid-cols-2 gap-y-6 border-b border-[#E7E2D8] dark:border-[#25344D] pb-6 sm:grid-cols-3 lg:grid-cols-5">
+        <StatCard label="Total products" value={stats.total} hint="All products in catalog" tone="bg-[#BF9A63]" />
+        <StatCard label="Active products" value={stats.active} hint="Visible in catalog" tone="bg-emerald-500" />
+        <StatCard label="In stock" value={stats.inStock} hint="Available to order" tone="bg-sky-500" />
+        <StatCard label="Low stock" value={stats.low} hint="At or below alert level" tone="bg-amber-500" />
+        <StatCard label="Out of stock" value={stats.out} hint="Needs restocking" tone="bg-rose-500" />
+      </div>
+
       {(showForm || editing) && <ProductForm editing={editing} onDone={handleDone} />}
 
-      {isLoading ? (
-        <div className="flex justify-center py-16">
-          <Spinner label="Loading products" />
+      {/* table card */}
+      <div className="overflow-hidden rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235]">
+        {/* toolbar */}
+        <div className="flex flex-wrap items-center gap-3 p-4">
+          <label className="relative min-w-[220px] flex-1 max-w-sm">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#7C7669] dark:text-[#9FA8B8]">
+              <SearchIcon />
+            </span>
+            <input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search by name, SKU, brand…"
+              aria-label="Search products"
+              className={`${inputClasses} pl-9`}
+            />
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Filter by status"
+            className={`${inputClasses} !w-auto min-w-[150px]`}
+          >
+            {STATUS_FILTERS.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
         </div>
-      ) : products.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] px-6 py-16 text-center text-sm text-[#7C7669] dark:text-[#9FA8B8]">
-          No products yet.
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235]">
-          <div className="divide-y divide-[#E7E2D8] dark:divide-[#25344D]">
-            {products.map((p) => (
-              <div key={p.id} className="flex flex-wrap items-center gap-4 px-5 py-3.5">
-                <span className="rounded border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#0B1320] px-2 py-0.5 font-mono text-[11px] text-[#7C7669] dark:text-[#9FA8B8]">
-                  {p.sku}
-                </span>
-                <strong className="flex-1 text-sm font-medium text-[#101B2C] dark:text-white">{p.name}</strong>
-                <span className="text-sm text-[#7C7669] dark:text-[#9FA8B8]">
-                  {p.category} · {p.brand}
-                </span>
-                <Price value={p.price} />
-                <StockBadge inStock={p.is_in_stock} lowStock={p.is_low_stock} />
+
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Spinner label="Loading products" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="border-t border-[#E7E2D8] dark:border-[#25344D] px-6 py-16 text-center text-sm text-[#7C7669] dark:text-[#9FA8B8]">
+            {products.length === 0 ? "No products yet. Add your first product to get started." : "No products match your search."}
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[860px] border-t border-[#E7E2D8] dark:border-[#25344D]">
+                <thead className="bg-[#FAF7F2] dark:bg-[#0B1320]">
+                  <tr>
+                    <th className={th}>Product name</th>
+                    <th className={th}>SKU &amp; brand</th>
+                    <th className={th}>Price</th>
+                    <th className={th}>Stock</th>
+                    <th className={th}>Status</th>
+                    <th className={`${th} text-right`}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E7E2D8] dark:divide-[#25344D]">
+                  {rows.map((p) => (
+                    <tr key={p.id} className="transition-colors hover:bg-[#FAF7F2]/60 dark:hover:bg-[#0B1320]/40">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-3">
+                          <ProductThumb product={p} />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-[#101B2C] dark:text-white">{p.name}</p>
+                            <p className="text-xs text-[#7C7669] dark:text-[#9FA8B8]">
+                              {p.category}
+                              {p.condition && ` · ${CONDITION_LABELS[p.condition] || p.condition}`}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3">
+                        <p className="text-sm font-semibold text-[#101B2C] dark:text-white">{p.sku}</p>
+                        <p className="text-xs text-[#7C7669] dark:text-[#9FA8B8]">{p.brand}</p>
+                      </td>
+                      <td className="px-5 py-3 text-sm font-semibold text-[#101B2C] dark:text-white">
+                        <Price value={p.price} />
+                      </td>
+                      <td className="px-5 py-3 text-sm font-semibold text-[#101B2C] dark:text-white">
+                        {(p.stock_quantity ?? 0).toLocaleString()}
+                      </td>
+                      <td className="px-5 py-3">
+                        <StatusPill status={getStatus(p)} />
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => setRestocking(p)}
+                            className="rounded-md px-3 py-1.5 text-xs font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white"
+                          >
+                            Restock
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditing(p);
+                              setShowForm(false);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-3 py-1.5 text-xs font-medium text-[#101B2C] dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* pagination */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E7E2D8] dark:border-[#25344D] px-5 py-3 text-xs text-[#7C7669] dark:text-[#9FA8B8]">
+              <span>
+                Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length}
+              </span>
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setRestocking(p)}
-                  className="rounded-md px-3 py-1.5 text-xs font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white"
+                  onClick={() => setPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-3 py-1.5 font-medium text-[#101B2C] dark:text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Restock
+                  Previous
                 </button>
+                <span>Page {currentPage} of {pageCount}</span>
                 <button
-                  onClick={() => {
-                    setEditing(p);
-                    setShowForm(false);
-                  }}
-                  className="rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-3 py-1.5 text-xs font-medium text-[#101B2C] dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
+                  onClick={() => setPage(currentPage + 1)}
+                  disabled={currentPage === pageCount}
+                  className="rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-3 py-1.5 font-medium text-[#101B2C] dark:text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Edit
+                  Next
                 </button>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+          </>
+        )}
+      </div>
 
       {restocking && (
         <RestockModal
