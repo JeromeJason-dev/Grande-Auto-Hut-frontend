@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as catalogApi from "../../api/catalog";
 import * as adminApi from "../../api/admin";
@@ -21,6 +21,11 @@ function slugify(text) {
 const inputClasses =
   "w-full rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#0B1320] px-3 py-2 text-sm text-[#1E2430] dark:text-white focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/20";
 const labelClasses = "mb-1.5 block text-xs font-medium text-[#7C7669] dark:text-[#9FA8B8]";
+
+const primaryBtn =
+  "rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] dark:disabled:bg-[#25344D] disabled:text-[#7C7669] dark:disabled:text-[#9FA8B8]";
+const ghostBtn =
+  "rounded-md px-5 py-2 text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white disabled:opacity-50";
 
 /* ---------- status helpers ---------- */
 
@@ -118,10 +123,10 @@ function SearchIcon() {
   );
 }
 
-function HomeIcon() {
+function CloseIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
     </svg>
   );
 }
@@ -139,9 +144,40 @@ function StatCard({ label, value, hint, tone }) {
   );
 }
 
-/* ---------- product form (unchanged behaviour) ---------- */
+/* ---------- shared modal shell ---------- */
 
-function ProductForm({ editing, onDone }) {
+function ModalShell({ onClose, busy = false, labelledBy, children }) {
+  // Close on Escape (unless a save is in flight) and lock background scroll.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape" && !busy) onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose, busy]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !busy) onClose();
+      }}
+    >
+      <div role="dialog" aria-modal="true" aria-labelledby={labelledBy} className="contents">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- add / edit product modal ---------- */
+
+function ProductModal({ editing, onClose, onSaved }) {
   const [form, setForm] = useState(
     editing
       ? {
@@ -178,7 +214,7 @@ function ProductForm({ editing, onDone }) {
       } else {
         await adminApi.createProduct(payload);
       }
-      onDone();
+      onSaved();
     } catch (err) {
       setError(extractErrorMessage(err));
     } finally {
@@ -187,103 +223,121 @@ function ProductForm({ editing, onDone }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6">
-      <h3 className="text-base font-semibold text-[#101B2C] dark:text-white">
-        {editing ? `Edit ${editing.name}` : "Add product"}
-      </h3>
-
-      {error && (
-        <div className="mt-3">
-          <ErrorAlert message={error} />
+    <ModalShell onClose={onClose} busy={saving} labelledBy="product-modal-title">
+      <form
+        onSubmit={handleSubmit}
+        className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] shadow-2xl"
+      >
+        {/* header */}
+        <div className="flex items-start justify-between gap-4 border-b border-[#E7E2D8] dark:border-[#25344D] px-6 py-4">
+          <div>
+            <h3 id="product-modal-title" className="text-base font-semibold text-[#101B2C] dark:text-white">
+              {editing ? `Edit ${editing.name}` : "Add product"}
+            </h3>
+            <p className="mt-0.5 text-xs text-[#7C7669] dark:text-[#9FA8B8]">
+              {editing ? "Update the product details below." : "Fill in the details to add a product to your catalog."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            aria-label="Close"
+            className="-mr-2 -mt-1 rounded-md p-2 text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white disabled:opacity-50"
+          >
+            <CloseIcon />
+          </button>
         </div>
-      )}
 
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Field label="SKU">
-          <input required value={form.sku} onChange={set("sku")} className={inputClasses} />
-        </Field>
-        <Field label="Name" className="sm:col-span-2">
-          <input required value={form.name} onChange={set("name")} className={inputClasses} />
-        </Field>
-      </div>
+        {error && (
+          <div className="border-b border-[#E7E2D8] dark:border-[#25344D] px-6 py-3">
+            <ErrorAlert message={error} />
+          </div>
+        )}
 
-      <Field label="Slug" className="mt-4">
-        <input required value={form.slug} onChange={set("slug")} className={inputClasses} />
-      </Field>
+        {/* scrollable body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Field label="SKU">
+              <input required autoFocus value={form.sku} onChange={set("sku")} className={inputClasses} />
+            </Field>
+            <Field label="Name" className="sm:col-span-2">
+              <input required value={form.name} onChange={set("name")} className={inputClasses} />
+            </Field>
+          </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Category">
-          <select required value={form.category} onChange={set("category")} className={inputClasses}>
-            <option value="">Select category</option>
-            {unwrapList(categoriesQuery.data).map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Brand">
-          <select required value={form.brand} onChange={set("brand")} className={inputClasses}>
-            <option value="">Select brand</option>
-            {unwrapList(brandsQuery.data).map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-        </Field>
-      </div>
+          <Field label="Slug" className="mt-4">
+            <input required value={form.slug} onChange={set("slug")} className={inputClasses} />
+          </Field>
 
-      <Field label="Description" className="mt-4">
-        <textarea rows={2} value={form.description} onChange={set("description")} className={inputClasses} />
-      </Field>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Category">
+              <select required value={form.category} onChange={set("category")} className={inputClasses}>
+                <option value="">Select category</option>
+                {unwrapList(categoriesQuery.data).map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Brand">
+              <select required value={form.brand} onChange={set("brand")} className={inputClasses}>
+                <option value="">Select brand</option>
+                {unwrapList(brandsQuery.data).map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </Field>
+          </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Field label="Condition">
-          <select value={form.condition} onChange={set("condition")} className={inputClasses}>
-            <option value="genuine">Genuine (OEM)</option>
-            <option value="aftermarket">Aftermarket</option>
-            <option value="refurbished">Refurbished</option>
-          </select>
-        </Field>
-        <Field label="Price (KES)">
-          <input type="number" required min="0" step="0.01" value={form.price} onChange={set("price")} className={inputClasses} />
-        </Field>
-        <Field label="Stock qty">
-          <input type="number" required min="0" value={form.stock_quantity} onChange={set("stock_quantity")} className={inputClasses} />
-        </Field>
-        <Field label="Low stock alert">
-          <input type="number" min="0" value={form.low_stock_threshold} onChange={set("low_stock_threshold")} className={inputClasses} />
-        </Field>
-      </div>
+          <Field label="Description" className="mt-4">
+            <textarea rows={3} value={form.description} onChange={set("description")} className={inputClasses} />
+          </Field>
 
-      <label className="mt-4 flex items-center gap-2 text-sm text-[#1E2430] dark:text-slate-200">
-        <input
-          type="checkbox"
-          checked={form.is_active}
-          onChange={set("is_active")}
-          className="h-4 w-4 rounded border-[#E7E2D8] dark:border-[#25344D] text-[#101B2C] focus:ring-[#BF9A63]"
-        />
-        Active (visible in catalog)
-      </label>
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <Field label="Condition">
+              <select value={form.condition} onChange={set("condition")} className={inputClasses}>
+                <option value="genuine">Genuine (OEM)</option>
+                <option value="aftermarket">Aftermarket</option>
+                <option value="refurbished">Refurbished</option>
+              </select>
+            </Field>
+            <Field label="Price (KES)">
+              <input type="number" required min="0" step="0.01" value={form.price} onChange={set("price")} className={inputClasses} />
+            </Field>
+            <Field label="Stock qty">
+              <input type="number" required min="0" value={form.stock_quantity} onChange={set("stock_quantity")} className={inputClasses} />
+            </Field>
+            <Field label="Low stock alert">
+              <input type="number" min="0" value={form.low_stock_threshold} onChange={set("low_stock_threshold")} className={inputClasses} />
+            </Field>
+          </div>
 
-      <div className="mt-5 flex gap-2">
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] dark:disabled:bg-[#25344D] disabled:text-[#7C7669] dark:disabled:text-[#9FA8B8]"
-        >
-          {saving ? "Saving…" : editing ? "Save changes" : "Create product"}
-        </button>
-        <button
-          type="button"
-          onClick={onDone}
-          className="rounded-md px-5 py-2 text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+          <label className="mt-5 flex items-center gap-2 text-sm text-[#1E2430] dark:text-slate-200">
+            <input
+              type="checkbox"
+              checked={form.is_active}
+              onChange={set("is_active")}
+              className="h-4 w-4 rounded border-[#E7E2D8] dark:border-[#25344D] text-[#101B2C] focus:ring-[#BF9A63]"
+            />
+            Active (visible in catalog)
+          </label>
+        </div>
+
+        {/* footer */}
+        <div className="flex justify-end gap-2 border-t border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#0B1320]/50 px-6 py-4">
+          <button type="button" onClick={onClose} disabled={saving} className={ghostBtn}>
+            Cancel
+          </button>
+          <button type="submit" disabled={saving} className={primaryBtn}>
+            {saving ? "Saving…" : editing ? "Save changes" : "Create product"}
+          </button>
+        </div>
+      </form>
+    </ModalShell>
   );
 }
 
-/* ---------- restock modal (unchanged behaviour) ---------- */
+/* ---------- restock modal ---------- */
 
 function RestockModal({ product, onClose, onSaved }) {
   const [qty, setQty] = useState("1");
@@ -311,17 +365,12 @@ function RestockModal({ product, onClose, onSaved }) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <ModalShell onClose={onClose} busy={saving} labelledBy="restock-modal-title">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6 shadow-xl"
+        className="w-full max-w-sm rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6 shadow-2xl"
       >
-        <h3 className="text-base font-semibold text-[#101B2C] dark:text-white">
+        <h3 id="restock-modal-title" className="text-base font-semibold text-[#101B2C] dark:text-white">
           Restock {product.sku}
         </h3>
         <p className="mt-1 text-xs text-[#7C7669] dark:text-[#9FA8B8]">{product.name}</p>
@@ -348,23 +397,15 @@ function RestockModal({ product, onClose, onSaved }) {
         </Field>
 
         <div className="mt-5 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md px-4 py-2 text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] hover:text-[#101B2C] dark:hover:text-white"
-          >
+          <button type="button" onClick={onClose} disabled={saving} className={`${ghostBtn} !px-4`}>
             Cancel
           </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] dark:disabled:bg-[#25344D] disabled:text-[#7C7669] dark:disabled:text-[#9FA8B8]"
-          >
+          <button type="submit" disabled={saving} className={`${primaryBtn} !px-4`}>
             {saving ? "Saving…" : "Add stock"}
           </button>
         </div>
       </form>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -413,9 +454,15 @@ export default function AdminProductsPage() {
   const currentPage = Math.min(page, pageCount);
   const rows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  const handleDone = () => {
+  // Close the product modal without touching data (Cancel / X / Esc / backdrop).
+  const handleCloseForm = () => {
     setShowForm(false);
     setEditing(null);
+  };
+
+  // Close after a successful save and refresh the lists.
+  const handleSaved = () => {
+    handleCloseForm();
     queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     queryClient.invalidateQueries({ queryKey: ["products"] });
   };
@@ -429,13 +476,6 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      {/* breadcrumb */}
-      <nav className="mb-6 flex items-center gap-3 text-sm text-[#7C7669] dark:text-[#9FA8B8]" aria-label="Breadcrumb">
-        <HomeIcon />
-        <span>/</span>
-        <span className="font-medium text-[#A9834E] dark:text-[#BF9A63]">Products</span>
-      </nav>
-
       {/* heading */}
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -444,14 +484,15 @@ export default function AdminProductsPage() {
             Here you can find all of your products.
           </p>
         </div>
-        {!showForm && !editing && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-2 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
-          >
-            <span className="text-lg leading-none">+</span> Add product
-          </button>
-        )}
+        <button
+          onClick={() => {
+            setEditing(null);
+            setShowForm(true);
+          }}
+          className="inline-flex items-center gap-2 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
+        >
+          <span className="text-lg leading-none">+</span> Add product
+        </button>
       </div>
 
       {/* stats */}
@@ -462,8 +503,6 @@ export default function AdminProductsPage() {
         <StatCard label="Low stock" value={stats.low} hint="At or below alert level" tone="bg-amber-500" />
         <StatCard label="Out of stock" value={stats.out} hint="Needs restocking" tone="bg-rose-500" />
       </div>
-
-      {(showForm || editing) && <ProductForm editing={editing} onDone={handleDone} />}
 
       {/* table card */}
       <div className="overflow-hidden rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235]">
@@ -559,9 +598,8 @@ export default function AdminProductsPage() {
                           </button>
                           <button
                             onClick={() => {
-                              setEditing(p);
                               setShowForm(false);
-                              window.scrollTo({ top: 0, behavior: "smooth" });
+                              setEditing(p);
                             }}
                             className="rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-3 py-1.5 text-xs font-medium text-[#101B2C] dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
                           >
@@ -601,6 +639,10 @@ export default function AdminProductsPage() {
           </>
         )}
       </div>
+
+      {(showForm || editing) && (
+        <ProductModal editing={editing} onClose={handleCloseForm} onSaved={handleSaved} />
+      )}
 
       {restocking && (
         <RestockModal
