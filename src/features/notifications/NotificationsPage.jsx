@@ -94,8 +94,8 @@ export default function NotificationsPage() {
   const hasUnread = notifications.some((n) => !n.is_read);
 
   return (
-    <div className="min-h-full bg-slate-50 px-4 py-10 dark:bg-[#0B121F] transition-colors duration-200">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-full bg-slate-50 p-14 dark:bg-[#0B121F] transition-colors duration-200">
+      <div className="w-full">
         {/* Back button */}
         <button
           type="button"
