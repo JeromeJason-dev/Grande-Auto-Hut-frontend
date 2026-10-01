@@ -44,6 +44,7 @@ export default function App() {
   return (
     <NotificationToastProvider>
       <Routes>
+        {/* Public & Customer Routes */}
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="about" element={<AboutPage />} />
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="fitment" element={<FitmentPage />} />
           <Route path="fitment/results" element={<FitmentResultsPage />} />
 
+          {/* Customer Protected Routes */}
           <Route path="cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
           <Route path="checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
 
@@ -69,12 +71,12 @@ export default function App() {
           <Route path="support/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
 
           <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-
           <Route path="account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
+        {/* Staff/Admin Protected Routes */}
         <Route path="admin" element={<ProtectedRoute staffOnly><AdminLayout /></ProtectedRoute>}>
           <Route index element={<AdminDashboardPage />} />
           <Route path="products" element={<AdminProductsPage />} />

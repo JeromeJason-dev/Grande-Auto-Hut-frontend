@@ -1,11 +1,10 @@
 import axios from "axios";
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+export const API_BASE_URL = 
+  import.meta.env.VITE_API_BASE_URL || 
+  import.meta.env.VITE_API_URL || 
+  "http://localhost:8000/api";
 
-// Access token lives in memory only (never localStorage) - the refresh token
-// is an httpOnly cookie the browser sends automatically, so a page reload
-// re-derives a fresh access token via /auth/refresh/ rather than persisting
-// the access token itself anywhere JS-readable.
 let accessToken = null;
 let onAuthLost = () => {};
 
@@ -24,7 +23,7 @@ export function setOnAuthLost(handler) {
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // sends the httpOnly refresh cookie
+  withCredentials: true, 
 });
 
 api.interceptors.request.use((config) => {
@@ -41,8 +40,9 @@ async function refreshAccessToken() {
     refreshPromise = axios
       .post(`${API_BASE_URL}/auth/refresh/`, {}, { withCredentials: true })
       .then((res) => {
-        setAccessToken(res.data.access);
-        return res.data.access;
+        const newAccess = res.data.access || res.data.access_token;
+        setAccessToken(newAccess);
+        return newAccess;
       })
       .finally(() => {
         refreshPromise = null;
@@ -55,11 +55,13 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
-    const isAuthEndpoint = original?.url?.includes("/auth/login") || original?.url?.includes("/auth/refresh");
+    const requestUrl = original?.url || "";
+    
+    const isAuthEndpoint = 
+      requestUrl.includes("/auth/login") || 
+      requestUrl.includes("/auth/register") || 
+      requestUrl.includes("/auth/refresh");
 
-    // original can be undefined for errors axios raises before a config
-    // exists (e.g. a cancelled request) - guard with optional chaining so
-    // those just reject cleanly instead of throwing here.
     if (error.response?.status === 401 && !original?._retry && !isAuthEndpoint) {
       original._retry = true;
       try {
@@ -77,8 +79,6 @@ api.interceptors.response.use(
 );
 
 /** Pulls DRF's error shape into a single readable string for toasts/alerts. */
-/** Every DRF ListAPIView here is paginated ({count, next, previous, results}) -
- * use this everywhere a list is consumed so pages don't have to know that. */
 export function unwrapList(data) {
   return data?.results ?? (Array.isArray(data) ? data : []);
 }
