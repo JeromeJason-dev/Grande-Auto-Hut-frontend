@@ -41,8 +41,8 @@ export default function NewTicketPage() {
   };
 
   return (
-    <div className="min-h-full bg-[#FAF7F2] dark:bg-[#0B121F] transition-colors duration-200">
-      <div className="mx-auto max-w-xl px-6 py-12">
+    <div className="min-h-full bg-[#FAF7F2] p-8 dark:bg-[#0B121F] transition-colors duration-200">
+      <div className="mx-auto max-w-xl">
         <button
           type="button"
           onClick={() => navigate(-1)}
