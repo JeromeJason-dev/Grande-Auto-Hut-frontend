@@ -88,7 +88,6 @@ const Svg = ({ children, size = 16 }) => (
 const SearchIcon = () => <Svg><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></Svg>;
 const CalendarIcon = () => <Svg><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></Svg>;
 const EyeIcon = () => <Svg size={14}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></Svg>;
-const EditIcon = () => <Svg size={14}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></Svg>;
 const ChevronLeft = () => <Svg><path d="m15 18-6-6 6-6" /></Svg>;
 const ChevronRight = () => <Svg><path d="m9 18 6-6-6-6" /></Svg>;
 const SortIcon = ({ active, dir }) => (
@@ -100,8 +99,7 @@ const SortIcon = ({ active, dir }) => (
 
 /* ---------- row actions ---------- */
 
-function ActionButtons({ order, isOpen, onToggle, onClose, onAdvance }) {
-  const next = NEXT_STATUS[order.status] || [];
+function ActionButtons({ order }) {
   const base = "flex h-7 w-7 items-center justify-center rounded-md transition-colors";
   return (
     <div className="relative flex justify-end gap-2">
@@ -113,37 +111,6 @@ function ActionButtons({ order, isOpen, onToggle, onClose, onAdvance }) {
       >
         <EyeIcon />
       </Link>
-      <button
-        type="button"
-        onClick={onToggle}
-        disabled={next.length === 0}
-        aria-label="Update status"
-        title={next.length ? "Update status" : "No further status changes"}
-        className={`${base} bg-amber-100 text-amber-700 hover:bg-amber-500 hover:text-white dark:bg-amber-500/15 dark:text-amber-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-amber-100 disabled:hover:text-amber-700`}
-      >
-        <EditIcon />
-      </button>
-
-      {isOpen && next.length > 0 && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={onClose} />
-          <div className="absolute right-0 top-9 z-20 w-44 overflow-hidden rounded-lg border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] py-1 shadow-lg">
-            <p className="px-3 py-1.5 text-[11px] text-[#7C7669] dark:text-[#9FA8B8]">Move order to</p>
-            {next.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => onAdvance(order, s)}
-                className={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320] ${
-                  s === "cancelled" ? "text-rose-600 dark:text-rose-400" : "text-[#101B2C] dark:text-white"
-                }`}
-              >
-                {capitalize(s)}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
     </div>
   );
 }
@@ -160,7 +127,6 @@ export default function AdminOrdersPage() {
   const [sort, setSort] = useState({ key: "date", dir: "desc" });
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
-  const [openMenu, setOpenMenu] = useState(null);
   const [error, setError] = useState("");
 
   const { data, isLoading } = useQuery({
@@ -196,17 +162,6 @@ export default function AdminOrdersPage() {
 
   const toggleSort = (key) => {
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
-  };
-
-  const handleAdvance = async (order, newStatus) => {
-    setError("");
-    setOpenMenu(null);
-    try {
-      await ordersApi.updateOrderStatus(order.id, newStatus);
-      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-    } catch (err) {
-      setError(extractErrorMessage(err));
-    }
   };
 
   const Th = ({ children, sortKey, className = "" }) => (
@@ -342,13 +297,7 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-5 py-4"><OrderStatusBadge status={o.status} /></td>
                       <td className="px-5 py-4">
-                        <ActionButtons
-                          order={o}
-                          isOpen={openMenu === o.id}
-                          onToggle={() => setOpenMenu(openMenu === o.id ? null : o.id)}
-                          onClose={() => setOpenMenu(null)}
-                          onAdvance={handleAdvance}
-                        />
+                        <ActionButtons order={o} />
                       </td>
                     </tr>
                   );
