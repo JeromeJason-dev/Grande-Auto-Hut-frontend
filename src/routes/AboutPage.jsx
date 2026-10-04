@@ -148,12 +148,7 @@ export default function AboutPage() {
             >
               Browse the catalog
             </Link>
-            <Link
-              to="/contact"
-              className="inline-block rounded-md border border-slate-300 dark:border-white/20 bg-white dark:bg-white/5 px-5 py-2.5 text-md font-medium text-slate-800 dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63]"
-            >
-              Talk to a specialist
-            </Link>
+            
           </div>
         </div>
       </section>
