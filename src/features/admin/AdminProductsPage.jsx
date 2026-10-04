@@ -175,6 +175,95 @@ function ModalShell({ onClose, busy = false, labelledBy, children }) {
   );
 }
 
+/* ---------- inline quick-add (category / brand) ---------- */
+
+function QuickAdd({ kind, categories = [], onCreated }) {
+  const isCategory = kind === "category";
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [parent, setParent] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const reset = () => {
+    setOpen(false);
+    setName("");
+    setParent("");
+    setError("");
+  };
+
+  const handleCreate = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError("Name is required.");
+      return;
+    }
+    setError("");
+    setSaving(true);
+    try {
+      const payload = { name: trimmed, slug: slugify(trimmed), is_active: true };
+      if (isCategory && parent) payload.parent = parent;
+      const created = isCategory
+        ? await adminApi.createCategory(payload)
+        : await adminApi.createBrand(payload);
+      await onCreated(created);
+      reset();
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-1.5 text-xs font-medium text-[#A9834E] dark:text-[#BF9A63] hover:underline"
+      >
+        + New {kind}
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-2 rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#0B1320]/50 p-3">
+      <input
+        autoFocus
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => {
+          // Enter must create the category/brand, not submit the product form.
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleCreate();
+          }
+        }}
+        placeholder={`New ${kind} name`}
+        className={inputClasses}
+      />
+      {isCategory && (
+        <select value={parent} onChange={(e) => setParent(e.target.value)} className={`${inputClasses} mt-2`}>
+          <option value="">No parent category</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      )}
+      {error && <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">{error}</p>}
+      <div className="mt-2 flex justify-end gap-2">
+        <button type="button" onClick={reset} disabled={saving} className={`${ghostBtn} !px-3 !py-1.5 !text-xs`}>
+          Cancel
+        </button>
+        <button type="button" onClick={handleCreate} disabled={saving} className={`${primaryBtn} !px-3 !py-1.5 !text-xs`}>
+          {saving ? "Adding…" : `Add ${kind}`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- add / edit product modal ---------- */
 
 function ProductModal({ editing, onClose, onSaved }) {
@@ -183,8 +272,8 @@ function ProductModal({ editing, onClose, onSaved }) {
       ? {
           ...EMPTY_FORM,
           ...editing,
-          category: editing.category?.id || editing.category,
-          brand: editing.brand?.id || editing.brand,
+          category: editing.category?.id ?? editing.category ?? "",
+          brand: editing.brand?.id ?? editing.brand ?? "",
         }
       : EMPTY_FORM
   );
@@ -192,6 +281,32 @@ function ProductModal({ editing, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: catalogApi.listCategories });
   const brandsQuery = useQuery({ queryKey: ["brands"], queryFn: catalogApi.listBrands });
+  const queryClient = useQueryClient();
+  const categories = unwrapList(categoriesQuery.data);
+  const brands = unwrapList(brandsQuery.data);
+
+  // Resolve a form value (an ID from the <select>, or a *name* from the list API
+  // when editing) to the real ID. IDs are compared as strings because <select>
+  // values are always strings while API IDs may be numbers.
+  const resolveId = (value, list) => {
+    if (value === "" || value === null || value === undefined) return "";
+    const byId = list.find((x) => String(x.id) === String(value));
+    if (byId) return byId.id;
+    const byName = list.find((x) => x.name === value);
+    return byName ? byName.id : "";
+  };
+  const categoryId = resolveId(form.category, categories);
+  const brandId = resolveId(form.brand, brands);
+
+  // After creating a category/brand: refresh the list, then auto-select the new one.
+  const handleCategoryCreated = async (created) => {
+    await queryClient.invalidateQueries({ queryKey: ["categories"] });
+    setForm((f) => ({ ...f, category: created.id }));
+  };
+  const handleBrandCreated = async (created) => {
+    await queryClient.invalidateQueries({ queryKey: ["brands"] });
+    setForm((f) => ({ ...f, brand: created.id }));
+  };
 
   const set = (key) => (e) => {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
@@ -201,13 +316,31 @@ function ProductModal({ editing, onClose, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!categoryId) {
+      setError("Please select a category.");
+      return;
+    }
+    if (!brandId) {
+      setError("Please select a brand.");
+      return;
+    }
+
     setSaving(true);
     try {
+      // Send only writable fields (not read-only list fields like id/image/is_in_stock).
       const payload = {
-        ...form,
+        sku: form.sku.trim(),
+        name: form.name.trim(),
+        slug: form.slug.trim(),
+        category: categoryId,
+        brand: brandId,
+        description: form.description || "",
+        condition: form.condition,
         price: Number(form.price),
         stock_quantity: Number(form.stock_quantity),
-        low_stock_threshold: Number(form.low_stock_threshold),
+        low_stock_threshold: Number(form.low_stock_threshold || 0),
+        is_active: form.is_active,
       };
       if (editing) {
         await adminApi.updateProduct(editing.slug, payload);
@@ -272,20 +405,22 @@ function ProductModal({ editing, onClose, onSaved }) {
 
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Category">
-              <select required value={form.category} onChange={set("category")} className={inputClasses}>
+              <select required value={categoryId} onChange={set("category")} className={inputClasses}>
                 <option value="">Select category</option>
-                {unwrapList(categoriesQuery.data).map((c) => (
+                {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
+              <QuickAdd kind="category" categories={categories} onCreated={handleCategoryCreated} />
             </Field>
             <Field label="Brand">
-              <select required value={form.brand} onChange={set("brand")} className={inputClasses}>
+              <select required value={brandId} onChange={set("brand")} className={inputClasses}>
                 <option value="">Select brand</option>
-                {unwrapList(brandsQuery.data).map((b) => (
+                {brands.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
+              <QuickAdd kind="brand" onCreated={handleBrandCreated} />
             </Field>
           </div>
 

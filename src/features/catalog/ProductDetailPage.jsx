@@ -11,6 +11,7 @@ import Price from "../../components/Price";
 import StockBadge from "../../components/StockBadge";
 import Spinner from "../../components/Spinner";
 import ErrorAlert from "../../components/ErrorAlert";
+import { getFallbackImage } from "../../utils";
 
 function Stars({ value }) {
   return (
@@ -148,36 +149,51 @@ function Specifications({ product }) {
 }
 
 function ImageGallery({ product, activeIndex, setActiveIndex }) {
-  const images = product.images ?? [];
+  // Backend images first; if there are none, fall back to a local picture
+  // (e.g. the aluminium radiator photo) so the section is never empty.
+  const fallback = getFallbackImage(product);
+  const backendImages = (product.images ?? []).filter((img) => img?.image);
+  const images = backendImages.length
+    ? backendImages
+    : fallback
+    ? [{ image: fallback }]
+    : [];
+
+  const [failed, setFailed] = useState({});
+  const safeIndex = activeIndex < images.length ? activeIndex : 0;
+  const activeSrc = failed[safeIndex] ? fallback : images[safeIndex]?.image;
 
   return (
     <div>
-      <div className="aspect-[4/3] overflow-hidden rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-[#FAF7F2] dark:bg-[#101B2C]">
-        {images[activeIndex]?.image ? (
+      <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C]">
+        {activeSrc ? (
           <img
-            src={images[activeIndex].image}
+            src={activeSrc}
             alt={product.name}
-            className="h-full w-full object-cover"
+            onError={() => setFailed((f) => ({ ...f, [safeIndex]: true }))}
+            className="h-full w-full object-contain p-6"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-[#7C7669] dark:text-slate-500">No image</div>
+          <div className="text-[#7C7669] dark:text-slate-500">No image</div>
         )}
       </div>
 
       {images.length > 1 && (
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           {images.map((img, i) => (
             <button
               key={i}
               type="button"
               onClick={() => setActiveIndex(i)}
-              className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border transition-colors ${
-                i === activeIndex
-                  ? "border-[#BF9A63]"
+              aria-label={`Show image ${i + 1}`}
+              aria-current={i === safeIndex}
+              className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border bg-white dark:bg-[#101B2C] transition-colors ${
+                i === safeIndex
+                  ? "border-[#BF9A63] ring-1 ring-[#BF9A63]"
                   : "border-[#E7E2D8] dark:border-white/10 hover:border-[#BF9A63]/50"
               }`}
             >
-              <img src={img.image} alt="" className="h-full w-full object-cover" />
+              <img src={img.image} alt="" className="h-full w-full object-contain p-1" />
             </button>
           ))}
         </div>

@@ -24,3 +24,13 @@ export async function restock(productId, quantity, note = "") {
   const { data } = await api.post("/inventory/restock/", { product: productId, quantity, note });
   return data;
 }
+
+export async function createCategory(payload) {
+  const { data } = await api.post("/categories/", payload);
+  return data;
+}
+
+export async function createBrand(payload) {
+  const { data } = await api.post("/brands/", payload);
+  return data;
+}

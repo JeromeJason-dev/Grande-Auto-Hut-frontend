@@ -11,6 +11,7 @@ import {
 } from "../api/conditions";
 import { getConditionVariants } from "../api/productVariants";
 import { addToWishlist, removeFromWishlist } from "../api/wishlist";
+import { getProductImage, getFallbackImage } from "../utils";
 
 export default function ProductCard({ 
   product, 
@@ -19,7 +20,17 @@ export default function ProductCard({
   onToggleWishlist = () => {},
   showFooterActions = true,
 }) {
-  const { slug, name, brand, category, primary_image } = product;
+  const { slug, name, brand, category } = product;
+  const fallbackImage = getFallbackImage(product);
+  // Remember which URL failed to load; derive the image to show from that.
+  const [failedSrc, setFailedSrc] = useState(null);
+  const preferredSrc = getProductImage(product);
+  const imageSrc =
+    failedSrc && failedSrc === preferredSrc
+      ? preferredSrc !== fallbackImage
+        ? fallbackImage
+        : null
+      : preferredSrc;
   const navigate = useNavigate();
   const location = useLocation();
   const { status } = useAuth();
@@ -128,12 +139,14 @@ export default function ProductCard({
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] text-[#1E2430] dark:text-slate-100 transition-all duration-200 hover:-translate-y-1 hover:border-[#BF9A63]/60 hover:shadow-[0_16px_32px_rgba(16,27,44,0.1)] dark:hover:shadow-[0_16px_32px_rgba(0,0,0,0.5)]">
       <Link to={`/catalog/${slug}`} className="contents">
-        <div className="relative aspect-[4/3] bg-[#FAF7F2] dark:bg-[#0B121F]">
-          {primary_image ? (
+        <div className="relative aspect-square overflow-hidden bg-white dark:bg-[#0B121F]">
+          {imageSrc ? (
             <img
-              src={primary_image}
+              src={imageSrc}
               alt={name}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
+              onError={() => setFailedSrc(imageSrc)}
+              className="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-[#D8D2C4] dark:text-white/20">
@@ -168,7 +181,7 @@ export default function ProductCard({
           <span className="text-[13px] text-[#7C7669] dark:text-slate-400">
             {brand} · {category}
           </span>
-          <strong className="leading-snug text-[#101B2C] dark:text-white group-hover:text-[#BF9A63] transition-colors">{name}</strong>
+          <strong className="line-clamp-2 min-h-[2.75rem] leading-snug text-[#101B2C] dark:text-white group-hover:text-[#BF9A63] transition-colors">{name}</strong>
 
           <div className="mt-auto flex items-center justify-between pt-2">
             <Price value={activeVariant.price} />
@@ -209,7 +222,7 @@ export default function ProductCard({
       </Link>
 
       {hasMultipleConditions && (
-        <div className="flex flex-wrap gap-1.5 border-t border-[#E7E2D8] dark:border-white/10 px-3 pt-3">
+        <div className="flex flex-wrap gap-1.5 border-t border-[#E7E2D8] dark:border-white/10 px-3 py-3">
           {conditionVariants.map((v) => (
             <button
               key={v.condition}
