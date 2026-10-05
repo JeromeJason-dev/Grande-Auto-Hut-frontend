@@ -8,6 +8,7 @@ import * as paymentsApi from "../../api/payments";
 import { unwrapList, extractErrorMessage } from "../../api/client";
 import Price from "../../components/Price";
 import ErrorAlert from "../../components/ErrorAlert";
+import { getProductImage, getFallbackImage } from "../../utils";
 
 const EMPTY_ADDRESS = { recipient_name: "", phone_number: "", county: "", town: "", street_address: "", building_or_estate: "" };
 
@@ -15,6 +16,41 @@ const fieldClasses =
   "w-full rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#0B1320] px-3 py-2 text-sm text-[#101B2C] dark:text-white transition-colors focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/25";
 
 const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]";
+
+
+function CartItemImage({ product }) {
+  const [failedSrc, setFailedSrc] = useState(null);
+  const fallback = getFallbackImage(product);
+  const preferred = getProductImage(product);
+  const src =
+    failedSrc && failedSrc === preferred
+      ? preferred !== fallback
+        ? fallback
+        : null
+      : preferred;
+
+  return (
+    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#0B1320]">
+      {src ? (
+        <img
+          src={src}
+          alt={product?.name || "Product"}
+          loading="lazy"
+          onError={() => setFailedSrc(src)}
+          className="h-full w-full object-contain p-1"
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center text-[#D8D2C4] dark:text-white/20">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="m21 15-5-5L5 21" />
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CheckoutPage() {
   const { cart, refresh } = useCart();
@@ -57,7 +93,7 @@ export default function CheckoutPage() {
 
       const order = await ordersApi.checkout(payload);
       console.log("Checkout response object:", order);
-      
+
       setPlacedOrder(order);
       await refresh();
 
@@ -330,10 +366,11 @@ export default function CheckoutPage() {
             <h3 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]">
               Order summary
             </h3>
-            <div className="mt-4 flex flex-col gap-2.5">
+            <div className="mt-4 flex flex-col gap-3">
               {cart.items.map((item) => (
-                <div key={item.id} className="flex items-start justify-between gap-3 text-sm">
-                  <span className="text-[#374151] dark:text-[#D1D5DB]">
+                <div key={item.id} className="flex items-center gap-3 text-sm">
+                  <CartItemImage product={item.product} />
+                  <span className="flex-1 text-[#374151] dark:text-[#D1D5DB]">
                     {item.quantity} × {item.product.name}
                   </span>
                   <Price value={item.line_total} size="sm" />

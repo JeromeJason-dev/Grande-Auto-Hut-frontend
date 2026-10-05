@@ -6,6 +6,41 @@ import Spinner from "../../components/Spinner";
 import EmptyState from "../../components/EmptyState";
 import ErrorAlert from "../../components/ErrorAlert";
 import { extractErrorMessage } from "../../api/client";
+import { getProductImage, getFallbackImage } from "../../utils";
+
+function CartItemImage({ product }) {
+  const [failedSrc, setFailedSrc] = useState(null);
+  const fallback = getFallbackImage(product);
+  const preferred = getProductImage(product);
+  const src =
+    failedSrc && failedSrc === preferred
+      ? preferred !== fallback
+        ? fallback
+        : null
+      : preferred;
+
+  return (
+    <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#0B1320]">
+      {src ? (
+        <img
+          src={src}
+          alt={product?.name || ""}
+          loading="lazy"
+          onError={() => setFailedSrc(src)}
+          className="h-full w-full object-contain p-1"
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center text-[#D8D2C4] dark:text-white/20">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="m21 15-5-5L5 21" />
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CartPage() {
   const { cart, loading, updateItem, removeItem } = useCart();
@@ -74,15 +109,7 @@ export default function CartPage() {
                   key={item.id}
                   className="flex items-center gap-4 rounded-lg border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-4"
                 >
-                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-white dark:bg-[#0B1320]">
-                    {item.product.primary_image && (
-                      <img
-                        src={item.product.primary_image}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                  </div>
+                  <CartItemImage product={item.product} />
 
                   <div className="min-w-0 flex-1">
                     <Link
