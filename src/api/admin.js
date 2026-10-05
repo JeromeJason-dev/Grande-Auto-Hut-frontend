@@ -34,3 +34,8 @@ export async function createBrand(payload) {
   const { data } = await api.post("/brands/", payload);
   return data;
 }
+
+export async function createFamily(payload) {
+  const { data } = await api.post("/product-families/", payload);
+  return data;
+}

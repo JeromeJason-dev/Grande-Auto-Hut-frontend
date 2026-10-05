@@ -8,7 +8,7 @@ import Spinner from "../../components/Spinner";
 import ErrorAlert from "../../components/ErrorAlert";
 
 const EMPTY_FORM = {
-  sku: "", name: "", slug: "", category: "", brand: "", description: "",
+  sku: "", name: "", slug: "", category: "", brand: "", family: "", description: "",
   condition: "aftermarket", price: "", stock_quantity: "", low_stock_threshold: "5", is_active: true,
 };
 
@@ -175,10 +175,11 @@ function ModalShell({ onClose, busy = false, labelledBy, children }) {
   );
 }
 
-/* ---------- inline quick-add (category / brand) ---------- */
+/* ---------- inline quick-add (category / brand / family) ---------- */
 
-function QuickAdd({ kind, categories = [], onCreated }) {
+function QuickAdd({ kind, categories = [], categoryId = "", onCreated }) {
   const isCategory = kind === "category";
+  const isFamily = kind === "family";
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [parent, setParent] = useState("");
@@ -198,14 +199,24 @@ function QuickAdd({ kind, categories = [], onCreated }) {
       setError("Name is required.");
       return;
     }
+    if (isFamily && !categoryId) {
+      setError("Select a category first; a family belongs to one.");
+      return;
+    }
     setError("");
     setSaving(true);
     try {
-      const payload = { name: trimmed, slug: slugify(trimmed), is_active: true };
-      if (isCategory && parent) payload.parent = parent;
-      const created = isCategory
-        ? await adminApi.createCategory(payload)
-        : await adminApi.createBrand(payload);
+      let created;
+      if (isFamily) {
+        // slug omitted: the backend auto-generates a unique one
+        created = await adminApi.createFamily({ name: trimmed, category: categoryId });
+      } else {
+        const payload = { name: trimmed, slug: slugify(trimmed), is_active: true };
+        if (isCategory && parent) payload.parent = parent;
+        created = isCategory
+          ? await adminApi.createCategory(payload)
+          : await adminApi.createBrand(payload);
+      }
       await onCreated(created);
       reset();
     } catch (err) {
@@ -234,7 +245,7 @@ function QuickAdd({ kind, categories = [], onCreated }) {
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => {
-          // Enter must create the category/brand, not submit the product form.
+          // Enter must create the category/brand/family, not submit the product form.
           if (e.key === "Enter") {
             e.preventDefault();
             handleCreate();
@@ -266,28 +277,40 @@ function QuickAdd({ kind, categories = [], onCreated }) {
 
 /* ---------- add / edit product modal ---------- */
 
+function buildInitialForm(editing) {
+  if (!editing) return EMPTY_FORM;
+  return {
+    ...EMPTY_FORM,
+    sku: editing.sku ?? "",
+    name: editing.name ?? "",
+    slug: editing.slug ?? "",
+    // Prefer real IDs; fall back to the name (resolved to an ID later).
+    category: editing.category_id ?? editing.category?.id ?? editing.category ?? "",
+    brand: editing.brand_id ?? editing.brand?.id ?? editing.brand ?? "",
+    family: editing.family_id ?? "",
+    description: editing.description ?? "",
+    condition: editing.condition ?? "aftermarket",
+    price: editing.price ?? "",
+    stock_quantity: editing.stock_quantity ?? "",
+    low_stock_threshold: editing.low_stock_threshold ?? "5",
+    is_active: editing.is_active !== false,
+  };
+}
+
 function ProductModal({ editing, onClose, onSaved }) {
-  const [form, setForm] = useState(
-    editing
-      ? {
-          ...EMPTY_FORM,
-          ...editing,
-          category: editing.category?.id ?? editing.category ?? "",
-          brand: editing.brand?.id ?? editing.brand ?? "",
-        }
-      : EMPTY_FORM
-  );
+  const [form, setForm] = useState(() => buildInitialForm(editing));
+  // Once the admin edits the slug by hand, stop auto-overwriting it from the name.
+  const [slugTouched, setSlugTouched] = useState(Boolean(editing));
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: catalogApi.listCategories });
   const brandsQuery = useQuery({ queryKey: ["brands"], queryFn: catalogApi.listBrands });
+  const familiesQuery = useQuery({ queryKey: ["families"], queryFn: () => catalogApi.listFamilies() });
   const queryClient = useQueryClient();
   const categories = unwrapList(categoriesQuery.data);
   const brands = unwrapList(brandsQuery.data);
+  const families = unwrapList(familiesQuery.data);
 
-  // Resolve a form value (an ID from the <select>, or a *name* from the list API
-  // when editing) to the real ID. IDs are compared as strings because <select>
-  // values are always strings while API IDs may be numbers.
   const resolveId = (value, list) => {
     if (value === "" || value === null || value === undefined) return "";
     const byId = list.find((x) => String(x.id) === String(value));
@@ -298,7 +321,15 @@ function ProductModal({ editing, onClose, onSaved }) {
   const categoryId = resolveId(form.category, categories);
   const brandId = resolveId(form.brand, brands);
 
-  // After creating a category/brand: refresh the list, then auto-select the new one.
+  // A family can hold only one product per condition. Detect clashes up front.
+  const familyTakenBy = (fam) =>
+    (fam.variants || []).find(
+      (v) => v.condition === form.condition && (!editing || v.id !== editing.id)
+    );
+  const selectedFamily = families.find((f) => String(f.id) === String(form.family));
+  const familyClash = selectedFamily ? familyTakenBy(selectedFamily) : null;
+
+  // After creating a category/brand/family: refresh the list, then auto-select the new one.
   const handleCategoryCreated = async (created) => {
     await queryClient.invalidateQueries({ queryKey: ["categories"] });
     setForm((f) => ({ ...f, category: created.id }));
@@ -307,14 +338,24 @@ function ProductModal({ editing, onClose, onSaved }) {
     await queryClient.invalidateQueries({ queryKey: ["brands"] });
     setForm((f) => ({ ...f, brand: created.id }));
   };
+  const handleFamilyCreated = async (created) => {
+    await queryClient.invalidateQueries({ queryKey: ["families"] });
+    setForm((f) => ({ ...f, family: created.id }));
+  };
 
   const set = (key) => (e) => {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    setForm((f) => ({ ...f, [key]: value, ...(key === "name" && !editing ? { slug: slugify(value) } : {}) }));
+    if (key === "slug") setSlugTouched(true);
+    setForm((f) => ({
+      ...f,
+      [key]: value,
+      ...(key === "name" && !slugTouched ? { slug: slugify(value) } : {}),
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
     setError("");
 
     if (!categoryId) {
@@ -325,6 +366,28 @@ function ProductModal({ editing, onClose, onSaved }) {
       setError("Please select a brand.");
       return;
     }
+    if (familyClash) {
+      setError(
+        `That family already has a ${CONDITION_LABELS[form.condition]} variant (${familyClash.sku}). Change the condition or pick another family.`
+      );
+      return;
+    }
+
+    const price = Number(form.price);
+    const stock = Number(form.stock_quantity);
+    const threshold = Number(form.low_stock_threshold || 0);
+    if (Number.isNaN(price) || price < 0) {
+      setError("Enter a valid price.");
+      return;
+    }
+    if (!Number.isInteger(stock) || stock < 0) {
+      setError("Stock quantity must be a whole number of 0 or more.");
+      return;
+    }
+    if (!Number.isInteger(threshold) || threshold < 0) {
+      setError("Low stock alert must be a whole number of 0 or more.");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -332,15 +395,17 @@ function ProductModal({ editing, onClose, onSaved }) {
       const payload = {
         sku: form.sku.trim(),
         name: form.name.trim(),
-        slug: form.slug.trim(),
+        slug: (form.slug.trim() || slugify(form.name)),
         category: categoryId,
         brand: brandId,
         description: form.description || "",
         condition: form.condition,
-        price: Number(form.price),
-        stock_quantity: Number(form.stock_quantity),
-        low_stock_threshold: Number(form.low_stock_threshold || 0),
+        price,
+        stock_quantity: stock,
+        low_stock_threshold: threshold,
         is_active: form.is_active,
+        // null detaches the product from any family (standalone)
+        family: form.family || null,
       };
       if (editing) {
         await adminApi.updateProduct(editing.slug, payload);
@@ -424,6 +489,32 @@ function ProductModal({ editing, onClose, onSaved }) {
             </Field>
           </div>
 
+          <Field label="Product family (optional)" className="mt-4">
+            <select value={form.family} onChange={set("family")} className={inputClasses}>
+              <option value="">Standalone (no family)</option>
+              {families.map((f) => {
+                const taken = familyTakenBy(f);
+                return (
+                  <option
+                    key={f.id}
+                    value={f.id}
+                    disabled={Boolean(taken) && String(f.id) !== String(form.family)}
+                  >
+                    {f.name} · {f.category_name}
+                    {taken ? ` — ${CONDITION_LABELS[form.condition]} taken` : ""}
+                  </option>
+                );
+              })}
+            </select>
+            {familyClash && (
+              <p className="mt-1.5 text-xs text-amber-700 dark:text-amber-300">
+                This family already has a {CONDITION_LABELS[form.condition]} variant ({familyClash.sku}). Change the
+                condition or pick another family.
+              </p>
+            )}
+            <QuickAdd kind="family" categoryId={categoryId} onCreated={handleFamilyCreated} />
+          </Field>
+
           <Field label="Description" className="mt-4">
             <textarea rows={3} value={form.description} onChange={set("description")} className={inputClasses} />
           </Field>
@@ -440,10 +531,10 @@ function ProductModal({ editing, onClose, onSaved }) {
               <input type="number" required min="0" step="0.01" value={form.price} onChange={set("price")} className={inputClasses} />
             </Field>
             <Field label="Stock qty">
-              <input type="number" required min="0" value={form.stock_quantity} onChange={set("stock_quantity")} className={inputClasses} />
+              <input type="number" required min="0" step="1" value={form.stock_quantity} onChange={set("stock_quantity")} className={inputClasses} />
             </Field>
             <Field label="Low stock alert">
-              <input type="number" min="0" value={form.low_stock_threshold} onChange={set("low_stock_threshold")} className={inputClasses} />
+              <input type="number" min="0" step="1" value={form.low_stock_threshold} onChange={set("low_stock_threshold")} className={inputClasses} />
             </Field>
           </div>
 
@@ -555,9 +646,10 @@ export default function AdminProductsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
 
+  // include_inactive lets staff see (and re-activate) deactivated products.
   const { data, isLoading } = useQuery({
     queryKey: ["admin-products"],
-    queryFn: () => catalogApi.listProducts({ page_size: 100 }),
+    queryFn: () => catalogApi.listAllProducts({ include_inactive: true }),
   });
   const products = unwrapList(data);
 
@@ -580,7 +672,7 @@ export default function AdminProductsPage() {
     return products.filter((p) => {
       if (statusFilter !== "all" && getStatus(p) !== statusFilter) return false;
       if (!q) return true;
-      return [p.name, p.sku, String(p.category ?? ""), String(p.brand ?? "")]
+      return [p.name, p.sku, String(p.category ?? ""), String(p.brand ?? ""), p.family_name]
         .some((v) => (v || "").toLowerCase().includes(q));
     });
   }, [products, search, statusFilter]);
@@ -600,6 +692,7 @@ export default function AdminProductsPage() {
     handleCloseForm();
     queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     queryClient.invalidateQueries({ queryKey: ["products"] });
+    queryClient.invalidateQueries({ queryKey: ["families"] });
   };
 
   const handleRestockSaved = () => {
@@ -653,7 +746,7 @@ export default function AdminProductsPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search by name, SKU, brand…"
+              placeholder="Search by name, SKU, brand, family…"
               aria-label="Search products"
               className={`${inputClasses} pl-9`}
             />
@@ -706,6 +799,7 @@ export default function AdminProductsPage() {
                             <p className="text-xs text-[#7C7669] dark:text-[#9FA8B8]">
                               {p.category}
                               {p.condition && ` · ${CONDITION_LABELS[p.condition] || p.condition}`}
+                              {p.family_name && ` · Family: ${p.family_name}`}
                             </p>
                           </div>
                         </div>
@@ -776,7 +870,12 @@ export default function AdminProductsPage() {
       </div>
 
       {(showForm || editing) && (
-        <ProductModal editing={editing} onClose={handleCloseForm} onSaved={handleSaved} />
+        <ProductModal
+          key={editing ? editing.id : "new"}
+          editing={editing}
+          onClose={handleCloseForm}
+          onSaved={handleSaved}
+        />
       )}
 
       {restocking && (

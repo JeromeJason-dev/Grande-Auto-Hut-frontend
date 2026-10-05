@@ -10,18 +10,21 @@ export async function getProduct(slug) {
   return data;
 }
 
-async function fetchAll(url) {
+async function fetchAll(url, params = {}) {
   let results = [];
   let page = 1;
-  // Backend paginates at 20 per page, so walk every page.
   while (true) {
-    const { data } = await api.get(url, { params: { page } });
+    const { data } = await api.get(url, { params: { ...params, page } });
     if (Array.isArray(data)) return data;
     results = results.concat(data?.results ?? []);
     if (!data?.next) break;
     page += 1;
   }
   return results;
+}
+
+export async function listAllProducts(params = {}) {
+  return fetchAll("/products/", params);
 }
 
 export async function listCategories() {
