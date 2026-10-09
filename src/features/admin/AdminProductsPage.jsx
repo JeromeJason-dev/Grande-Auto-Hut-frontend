@@ -309,7 +309,12 @@ function ProductModal({ editing, onClose, onSaved }) {
   const queryClient = useQueryClient();
   const categories = unwrapList(categoriesQuery.data);
   const brands = unwrapList(brandsQuery.data);
-  const families = unwrapList(familiesQuery.data);
+  const [createdFamilies, setCreatedFamilies] = useState([]);
+  const fetchedFamilies = unwrapList(familiesQuery.data);
+  const families = useMemo(() => {
+    const seen = new Set(fetchedFamilies.map((f) => String(f.id)));
+    return [...fetchedFamilies, ...createdFamilies.filter((f) => !seen.has(String(f.id)))];
+  }, [fetchedFamilies, createdFamilies]);
 
   const resolveId = (value, list) => {
     if (value === "" || value === null || value === undefined) return "";
@@ -339,8 +344,10 @@ function ProductModal({ editing, onClose, onSaved }) {
     setForm((f) => ({ ...f, brand: created.id }));
   };
   const handleFamilyCreated = async (created) => {
-    await queryClient.invalidateQueries({ queryKey: ["families"] });
+    // Select it right away; don't wait on (or depend on) the refetch.
+    setCreatedFamilies((prev) => [...prev, { variants: [], ...created }]);
     setForm((f) => ({ ...f, family: created.id }));
+    queryClient.invalidateQueries({ queryKey: ["families"] });
   };
 
   const set = (key) => (e) => {
@@ -506,6 +513,12 @@ function ProductModal({ editing, onClose, onSaved }) {
                 );
               })}
             </select>
+            {familiesQuery.isError && (
+              <p className="mt-1.5 text-xs text-rose-600 dark:text-rose-400">
+                Couldn't load existing families ({extractErrorMessage(familiesQuery.error)}). Check that
+                listFamilies exists in api/catalog.js and that /product-families/ is reachable.
+              </p>
+            )}
             {familyClash && (
               <p className="mt-1.5 text-xs text-amber-700 dark:text-amber-300">
                 This family already has a {CONDITION_LABELS[form.condition]} variant ({familyClash.sku}). Change the
