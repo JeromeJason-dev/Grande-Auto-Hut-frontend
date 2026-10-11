@@ -575,6 +575,61 @@ function RestockModal({ product, onClose, onSaved }) {
   );
 }
 
+/* ---------- delete modal ---------- */
+
+function DeleteModal({ product, onClose, onDeleted }) {
+  const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setError("");
+    setDeleting(true);
+    try {
+      await adminApi.deleteProduct(product.slug);
+      onDeleted();
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <ModalShell onClose={onClose} busy={deleting} labelledBy="delete-modal-title">
+      <div className="w-full max-w-sm rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6 shadow-2xl">
+        <h3 id="delete-modal-title" className="text-base font-semibold text-[#101B2C] dark:text-white">
+          Delete product?
+        </h3>
+        <p className="mt-2 text-sm text-[#7C7669] dark:text-[#9FA8B8]">
+          <span className="font-semibold text-[#101B2C] dark:text-white">{product.name}</span>{" "}
+          ({product.sku}) will be permanently removed from your catalog. This can't be undone.
+          If you only want to hide it, edit the product and untick “Active” instead.
+        </p>
+
+        {error && (
+          <div className="mt-3">
+            <ErrorAlert message={error} />
+          </div>
+        )}
+
+        <div className="mt-5 flex justify-end gap-2">
+          <button type="button" onClick={onClose} disabled={deleting} className={`${ghostBtn} !px-4`}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {deleting ? "Deleting…" : "Delete"}
+          </button>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}
+
 /* ---------- page ---------- */
 
 export default function AdminProductsPage() {
@@ -582,6 +637,7 @@ export default function AdminProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [restocking, setRestocking] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
@@ -637,6 +693,12 @@ export default function AdminProductsPage() {
   const handleRestockSaved = () => {
     setRestocking(null);
     queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+  };
+
+  const handleDeleted = () => {
+    setDeleting(null);
+    queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    queryClient.invalidateQueries({ queryKey: ["products"] });
   };
 
   const th = "px-5 py-3 text-left text-sm font-medium text-[#101B2C] dark:text-white whitespace-nowrap";
@@ -716,7 +778,7 @@ export default function AdminProductsPage() {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[860px] border-t border-[#E7E2D8] dark:border-[#25344D]">
+              <table className="w-full min-w-[920px] border-t border-[#E7E2D8] dark:border-[#25344D]">
                 <thead className="bg-[#FAF7F2] dark:bg-[#0B1320]">
                   <tr>
                     <th className={th}>Product name</th>
@@ -772,6 +834,12 @@ export default function AdminProductsPage() {
                           >
                             Edit
                           </button>
+                          <button
+                            onClick={() => setDeleting(p)}
+                            className="rounded-md border border-rose-200 dark:border-rose-500/30 px-3 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 transition-colors hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -821,6 +889,14 @@ export default function AdminProductsPage() {
           product={restocking}
           onClose={() => setRestocking(null)}
           onSaved={handleRestockSaved}
+        />
+      )}
+
+      {deleting && (
+        <DeleteModal
+          product={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={handleDeleted}
         />
       )}
     </div>

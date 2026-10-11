@@ -20,6 +20,10 @@ export async function updateProduct(slug, payload) {
   return data;
 }
 
+export async function deleteProduct(slug) {
+  await api.delete(`/products/${slug}/`);
+}
+
 export async function restock(productId, quantity, note = "") {
   const { data } = await api.post("/inventory/restock/", { product: productId, quantity, note });
   return data;
