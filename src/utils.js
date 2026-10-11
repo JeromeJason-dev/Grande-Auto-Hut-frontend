@@ -2,21 +2,33 @@ export { cn } from "cn"
 
 import { api } from "./api/client";
 
-// Local fallback pictures, served from /public.
-export const RADIATOR_IMAGE = "/Aluminium_Radiator.jpg";
 
-function isRadiator(product) {
-  const category =
-    typeof product?.category === "string"
-      ? product.category
-      : product?.category?.name;
-  return /radiator/i.test(
-    [product?.name, product?.slug, category].filter(Boolean).join(" ")
-  );
+export const RADIATOR_IMAGE = "/Aluminium_Radiator.png";
+export const CLUTCH_KIT_IMAGE = "/Clutch_Kit.png";
+
+function getCategoryName(product) {
+  return typeof product?.category === "string"
+    ? product.category
+    : product?.category?.name;
 }
 
+const LOCAL_IMAGE_RULES = [
+  { pattern: /radiator/i, image: RADIATOR_IMAGE, useCategory: true },
+  { pattern: /clutch[\s_-]*kit/i, image: CLUTCH_KIT_IMAGE, useCategory: false },
+];
+
 export function getFallbackImage(product) {
-  return isRadiator(product) ? RADIATOR_IMAGE : null;
+  if (!product) return null;
+  const nameAndSlug = [product.name, product.slug].filter(Boolean).join(" ");
+  const withCategory = [nameAndSlug, getCategoryName(product)]
+    .filter(Boolean)
+    .join(" ");
+
+  for (const rule of LOCAL_IMAGE_RULES) {
+    const haystack = rule.useCategory ? withCategory : nameAndSlug;
+    if (rule.pattern.test(haystack)) return rule.image;
+  }
+  return null;
 }
 
 function resolveUrl(src) {
