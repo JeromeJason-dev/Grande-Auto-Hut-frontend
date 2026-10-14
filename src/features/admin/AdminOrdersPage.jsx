@@ -18,6 +18,7 @@ const NEXT_STATUS = {
 };
 
 const ALL_STATUSES = ["pending", "confirmed", "processing", "in_transit", "delivered", "cancelled"];
+const PAYMENT_OPTIONS = ["pending", "paid", "failed"];
 const PAGE_SIZES = [10, 25, 50];
 
 const controlClasses =
@@ -97,6 +98,66 @@ const SortIcon = ({ active, dir }) => (
   </svg>
 );
 
+/* ---------- sortable table header ---------- */
+
+function Th({ children, sortKey, sort, onSort, className = "" }) {
+  return (
+    <th className={`px-5 py-3.5 text-left text-xs font-semibold text-[#101B2C] dark:text-white whitespace-nowrap ${className}`}>
+      {sortKey ? (
+        <button type="button" onClick={() => onSort(sortKey)} className="inline-flex items-center hover:text-[#A9834E] dark:hover:text-[#BF9A63]">
+          {children}
+          <SortIcon active={sort.key === sortKey} dir={sort.dir} />
+        </button>
+      ) : (
+        children
+      )}
+    </th>
+  );
+}
+
+/* ---------- inline editors ---------- */
+
+const selectBase =
+  "h-8 rounded-md border bg-white dark:bg-[#0B1320] pl-2 pr-7 text-xs font-medium capitalize focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/30 disabled:cursor-wait disabled:opacity-60";
+
+// Order status: only the transitions the backend allows from the current state.
+// Delivered / cancelled are final, so they stay a plain badge.
+function OrderStatusEditor({ order, busy, onChange }) {
+  const next = NEXT_STATUS[order.status] || [];
+  if (next.length === 0) return <OrderStatusBadge status={order.status} />;
+  return (
+    <select
+      value={order.status}
+      disabled={busy}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={`Order status for ${order.order_number}`}
+      className={`${selectBase} border-[#E7E2D8] dark:border-[#25344D] text-[#101B2C] dark:text-white`}
+    >
+      <option value={order.status}>{capitalize(order.status)}</option>
+      {next.map((s) => (
+        <option key={s} value={s}>{capitalize(s)}</option>
+      ))}
+    </select>
+  );
+}
+
+function PaymentStatusEditor({ order, busy, onChange }) {
+  const pay = (order.payment_status || "pending").toLowerCase();
+  return (
+    <select
+      value={pay}
+      disabled={busy}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={`Payment status for ${order.order_number}`}
+      className={`${selectBase} border-[#E7E2D8] dark:border-[#25344D] ${PAYMENT_STYLES[pay] || ""}`}
+    >
+      {PAYMENT_OPTIONS.map((s) => (
+        <option key={s} value={s} className="text-[#101B2C]">{capitalize(s)}</option>
+      ))}
+    </select>
+  );
+}
+
 /* ---------- row actions ---------- */
 
 function ActionButtons({ order }) {
@@ -136,6 +197,45 @@ export default function AdminOrdersPage() {
   });
   const orders = unwrapList(data);
 
+  // Which row/field is mid-save, so only that dropdown is disabled.
+  const [saving, setSaving] = useState(null); // `${orderId}:status` | `${orderId}:payment`
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    queryClient.invalidateQueries({ queryKey: ["orders"] });
+    queryClient.invalidateQueries({ queryKey: ["order"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-metrics"] });
+  };
+
+  const runUpdate = (key, request) => {
+    setError("");
+    setSaving(key);
+    return request()
+      .then(refresh)
+      .catch((err) => {
+        setError(extractErrorMessage(err));
+        // Re-fetch so the dropdown snaps back to the real server value.
+        refresh();
+      })
+      .finally(() => setSaving(null));
+  };
+
+  const changeStatus = (order, status) => {
+    if (status === order.status) return;
+    if (
+      status === "cancelled" &&
+      !window.confirm(`Cancel order ${order.order_number}? This can't be undone and any reserved stock is returned.`)
+    ) {
+      return;
+    }
+    runUpdate(`${order.id}:status`, () => ordersApi.updateOrderStatus(order.id, status));
+  };
+
+  const changePayment = (order, paymentStatus) => {
+    if (paymentStatus === (order.payment_status || "").toLowerCase()) return;
+    runUpdate(`${order.id}:payment`, () => ordersApi.updatePaymentStatus(order.id, paymentStatus));
+  };
+
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
     const fromTs = from ? new Date(from).getTime() : null;
@@ -163,19 +263,6 @@ export default function AdminOrdersPage() {
   const toggleSort = (key) => {
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
   };
-
-  const Th = ({ children, sortKey, className = "" }) => (
-    <th className={`px-5 py-3.5 text-left text-xs font-semibold text-[#101B2C] dark:text-white whitespace-nowrap ${className}`}>
-      {sortKey ? (
-        <button type="button" onClick={() => toggleSort(sortKey)} className="inline-flex items-center hover:text-[#A9834E] dark:hover:text-[#BF9A63]">
-          {children}
-          <SortIcon active={sort.key === sortKey} dir={sort.dir} />
-        </button>
-      ) : (
-        children
-      )}
-    </th>
-  );
 
   const pageBtn =
     "flex h-9 min-w-9 items-center justify-center rounded-md border px-2 text-sm transition-colors";
@@ -268,11 +355,11 @@ export default function AdminOrdersPage() {
             <table className="w-full min-w-[900px]">
               <thead className="bg-[#FAF7F2] dark:bg-[#0B1320]">
                 <tr>
-                  <Th sortKey="order" className="rounded-l-lg">Order ID</Th>
-                  <Th sortKey="customer">Customer</Th>
-                  <Th sortKey="date">Date</Th>
-                  <Th sortKey="amount">Amount</Th>
-                  <Th sortKey="quantity">Quantity</Th>
+                  <Th sortKey="order" sort={sort} onSort={toggleSort} className="rounded-l-lg">Order ID</Th>
+                  <Th sortKey="customer" sort={sort} onSort={toggleSort}>Customer</Th>
+                  <Th sortKey="date" sort={sort} onSort={toggleSort}>Date</Th>
+                  <Th sortKey="amount" sort={sort} onSort={toggleSort}>Amount</Th>
+                  <Th sortKey="quantity" sort={sort} onSort={toggleSort}>Quantity</Th>
                   <Th>Payment</Th>
                   <Th>Status</Th>
                   <Th className="rounded-r-lg text-right">Action</Th>
@@ -280,7 +367,6 @@ export default function AdminOrdersPage() {
               </thead>
               <tbody className="divide-y divide-[#E7E2D8]/70 dark:divide-[#25344D]">
                 {rows.map((o) => {
-                  const pay = (o.payment_status || "").toLowerCase();
                   return (
                     <tr key={o.id} className="text-sm text-[#101B2C] dark:text-white transition-colors hover:bg-[#FAF7F2]/70 dark:hover:bg-[#0B1320]/50">
                       <td className="px-5 py-4 font-mono text-[13px] font-medium">
@@ -292,10 +378,20 @@ export default function AdminOrdersPage() {
                       <td className="px-5 py-4 whitespace-nowrap">{formatDate(orderDate(o))}</td>
                       <td className="px-5 py-4"><Price value={o.total} /></td>
                       <td className="px-5 py-4">{o.total_quantity ?? o.items_count}</td>
-                      <td className={`px-5 py-4 text-xs font-medium ${PAYMENT_STYLES[pay] || "text-[#7C7669] dark:text-[#9FA8B8]"}`}>
-                        {pay ? capitalize(pay) : "—"}
+                      <td className="px-5 py-4">
+                        <PaymentStatusEditor
+                          order={o}
+                          busy={saving === `${o.id}:payment`}
+                          onChange={(v) => changePayment(o, v)}
+                        />
                       </td>
-                      <td className="px-5 py-4"><OrderStatusBadge status={o.status} /></td>
+                      <td className="px-5 py-4">
+                        <OrderStatusEditor
+                          order={o}
+                          busy={saving === `${o.id}:status`}
+                          onChange={(v) => changeStatus(o, v)}
+                        />
+                      </td>
                       <td className="px-5 py-4">
                         <ActionButtons order={o} />
                       </td>
