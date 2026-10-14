@@ -5,6 +5,7 @@ import { api } from "./api/client";
 
 export const RADIATOR_IMAGE = "/Aluminium_Radiator.png";
 export const CLUTCH_KIT_IMAGE = "/Clutch_Kit.png";
+export const HEADLIGHTS_IMAGE = "/headlights.png";
 
 function getCategoryName(product) {
   return typeof product?.category === "string"
@@ -15,6 +16,7 @@ function getCategoryName(product) {
 const LOCAL_IMAGE_RULES = [
   { pattern: /radiator/i, image: RADIATOR_IMAGE, useCategory: true },
   { pattern: /clutch[\s_-]*kit/i, image: CLUTCH_KIT_IMAGE, useCategory: false },
+  { pattern: /head[\s_-]*(light|lamp)s?/i, image: HEADLIGHTS_IMAGE, useCategory: false }
 ];
 
 export function getFallbackImage(product) {
