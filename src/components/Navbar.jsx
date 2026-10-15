@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
 import { useCart } from "../features/cart/CartContext";
@@ -55,12 +55,36 @@ function MenuIcon({ open }) {
   );
 }
 
+function UserIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+    </svg>
+  );
+}
+
+const dropdownItemClasses =
+  "flex w-full items-center rounded-md px-3 py-2 text-left text-sm font-medium text-[#101B2C] dark:text-gray-200 transition-colors hover:bg-[#FAF7F2] dark:hover:bg-gray-800 focus:outline-none focus-visible:bg-[#FAF7F2] dark:focus-visible:bg-gray-800";
+
 export default function Navbar({ minimal = false }) {
   const { user, status, logout } = useAuth();
   const { itemCount } = useCart();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef(null);
 
   const isAdmin = user?.role !== "customer" && status === "authenticated";
   const accountPath = minimal || isAdmin ? "/admin/account" : "/account";
@@ -72,9 +96,10 @@ export default function Navbar({ minimal = false }) {
   });
   const wishlistCount = unwrapList(wishlistData).length;
 
-  // Close the menu whenever the route changes
+  // Close both menus whenever the route changes
   useEffect(() => {
     setMenuOpen(false);
+    setAccountOpen(false);
   }, [pathname]);
 
   // Close on Escape, and when the viewport grows to desktop width
@@ -91,10 +116,40 @@ export default function Navbar({ minimal = false }) {
     };
   }, [menuOpen]);
 
+  // Account dropdown: close on outside click or Escape
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onPointerDown = (e) => {
+      if (accountRef.current && !accountRef.current.contains(e.target)) {
+        setAccountOpen(false);
+      }
+    };
+    const onKey = (e) => e.key === "Escape" && setAccountOpen(false);
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [accountOpen]);
+
   const handleLogout = async () => {
     setMenuOpen(false);
+    setAccountOpen(false);
     await logout();
     navigate("/");
+  };
+
+  const toggleAccount = () => {
+    setMenuOpen(false);
+    setAccountOpen((o) => !o);
+  };
+
+  const toggleMenu = () => {
+    setAccountOpen(false);
+    setMenuOpen((o) => !o);
   };
 
   return (
@@ -159,45 +214,93 @@ export default function Navbar({ minimal = false }) {
             </Link>
           )}
 
-          {/* Desktop auth actions */}
-          <div className="hidden items-center gap-4 lg:flex">
-            {status === "authenticated" ? (
-              <>
-                <Link
-                  to={accountPath}
-                  className="text-sm font-medium text-[#101B2C] dark:text-gray-200 hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
-                >
+          {/* Account icon + dropdown (all screen sizes) */}
+          {status === "authenticated" && (
+            <div ref={accountRef} className="relative">
+              <button
+                type="button"
+                onClick={toggleAccount}
+                aria-label="Account menu"
+                aria-haspopup="menu"
+                aria-expanded={accountOpen}
+                aria-controls="account-menu"
+                className={`flex h-9 items-center gap-2 rounded-full border px-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#BF9A63] sm:pl-2 sm:pr-3 ${
+                  accountOpen
+                    ? "border-[#BF9A63] bg-[#FAF7F2] text-[#101B2C] dark:bg-gray-800 dark:text-white"
+                    : "border-[#E7E2D8] dark:border-gray-700 text-[#101B2C] dark:text-gray-200 hover:bg-[#FAF7F2] dark:hover:bg-gray-800"
+                }`}
+              >
+                <UserIcon />
+                <span className="hidden max-w-[7rem] truncate text-sm font-medium sm:inline">
                   {user?.first_name || "Account"}
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="rounded-md px-3 py-1.5 text-sm font-medium text-[#7C7669] dark:text-gray-400 transition-colors hover:bg-[#FAF7F2] dark:hover:bg-gray-800 hover:text-[#101B2C] dark:hover:text-white"
+                </span>
+              </button>
+
+              {accountOpen && (
+                <div
+                  id="account-menu"
+                  role="menu"
+                  aria-label="Account"
+                  className="absolute right-0 top-full z-50 mt-2 w-56 origin-top-right rounded-lg border border-[#E7E2D8] dark:border-gray-700 bg-white dark:bg-gray-900 p-1.5 shadow-lg"
                 >
-                  Log out
-                </button>
-              </>
-            ) : status === "anonymous" ? (
-              <>
-                <Link
-                  to="/login"
-                  className="rounded-md px-3 py-1.5 text-sm font-medium text-[#101B2C] dark:text-gray-200 transition-colors hover:bg-[#FAF7F2] dark:hover:bg-gray-800"
-                >
-                  Log in
-                </Link>
-                <Link
-                  to="/register"
-                  className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-1.5 text-sm font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E]"
-                >
-                  Sign up
-                </Link>
-              </>
-            ) : null}
-          </div>
+                  <div className="border-b border-[#E7E2D8] dark:border-gray-800 px-3 pb-2 pt-1.5">
+                    <p className="truncate text-sm font-semibold text-[#101B2C] dark:text-white">
+                      {user?.first_name
+                        ? `${user.first_name}${user?.last_name ? ` ${user.last_name}` : ""}`
+                        : "My account"}
+                    </p>
+                    {user?.email && (
+                      <p className="truncate text-xs text-[#7C7669] dark:text-gray-400">
+                        {user.email}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-1.5">
+                    <Link
+                      to={accountPath}
+                      role="menuitem"
+                      onClick={() => setAccountOpen(false)}
+                      className={dropdownItemClasses}
+                    >
+                      My account
+                    </Link>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      className={`${dropdownItemClasses} text-[#DC2626] dark:text-red-400`}
+                    >
+                      Log out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Desktop auth actions (logged-out visitors) */}
+          {status === "anonymous" && (
+            <div className="hidden items-center gap-4 lg:flex">
+              <Link
+                to="/login"
+                className="rounded-md px-3 py-1.5 text-sm font-medium text-[#101B2C] dark:text-gray-200 transition-colors hover:bg-[#FAF7F2] dark:hover:bg-gray-800"
+              >
+                Log in
+              </Link>
+              <Link
+                to="/register"
+                className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-1.5 text-sm font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E]"
+              >
+                Sign up
+              </Link>
+            </div>
+          )}
 
           {/* Hamburger button (below lg) */}
           <button
             type="button"
-            onClick={() => setMenuOpen((o) => !o)}
+            onClick={toggleMenu}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
@@ -231,36 +334,26 @@ export default function Navbar({ minimal = false }) {
               <NavLink to="/admin" className={mobileLinkClasses}>Admin</NavLink>
             )}
 
-            <div className="my-2 border-t border-[#E7E2D8] dark:border-gray-800" />
-
-            {status === "authenticated" ? (
+            {/* Account + logout now live in the account icon dropdown */}
+            {status === "anonymous" && (
               <>
-                <NavLink to={accountPath} className={mobileLinkClasses}>
-                  {user?.first_name || "Account"}
-                </NavLink>
-                <button
-                  onClick={handleLogout}
-                  className="block w-full rounded-md px-3 py-3 text-left text-base font-medium text-[#7C7669] dark:text-gray-400 transition-colors hover:bg-[#FAF7F2] dark:hover:bg-gray-800 hover:text-[#101B2C] dark:hover:text-white"
-                >
-                  Log out
-                </button>
+                <div className="my-2 border-t border-[#E7E2D8] dark:border-gray-800" />
+                <div className="flex gap-3 pt-1">
+                  <Link
+                    to="/login"
+                    className="flex-1 rounded-md border border-[#E7E2D8] dark:border-gray-700 px-4 py-2.5 text-center text-sm font-medium text-[#101B2C] dark:text-gray-200 transition-colors hover:bg-[#FAF7F2] dark:hover:bg-gray-800"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="flex-1 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2.5 text-center text-sm font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E]"
+                  >
+                    Sign up
+                  </Link>
+                </div>
               </>
-            ) : status === "anonymous" ? (
-              <div className="flex gap-3 pt-1">
-                <Link
-                  to="/login"
-                  className="flex-1 rounded-md border border-[#E7E2D8] dark:border-gray-700 px-4 py-2.5 text-center text-sm font-medium text-[#101B2C] dark:text-gray-200 transition-colors hover:bg-[#FAF7F2] dark:hover:bg-gray-800"
-                >
-                  Log in
-                </Link>
-                <Link
-                  to="/register"
-                  className="flex-1 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-2.5 text-center text-sm font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E]"
-                >
-                  Sign up
-                </Link>
-              </div>
-            ) : null}
+            )}
           </nav>
         </div>
       )}
