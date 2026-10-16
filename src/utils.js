@@ -2,39 +2,13 @@ export { cn } from "cn"
 
 import { api } from "./api/client";
 
-
-export const RADIATOR_IMAGE = "/Aluminium_Radiator.png";
-export const CLUTCH_KIT_IMAGE = "/Clutch_Kit.png";
-export const HEADLIGHTS_IMAGE = "/headlights.png";
-
-function getCategoryName(product) {
-  return typeof product?.category === "string"
-    ? product.category
-    : product?.category?.name;
-}
-
-const LOCAL_IMAGE_RULES = [
-  { pattern: /radiator/i, image: RADIATOR_IMAGE, useCategory: true },
-  { pattern: /clutch[\s_-]*kit/i, image: CLUTCH_KIT_IMAGE, useCategory: false },
-  { pattern: /head[\s_-]*(light|lamp)s?/i, image: HEADLIGHTS_IMAGE, useCategory: false }
-];
-
-export function getFallbackImage(product) {
-  if (!product) return null;
-  const nameAndSlug = [product.name, product.slug].filter(Boolean).join(" ");
-  const withCategory = [nameAndSlug, getCategoryName(product)]
-    .filter(Boolean)
-    .join(" ");
-
-  for (const rule of LOCAL_IMAGE_RULES) {
-    const haystack = rule.useCategory ? withCategory : nameAndSlug;
-    if (rule.pattern.test(haystack)) return rule.image;
-  }
+export function getFallbackImage() {
   return null;
 }
 
 function resolveUrl(src) {
   if (!src || typeof src !== "string") return null;
+  // Cloudinary pictures are already full https:// URLs and are used as-is.
   if (/^(https?:)?\/\//i.test(src) || /^(data|blob):/i.test(src)) return src;
   try {
     const base = api?.defaults?.baseURL || "";
@@ -69,5 +43,5 @@ function getBackendImage(product) {
 }
 
 export function getProductImage(product) {
-  return getBackendImage(product) || getFallbackImage(product);
+  return getBackendImage(product);
 }
