@@ -8,6 +8,9 @@ import * as catalogApi from "../api/catalog";
 
 const FLEET = ["Toyota", "Nissan", "Subaru", "Mazda", "Isuzu", "Mitsubishi"];
 
+// How many products the "Recently added" section shows.
+const RECENT_COUNT = 4;
+
 const TRUST_MARKERS = [
   { value: "12,000+", label: "Genuine OEM SKUs in stock" },
   { value: "48-Hour", label: "Express freight, door to door" },
@@ -100,14 +103,14 @@ function CarIcon({ className }) {
 
 export default function HomePage() {
   const { data, isLoading } = useQuery({
-    queryKey: ["products", { ordering: "-created_at", page_size: 8 }],
+    queryKey: ["products", { ordering: "-created_at", page_size: RECENT_COUNT }],
     queryFn: () => catalogApi.listProducts({ ordering: "-created_at" }),
   });
 
-  const products = isLoading ? [] : unwrapList(data).slice(0, 8);
+  const products = isLoading ? [] : unwrapList(data).slice(0, RECENT_COUNT);
 
   return (
-    <div className="bg-slate-50 text-slate-900 dark:bg-[#0B121F] dark:text-slate-100 min-h-screen transition-colors duration-200">
+    <div className="bg-slate-50 text-base text-slate-900 dark:bg-[#0B121F] dark:text-slate-100 min-h-screen transition-colors duration-200">
       {/* Hero */}
       <section
         className="relative isolate overflow-hidden bg-slate-900 dark:bg-[#101B2C] bg-cover bg-center py-24 md:py-32"
@@ -117,15 +120,15 @@ export default function HomePage() {
 
         <div className="relative mx-auto flex max-w-[750px] flex-col items-center px-6 text-center">
           <div className="flex flex-col items-center gap-[1.2rem] rounded-2xl border border-white/[0.15] bg-slate-900/80 dark:bg-[#101B2C]/70 px-6 py-10 shadow-xl backdrop-blur-[12px] md:px-10 md:py-14">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3 py-1 text-[11px] font-medium tracking-wide text-white backdrop-blur-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3.5 py-1.5 text-xs font-medium tracking-wide text-white backdrop-blur-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-[#BF9A63]" />
               Built for the Kenyan fleet
             </span>
 
-            <h1 className="mt-6 max-w-[20ch] text-4xl font-semibold leading-tight text-white md:text-5xl">
+            <h1 className="mt-6 max-w-[20ch] text-[2.5rem] font-semibold leading-tight text-white md:text-[3.25rem]">
               Genuine Parts. <span className="text-[#BF9A63]">Precise Fit.</span> Zero Guesswork.
             </h1>
-            <p className="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-slate-200 dark:text-slate-300">
+            <p className="mt-5 max-w-[46ch] text-lg leading-relaxed text-slate-200 dark:text-slate-300">
               We stock genuine, top-grade components at fair retail pricing —
               checked against your vehicle's exact specification and backed
               by counter staff who actually know what's under the hood.
@@ -134,13 +137,13 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
                 to="/catalog"
-                className="rounded-md bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-slate-900 dark:text-[#101B2C] shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#A9834E]"
+                className="rounded-md bg-[#BF9A63] px-6 py-3 text-base font-medium text-slate-900 dark:text-[#101B2C] shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#A9834E]"
               >
                 View Catalog
               </Link>
               <Link
                 to="/register"
-                className="rounded-md border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:border-white hover:bg-white/20"
+                className="rounded-md border border-white/30 bg-white/10 px-6 py-3 text-base font-medium text-white backdrop-blur-sm transition-colors hover:border-white hover:bg-white/20"
               >
                 Get Started
               </Link>
@@ -159,8 +162,8 @@ export default function HomePage() {
           <dl className="grid grid-cols-1 divide-y divide-slate-200 dark:divide-white/10 border border-slate-200 dark:border-white/10 bg-white dark:bg-[#101B2C] sm:grid-cols-3 sm:divide-x sm:divide-y-0 rounded-xl overflow-hidden shadow-sm">
             {TRUST_MARKERS.map(({ value, label }) => (
               <div key={label} className="px-6 py-5">
-                <dt className="text-xl font-semibold text-slate-900 dark:text-white">{value}</dt>
-                <dd className="mt-1 text-sm text-slate-600 dark:text-slate-400">{label}</dd>
+                <dt className="text-2xl font-semibold text-slate-900 dark:text-white">{value}</dt>
+                <dd className="mt-1 text-base text-slate-600 dark:text-slate-400">{label}</dd>
               </div>
             ))}
           </dl>
@@ -168,14 +171,14 @@ export default function HomePage() {
           {/* Fitment finder */}
           <div className="mt-10 rounded-xl border-2 border-[#BF9A63]/30 bg-white dark:bg-[#101B2C] p-6 shadow-md transition-shadow hover:shadow-lg md:p-7">
             <div className="mb-5 flex items-center gap-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#BF9A63]">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#BF9A63]">
                 Flagship feature
               </span>
             </div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Find parts for your vehicle
             </h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mt-1 text-base text-slate-600 dark:text-slate-400">
               Select your make, model and year — we'll only show parts confirmed to fit.
             </p>
             <div className="mt-5">
@@ -188,7 +191,7 @@ export default function HomePage() {
       {/* Trusted fleet band */}
       <section className="border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#101B2C] py-12">
         <div className="max-w-7xl mx-auto px-8">
-          <p className="text-center text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <p className="text-center text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Stocked for the fleet
           </p>
           <div className="mt-6 grid grid-cols-3 gap-4 sm:grid-cols-6">
@@ -197,8 +200,8 @@ export default function HomePage() {
                 key={make}
                 className="flex flex-col items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0B121F] px-3 py-5 text-center transition-all duration-200 hover:-translate-y-1 hover:border-[#BF9A63]/40 hover:shadow-sm"
               >
-                <CarIcon className="h-6 w-6 text-[#BF9A63]" />
-                <span className="text-sm font-medium text-slate-900 dark:text-white">{make}</span>
+                <CarIcon className="h-7 w-7 text-[#BF9A63]" />
+                <span className="text-base font-medium text-slate-900 dark:text-white">{make}</span>
               </div>
             ))}
           </div>
@@ -207,18 +210,18 @@ export default function HomePage() {
 
       {/* Recently added */}
       <section className="max-w-7xl mx-auto px-8 py-14">
-        <div className="mb-6 flex items-end justify-between">
+        <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-3xl font-semibold text-slate-900 dark:text-white">
               Recently added
             </h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mt-1 text-base text-slate-600 dark:text-slate-400">
               Newest parts to land in the warehouse.
             </p>
           </div>
           <Link
             to="/catalog"
-            className="shrink-0 rounded-md border border-slate-300 dark:border-white/20 bg-white dark:bg-[#101B2C] px-4 py-2 text-sm font-medium text-slate-700 dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63]"
+            className="shrink-0 rounded-md border border-slate-300 dark:border-white/20 bg-white dark:bg-[#101B2C] px-4 py-2.5 text-base font-medium text-slate-700 dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63]"
           >
             View full catalog
           </Link>
@@ -230,7 +233,7 @@ export default function HomePage() {
           </div>
         ) : products.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 dark:border-white/10 bg-white dark:bg-[#101B2C] px-6 py-16 text-center">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-base text-slate-500 dark:text-slate-400">
               No products yet — new stock will show up here as it's added.
             </p>
           </div>
@@ -246,7 +249,7 @@ export default function HomePage() {
       {/* Why fleets order from us */}
       <section className="bg-white dark:bg-[#101B2C] border-t border-slate-200 dark:border-white/10 py-16 text-slate-900 dark:text-white">
         <div className="max-w-7xl mx-auto px-8">
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Why fleets order from us</h2>
+          <h2 className="text-3xl font-semibold text-slate-900 dark:text-white">Why fleets order from us</h2>
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {WHY_US.map(({ title, body, icon }) => (
               <div
@@ -256,8 +259,8 @@ export default function HomePage() {
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#BF9A63]/15 text-[#BF9A63]">
                   <Icon className="h-6 w-6">{icon}</Icon>
                 </span>
-                <h3 className="mt-4 text-base font-semibold text-slate-900 dark:text-white">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <h3 className="mt-4 text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
+                <p className="mt-2 text-base leading-relaxed text-slate-600 dark:text-slate-300">
                   {body}
                 </p>
               </div>
@@ -269,10 +272,10 @@ export default function HomePage() {
       {/* Reviews */}
       <section className="bg-slate-50 dark:bg-[#0B121F] py-16">
         <div className="max-w-7xl mx-auto px-8">
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-3xl font-semibold text-slate-900 dark:text-white">
             Trusted by fleets across the country
           </h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-1 text-base text-slate-600 dark:text-slate-400">
             A few words from the workshops and operators who order from us every week.
           </p>
 
@@ -286,7 +289,7 @@ export default function HomePage() {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Icon
                       key={i}
-                      className={`h-4 w-4 ${
+                      className={`h-5 w-5 ${
                         i < rating ? "fill-current" : "fill-none text-slate-300 dark:text-white/20"
                       }`}
                     >
@@ -295,13 +298,13 @@ export default function HomePage() {
                   ))}
                 </div>
 
-                <p className="mt-4 flex-1 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                <p className="mt-4 flex-1 text-base leading-relaxed text-slate-700 dark:text-slate-200">
                   "{quote}"
                 </p>
 
                 <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{name}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{role}</p>
+                  <p className="text-base font-semibold text-slate-900 dark:text-white">{name}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{role}</p>
                 </div>
               </div>
             ))}
