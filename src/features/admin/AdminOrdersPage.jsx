@@ -117,8 +117,13 @@ function Th({ children, sortKey, sort, onSort, className = "" }) {
 
 /* ---------- inline editors ---------- */
 
+// Selects get an explicit dark background + `color-scheme` so the browser's
+// native dropdown popup also renders dark in dark theme.
 const selectBase =
-  "h-8 rounded-md border bg-white dark:bg-[#0B1320] pl-2 pr-7 text-xs font-medium capitalize focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/30 disabled:cursor-wait disabled:opacity-60";
+  "h-8 rounded-md border bg-white dark:bg-[#0B1320] dark:[color-scheme:dark] pl-2 pr-7 text-xs font-medium capitalize focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/30 disabled:cursor-wait disabled:opacity-60";
+
+// Shared by every <option> so the popup list is readable in both themes.
+const optionClasses = "bg-white text-[#101B2C] dark:bg-[#0B1320] dark:text-white";
 
 // Order status: only the transitions the backend allows from the current state.
 // Delivered / cancelled are final, so they stay a plain badge.
@@ -133,9 +138,9 @@ function OrderStatusEditor({ order, busy, onChange }) {
       aria-label={`Order status for ${order.order_number}`}
       className={`${selectBase} border-[#E7E2D8] dark:border-[#25344D] text-[#101B2C] dark:text-white`}
     >
-      <option value={order.status}>{capitalize(order.status)}</option>
+      <option value={order.status} className={optionClasses}>{capitalize(order.status)}</option>
       {next.map((s) => (
-        <option key={s} value={s}>{capitalize(s)}</option>
+        <option key={s} value={s} className={optionClasses}>{capitalize(s)}</option>
       ))}
     </select>
   );
@@ -152,7 +157,7 @@ function PaymentStatusEditor({ order, busy, onChange }) {
       className={`${selectBase} border-[#E7E2D8] dark:border-[#25344D] ${PAYMENT_STYLES[pay] || ""}`}
     >
       {PAYMENT_OPTIONS.map((s) => (
-        <option key={s} value={s} className="text-[#101B2C]">{capitalize(s)}</option>
+        <option key={s} value={s} className={optionClasses}>{capitalize(s)}</option>
       ))}
     </select>
   );
@@ -305,11 +310,11 @@ export default function AdminOrdersPage() {
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
             aria-label="Filter by status"
-            className={controlClasses}
+            className={`${controlClasses} dark:[color-scheme:dark]`}
           >
-            <option value="">All status</option>
+            <option value="" className={optionClasses}>All status</option>
             {ALL_STATUSES.map((s) => (
-              <option key={s} value={s}>{capitalize(s)}</option>
+              <option key={s} value={s} className={optionClasses}>{capitalize(s)}</option>
             ))}
           </select>
 
@@ -317,11 +322,11 @@ export default function AdminOrdersPage() {
             <div className="absolute right-0 top-12 z-20 flex items-end gap-3 rounded-lg border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-4 shadow-lg">
               <label className="text-xs text-[#7C7669] dark:text-[#9FA8B8]">
                 From
-                <input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} className={`${controlClasses} mt-1 block`} />
+                <input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} className={`${controlClasses} dark:[color-scheme:dark] mt-1 block`} />
               </label>
               <label className="text-xs text-[#7C7669] dark:text-[#9FA8B8]">
                 To
-                <input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} className={`${controlClasses} mt-1 block`} />
+                <input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} className={`${controlClasses} dark:[color-scheme:dark] mt-1 block`} />
               </label>
               <button
                 type="button"
@@ -452,10 +457,10 @@ export default function AdminOrdersPage() {
                 value={pageSize}
                 onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
                 aria-label="Rows per page"
-                className={`${controlClasses} h-9 text-xs`}
+                className={`${controlClasses} dark:[color-scheme:dark] h-9 text-xs`}
               >
                 {PAGE_SIZES.map((n) => (
-                  <option key={n} value={n}>Show {n}</option>
+                  <option key={n} value={n} className={optionClasses}>Show {n}</option>
                 ))}
               </select>
             </div>
