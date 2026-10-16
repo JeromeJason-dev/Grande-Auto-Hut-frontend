@@ -13,6 +13,8 @@ const EMPTY_FORM = {
 };
 
 const PAGE_SIZE = 10;
+const MAX_IMAGE_MB = 10; // Cloudinary's free plan rejects larger images
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 function slugify(text) {
   return text.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -291,6 +293,12 @@ function ProductModal({ editing, onClose, onSaved }) {
   const [slugTouched, setSlugTouched] = useState(Boolean(editing));
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  // Pictures chosen in the form, and the slug of a product that was already
+  // saved (so a retry after a failed upload does not create it twice).
+  const [files, setFiles] = useState([]);
+  const [savedSlug, setSavedSlug] = useState(null);
+  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: catalogApi.listCategories });
   const brandsQuery = useQuery({ queryKey: ["brands"], queryFn: catalogApi.listBrands });
   const queryClient = useQueryClient();
@@ -325,6 +333,20 @@ function ProductModal({ editing, onClose, onSaved }) {
       [key]: value,
       ...(key === "name" && !slugTouched ? { slug: slugify(value) } : {}),
     }));
+  };
+
+  const handleFiles = (e) => {
+    const picked = Array.from(e.target.files || []);
+    e.target.value = ""; // allow choosing the same file again
+    const bad = picked.find(
+      (f) => !ALLOWED_IMAGE_TYPES.includes(f.type) || f.size > MAX_IMAGE_MB * 1024 * 1024
+    );
+    if (bad) {
+      setError(`"${bad.name}" can't be used. Pictures must be JPG, PNG or WEBP and under ${MAX_IMAGE_MB} MB.`);
+      return;
+    }
+    setError("");
+    setFiles(picked);
   };
 
   const handleSubmit = async (e) => {
@@ -373,10 +395,37 @@ function ProductModal({ editing, onClose, onSaved }) {
         low_stock_threshold: threshold,
         is_active: form.is_active,
       };
-      if (editing) {
-        await adminApi.updateProduct(editing.slug, payload);
-      } else {
-        await adminApi.createProduct(payload);
+      // 1) Save the product details (skipped if this is a retry after a failed upload).
+      let slug = savedSlug;
+      if (!slug) {
+        if (editing) {
+          const updated = await adminApi.updateProduct(editing.slug, payload);
+          slug = updated?.slug || payload.slug || editing.slug;
+        } else {
+          const created = await adminApi.createProduct(payload);
+          slug = created?.slug || payload.slug;
+        }
+        setSavedSlug(slug);
+      }
+
+      // 2) Upload the chosen pictures. The first one becomes the main picture.
+      for (let i = 0; i < files.length; i += 1) {
+        try {
+          await adminApi.uploadProductImage(slug, files[i], {
+            isPrimary: i === 0,
+            sortOrder: i,
+            altText: payload.name,
+          });
+        } catch (uploadErr) {
+          // Keep the modal open; the product itself is already saved.
+          setFiles(files.slice(i));
+          setError(
+            `The product was saved, but "${files[i].name}" could not be uploaded: ${extractErrorMessage(uploadErr)} ` +
+              "Press the button again to retry the pictures, or Cancel to finish without them."
+          );
+          queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+          return;
+        }
       }
       onSaved();
     } catch (err) {
@@ -478,6 +527,36 @@ function ProductModal({ editing, onClose, onSaved }) {
             </Field>
           </div>
 
+          <Field label={editing ? "Add new pictures (the first becomes the main picture)" : "Pictures (the first becomes the main picture)"} className="mt-5">
+            {editing && (editing.primary_image || editing.image) && files.length === 0 && (
+              <img
+                src={editing.primary_image || editing.image}
+                alt=""
+                className="mb-2 h-20 w-20 rounded-md border border-[#E7E2D8] dark:border-[#25344D] object-cover"
+              />
+            )}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={handleFiles}
+              disabled={saving}
+              className="block w-full text-sm text-[#1E2430] dark:text-slate-200 file:mr-3 file:rounded-md file:border-0 file:bg-[#101B2C] file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
+            />
+            {previews.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {previews.map((src, i) => (
+                  <img
+                    key={src}
+                    src={src}
+                    alt=""
+                    className={`h-16 w-16 rounded-md object-cover border ${i === 0 ? "border-[#BF9A63] ring-2 ring-[#BF9A63]" : "border-[#E7E2D8] dark:border-[#25344D]"}`}
+                  />
+                ))}
+              </div>
+            )}
+          </Field>
+
           <label className="mt-5 flex items-center gap-2 text-sm text-[#1E2430] dark:text-slate-200">
             <input
               type="checkbox"
@@ -495,7 +574,7 @@ function ProductModal({ editing, onClose, onSaved }) {
             Cancel
           </button>
           <button type="submit" disabled={saving} className={primaryBtn}>
-            {saving ? "Saving…" : editing ? "Save changes" : "Create product"}
+            {saving ? (files.length ? "Saving & uploading…" : "Saving…") : savedSlug ? "Retry pictures" : editing ? "Save changes" : "Create product"}
           </button>
         </div>
       </form>

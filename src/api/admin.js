@@ -20,6 +20,19 @@ export async function updateProduct(slug, payload) {
   return data;
 }
 
+
+// Upload one picture for a product (staff/admin only).
+ 
+export async function uploadProductImage(slug, file, { isPrimary = false, sortOrder = 0, altText = "" } = {}) {
+  const body = new FormData();
+  body.append("image", file);
+  body.append("is_primary", isPrimary ? "true" : "false");
+  body.append("sort_order", String(sortOrder));
+  if (altText) body.append("alt_text", altText);
+  const { data } = await api.post(`/products/${slug}/images/`, body);
+  return data;
+}
+
 export async function deleteProduct(slug) {
   await api.delete(`/products/${slug}/`);
 }
