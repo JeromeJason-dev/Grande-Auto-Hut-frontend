@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useCart } from "./CartContext";
+import { useNotificationToastContext } from "../notifications/NotificationToastContext";
 import * as authApi from "../../api/auth";
 import * as ordersApi from "../../api/orders";
 import * as paymentsApi from "../../api/payments";
@@ -54,6 +55,8 @@ function CartItemImage({ product }) {
 
 export default function CheckoutPage() {
   const { cart, refresh } = useCart();
+  const navigate = useNavigate();
+  const { showToast, refreshNotificationsQuietly } = useNotificationToastContext();
   const addressesQuery = useQuery({ queryKey: ["addresses"], queryFn: authApi.listAddresses });
 
   const [addressId, setAddressId] = useState("");
@@ -66,7 +69,8 @@ export default function CheckoutPage() {
 
   const addresses = unwrapList(addressesQuery.data);
 
-  if (!cart || cart.items.length === 0) {
+  // Once an order is placed the cart is emptied; don't let that hide the confirmation screen.
+  if (!placedOrder && (!cart || cart.items.length === 0)) {
     return (
       <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-16 text-center transition-colors">
         <div className="mx-auto max-w-3xl">
@@ -86,28 +90,69 @@ export default function CheckoutPage() {
     e.preventDefault();
     setError("");
     setStep("placing");
+
+    let order;
     try {
       const payload = addressId
         ? { address_id: addressId, payment_method: paymentMethod }
         : { ...newAddress, payment_method: paymentMethod };
-
-      const order = await ordersApi.checkout(payload);
-      console.log("Checkout response object:", order);
-
-      setPlacedOrder(order);
-      await refresh();
-
-      const orderIdentifier = order?.id || order?.order_number;
-
-      if (paymentMethod === "mpesa") {
-        setStep("awaiting-mpesa");
-        await paymentsApi.initiateMpesa(orderIdentifier, mpesaPhone || newAddress.phone_number);
-      } else {
-        setStep("done");
-      }
+      order = await ordersApi.checkout(payload);
     } catch (err) {
       setError(extractErrorMessage(err));
       setStep("form");
+      return;
+    }
+
+    // The order exists from here on, so never fall back to the checkout form.
+    const isMpesa = paymentMethod === "mpesa";
+    const orderIdentifier = order?.id || order?.order_number;
+    const orderLabel = order?.order_number ? `Order ${order.order_number}` : "Your order";
+
+    setPlacedOrder(order);
+    setStep(isMpesa ? "awaiting-mpesa" : "done");
+
+    showToast({
+      type: "order",
+      title: "Order placed",
+      message: isMpesa
+        ? `${orderLabel} has been placed. Check your phone to complete the M-Pesa payment.`
+        : `${orderLabel} has been placed and is being prepared.`,
+      duration: 8000,
+      actions: [
+        {
+          label: "Track order",
+          variant: "primary",
+          onClick: () => navigate(`/orders/${orderIdentifier}`),
+        },
+      ],
+    });
+
+    // The cart is now empty on the server; resync it and the notification bell.
+    try {
+      await refresh();
+    } catch {
+      // The cart will resync on the next load.
+    }
+    refreshNotificationsQuietly();
+
+    if (isMpesa) {
+      try {
+        await paymentsApi.initiateMpesa(orderIdentifier, mpesaPhone || newAddress.phone_number);
+      } catch (err) {
+        showToast({
+          type: "warning",
+          title: "M-Pesa prompt not sent",
+          message: `${extractErrorMessage(err)} Your order is saved. You can retry payment from your order page.`,
+          persistent: true,
+          actions: [
+            {
+              label: "Open order",
+              variant: "primary",
+              onClick: () => navigate(`/orders/${orderIdentifier}`),
+            },
+          ],
+        });
+      }
     }
   };
 

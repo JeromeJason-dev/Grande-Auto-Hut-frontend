@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../features/auth/AuthContext";
+import { useNotificationToastContext } from "../features/notifications/NotificationToastContext";
 import Price from "./Price";
 import StockBadge from "./StockBadge";
 import {
@@ -35,6 +36,7 @@ export default function ProductCard({
   const location = useLocation();
   const { status } = useAuth();
   const queryClient = useQueryClient();
+  const { showToast } = useNotificationToastContext();
   const [isAdding, setIsAdding] = useState(false);
   const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
 
@@ -97,9 +99,23 @@ export default function ProductCard({
         is_in_stock: activeVariant.is_in_stock,
         is_low_stock: activeVariant.is_low_stock,
       });
-      navigate("/cart");
+      showToast({
+        type: "success",
+        title: "Added to cart",
+        message: `${name} was added to your cart.`,
+        duration: 4000,
+        actions: [
+          { label: "View cart", variant: "primary", onClick: () => navigate("/cart") },
+        ],
+      });
     } catch (err) {
       console.error("Failed to add item to cart:", err);
+      showToast({
+        type: "warning",
+        title: "Couldn't add to cart",
+        message: "Something went wrong. Please try again.",
+        duration: 5000,
+      });
     } finally {
       setIsAdding(false);
     }
@@ -109,6 +125,16 @@ export default function ProductCard({
     e.preventDefault();
     e.stopPropagation();
     if (isTogglingWishlist) return;
+
+    // Guests must log in before using the wishlist
+    if (status !== "authenticated") {
+      if (status === "anonymous") {
+        navigate("/login", {
+          state: { from: location.pathname + location.search },
+        });
+      }
+      return;
+    }
 
     const productId = activeVariant.product_id;
     if (!productId) {
@@ -127,10 +153,34 @@ export default function ProductCard({
         await removeFromWishlist(productId);
       }
       await queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+      showToast(
+        nextWishlisted
+          ? {
+              type: "success",
+              title: "Added to wishlist",
+              message: `${name} was saved to your wishlist.`,
+              duration: 4000,
+              actions: [
+                { label: "View wishlist", variant: "primary", onClick: () => navigate("/wishlist") },
+              ],
+            }
+          : {
+              type: "success",
+              title: "Removed from wishlist",
+              message: `${name} was removed from your wishlist.`,
+              duration: 4000,
+            }
+      );
       await onToggleWishlist(product);
     } catch (err) {
       console.error("Failed to update wishlist:", err);
       setWishlisted(!nextWishlisted);
+      showToast({
+        type: "warning",
+        title: "Couldn't update wishlist",
+        message: "Something went wrong. Please try again.",
+        duration: 5000,
+      });
     } finally {
       setIsTogglingWishlist(false);
     }
