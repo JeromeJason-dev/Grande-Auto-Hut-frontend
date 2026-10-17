@@ -12,6 +12,7 @@ const TYPE_STYLES = {
   promo: { badge: "bg-emerald-500", icon: "🏷️" },
   success: { badge: "bg-emerald-500", icon: "✓" },
   warning: { badge: "bg-amber-500", icon: "!" },
+  error: { badge: "bg-red-500", icon: "✕" },
   default: { badge: "bg-[#101B2C] dark:bg-[#BF9A63]", icon: "🔔" },
 };
 
@@ -94,7 +95,7 @@ export default function Toast({ notification, onDismiss, onClick }) {
             {notification.title || "New notification"}
           </p>
           {notification.message && (
-            <p className="mt-0.5 line-clamp-3 text-sm text-[#7C7669] dark:text-gray-400">
+            <p className="mt-0.5 line-clamp-5 text-sm text-[#7C7669] dark:text-gray-400">
               {notification.message}
             </p>
           )}

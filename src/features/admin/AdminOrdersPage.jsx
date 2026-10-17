@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ordersApi from "../../api/orders";
@@ -7,6 +7,7 @@ import OrderStatusBadge from "../../components/OrderStatusBadge";
 import Price from "../../components/Price";
 import Spinner from "../../components/Spinner";
 import ErrorAlert from "../../components/ErrorAlert";
+import { useNotificationToastContext } from "../notifications/NotificationToastContext";
 
 const NEXT_STATUS = {
   pending: ["confirmed", "cancelled"],
@@ -20,6 +21,22 @@ const NEXT_STATUS = {
 const ALL_STATUSES = ["pending", "confirmed", "processing", "in_transit", "delivered", "cancelled"];
 const PAYMENT_OPTIONS = ["pending", "paid", "failed"];
 const PAGE_SIZES = [10, 25, 50];
+
+// States in which stock has been deducted, so a cancellation puts it back.
+const STOCK_RESERVED = ["confirmed", "processing", "in_transit"];
+
+// The API paginates, so follow `next` until every order is loaded. The page
+// searches, sorts and filters by date client-side and needs the full list.
+async function fetchAllOrders(params) {
+  const all = [];
+  for (let page = 1; page <= 50; page += 1) {
+    const data = await ordersApi.listOrders({ ...params, page, page_size: 100 });
+    const batch = unwrapList(data);
+    all.push(...batch);
+    if (!data?.next || batch.length === 0) break;
+  }
+  return all;
+}
 
 const controlClasses =
   "h-10 rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#0B1320] px-3 text-sm text-[#101B2C] dark:text-white placeholder:text-[#7C7669] dark:placeholder:text-[#9FA8B8] focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/20";
@@ -193,14 +210,22 @@ export default function AdminOrdersPage() {
   const [sort, setSort] = useState({ key: "date", dir: "desc" });
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
-  const [error, setError] = useState("");
+  const { showToast, dismissToast } = useNotificationToastContext();
+  const confirmToastRef = useRef(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error: loadError } = useQuery({
     queryKey: ["admin-orders", statusFilter],
-    queryFn: () =>
-      ordersApi.listOrders({ page_size: 100, ...(statusFilter ? { status: statusFilter } : {}) }),
+    queryFn: () => fetchAllOrders(statusFilter ? { status: statusFilter } : {}),
   });
-  const orders = unwrapList(data);
+  const orders = useMemo(() => data ?? [], [data]);
+
+  // Don't leave a pending "Cancel order?" prompt behind when leaving the page.
+  useEffect(
+    () => () => {
+      if (confirmToastRef.current) dismissToast(confirmToastRef.current);
+    },
+    [dismissToast]
+  );
 
   // Which row/field is mid-save, so only that dropdown is disabled.
   const [saving, setSaving] = useState(null); // `${orderId}:status` | `${orderId}:payment`
@@ -210,35 +235,90 @@ export default function AdminOrdersPage() {
     queryClient.invalidateQueries({ queryKey: ["orders"] });
     queryClient.invalidateQueries({ queryKey: ["order"] });
     queryClient.invalidateQueries({ queryKey: ["admin-metrics"] });
+    // Status changes move revenue, and cancelling returns stock.
+    queryClient.invalidateQueries({ queryKey: ["admin-revenue-analytics"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    queryClient.invalidateQueries({ queryKey: ["products"] });
   };
 
-  const runUpdate = (key, request) => {
-    setError("");
+  // Runs an update and reports the outcome in a toast either way.
+  const runUpdate = (key, request, { success, failureTitle }) => {
     setSaving(key);
     return request()
-      .then(refresh)
-      .catch((err) => {
-        setError(extractErrorMessage(err));
-        // Re-fetch so the dropdown snaps back to the real server value.
+      .then(() => showToast({ type: "success", ...success }))
+      .catch((err) =>
+        showToast({ type: "error", title: failureTitle, message: extractErrorMessage(err), duration: 8000 })
+      )
+      // Success or failure, re-fetch so the dropdown shows the real server value.
+      .finally(() => {
         refresh();
-      })
-      .finally(() => setSaving(null));
+        setSaving(null);
+      });
+  };
+
+  const performStatusChange = (order, status) => {
+    const cancelling = status === "cancelled";
+    const reserved = STOCK_RESERVED.includes(order.status);
+    runUpdate(`${order.id}:status`, () => ordersApi.updateOrderStatus(order.id, status), {
+      failureTitle: cancelling ? "Couldn't cancel order" : "Couldn't update order",
+      success: cancelling
+        ? {
+            title: "Order cancelled",
+            message: `${order.order_number} was cancelled and the customer has been notified.${
+              reserved ? " Reserved stock was returned to inventory." : ""
+            }`,
+          }
+        : {
+            title: "Order updated",
+            message: `${order.order_number} moved to ${capitalize(status)}. The customer has been notified.`,
+          },
+    });
+  };
+
+  // Cancelling is irreversible, so ask first, in a toast rather than a browser dialog.
+  const confirmCancel = (order) => {
+    if (confirmToastRef.current) dismissToast(confirmToastRef.current);
+    const reserved = STOCK_RESERVED.includes(order.status);
+    const paid = (order.payment_status || "").toLowerCase() === "paid";
+    const message = [
+      "This can't be undone.",
+      reserved && "Reserved stock goes back to inventory.",
+      "The customer will be notified.",
+      paid && "This order is already paid, so remember to refund the customer.",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    confirmToastRef.current = showToast({
+      type: "warning",
+      title: `Cancel order ${order.order_number}?`,
+      message,
+      persistent: true,
+      actions: [
+        { label: "Cancel order", variant: "danger", onClick: () => performStatusChange(order, "cancelled") },
+        { label: "Keep order", variant: "secondary" },
+      ],
+    });
   };
 
   const changeStatus = (order, status) => {
     if (status === order.status) return;
-    if (
-      status === "cancelled" &&
-      !window.confirm(`Cancel order ${order.order_number}? This can't be undone and any reserved stock is returned.`)
-    ) {
+    if (status === "cancelled") {
+      confirmCancel(order);
       return;
     }
-    runUpdate(`${order.id}:status`, () => ordersApi.updateOrderStatus(order.id, status));
+    performStatusChange(order, status);
   };
 
   const changePayment = (order, paymentStatus) => {
     if (paymentStatus === (order.payment_status || "").toLowerCase()) return;
-    runUpdate(`${order.id}:payment`, () => ordersApi.updatePaymentStatus(order.id, paymentStatus));
+    runUpdate(`${order.id}:payment`, () => ordersApi.updatePaymentStatus(order.id, paymentStatus), {
+      failureTitle: "Couldn't update payment",
+      success: {
+        title: "Payment updated",
+        message: `Payment for ${order.order_number} marked as ${capitalize(paymentStatus)}.`,
+      },
+    });
   };
 
   const visible = useMemo(() => {
@@ -340,9 +420,9 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {error && (
+      {isError && (
         <div className="px-6 pb-4">
-          <ErrorAlert message={error} />
+          <ErrorAlert message={extractErrorMessage(loadError, "Couldn't load orders.")} />
         </div>
       )}
 

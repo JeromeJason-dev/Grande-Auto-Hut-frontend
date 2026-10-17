@@ -1,13 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNotifications } from "./Usenotifications";
 import { unwrapList } from "../../api/client";
 import ToastContainer from "./ToastContainer";
 
 const NotificationToastContext = createContext(null);
 
+// Support alerts for the team: keep them up a little longer than the default,
+// and refresh the ticket queue / dashboard counts behind them.
+const TICKET_ALERT_TYPES = new Set(["new_ticket", "ticket_message"]);
+const TICKET_ALERT_DURATION_MS = 10_000;
+
 export function NotificationToastProvider({ children }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { notifications, markRead, isSuccess, refetch } = useNotifications();
   const [toasts, setToasts] = useState([]);
   const seenIds = useRef(new Set());
@@ -32,12 +39,23 @@ export function NotificationToastProvider({ children }) {
     if (fresh.length) {
       setToasts((prev) => [
         ...prev,
-        ...fresh.map((n) => ({ ...n, toastId: `${n.id}-${Date.now()}` })),
+        ...fresh.map((n) => ({
+          ...n,
+          toastId: `${n.id}-${Date.now()}`,
+          ...(TICKET_ALERT_TYPES.has(n.notification_type) ? { duration: TICKET_ALERT_DURATION_MS } : {}),
+        })),
       ]);
+
+      if (fresh.some((n) => TICKET_ALERT_TYPES.has(n.notification_type))) {
+        queryClient.invalidateQueries({ queryKey: ["admin-tickets"] });
+        queryClient.invalidateQueries({ queryKey: ["tickets"] });
+        queryClient.invalidateQueries({ queryKey: ["ticket"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-metrics"] });
+      }
     }
 
     notifications.forEach((n) => seenIds.current.add(n.id));
-  }, [notifications, isSuccess]);
+  }, [notifications, isSuccess, queryClient]);
 
   const dismissToast = useCallback((toastId) => {
     setToasts((prev) => prev.filter((t) => t.toastId !== toastId));

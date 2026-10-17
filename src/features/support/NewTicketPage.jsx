@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import * as supportApi from "../../api/support";
 import { extractErrorMessage } from "../../api/client";
 import ErrorAlert from "../../components/ErrorAlert";
+import { useNotificationToastContext } from "../notifications/NotificationToastContext";
 
 const CATEGORIES = [
   { value: "order", label: "Order issue" },
@@ -19,6 +20,7 @@ const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide
 
 export default function NewTicketPage() {
   const navigate = useNavigate();
+  const { showToast } = useNotificationToastContext();
   const [params] = useSearchParams();
   const orderId = params.get("order") || "";
 
@@ -32,9 +34,16 @@ export default function NewTicketPage() {
     setSubmitting(true);
     try {
       const ticket = await supportApi.createTicket({ ...form, order: orderId || undefined });
+      showToast({
+        type: "success",
+        title: "Ticket submitted",
+        message: "Our support team has been notified and will get back to you soon.",
+      });
       navigate(`/support/${ticket.id}`, { replace: true });
     } catch (err) {
-      setError(extractErrorMessage(err));
+      const message = extractErrorMessage(err);
+      setError(message);
+      showToast({ type: "error", title: "Couldn't submit ticket", message, duration: 8000 });
     } finally {
       setSubmitting(false);
     }
