@@ -1,14 +1,25 @@
+import {
+  CarFront,
+  ChevronLeft,
+  LayoutDashboard,
+  LifeBuoy,
+  Package,
+  ShoppingCart,
+  Store,
+  Users,
+} from "lucide-react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/AuthContext";
 import ThemeToggle from "../../components/ThemeToggle";
+import NotificationBell from "../../components/NotificationBell";
 
 const NAV_ITEMS = [
-  { to: "/admin", label: "Dashboard", end: true },
-  { to: "/admin/products", label: "Products" },
-  { to: "/admin/orders", label: "Orders" },
-  { to: "/admin/customers", label: "Customers" },
-  { to: "/admin/tickets", label: "Tickets" },
-  { to: "/admin/fitment", label: "Fitment Catalog" },
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin/products", label: "Products", icon: Package },
+  { to: "/admin/orders", label: "Orders", icon: ShoppingCart },
+  { to: "/admin/customers", label: "Customers", icon: Users },
+  { to: "/admin/tickets", label: "Tickets", icon: LifeBuoy },
+  { to: "/admin/fitment", label: "Fitment Catalog", icon: CarFront },
 ];
 
 function WrenchMark() {
@@ -26,11 +37,27 @@ const sectionLabelClasses =
   "px-3 text-[11px] font-semibold uppercase tracking-wider text-[#7C7669] dark:text-[#9FA8B8]";
 
 const navItemClasses = ({ isActive }) =>
-  `rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
+  `group flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
     isActive
       ? "border-[#BF9A63] bg-[#FAF7F2] dark:bg-[#162235] text-[#101B2C] dark:text-white"
       : "border-transparent text-[#7C7669] dark:text-[#9FA8B8] hover:bg-[#FAF7F2] dark:hover:bg-[#162235] hover:text-[#101B2C] dark:hover:text-white"
   }`;
+
+// Icon + label for a sidebar link. The icon takes the gold accent when its page is active.
+function NavContent({ icon: Icon, label, isActive }) {
+  return (
+    <>
+      <Icon
+        aria-hidden="true"
+        strokeWidth={1.75}
+        className={`h-[18px] w-[18px] shrink-0 transition-colors ${
+          isActive ? "text-[#BF9A63]" : "text-[#9A9385] dark:text-[#6F7C93] group-hover:text-[#BF9A63]"
+        }`}
+      />
+      <span className="truncate">{label}</span>
+    </>
+  );
+}
 
 export default function AdminLayout() {
   const { pathname } = useLocation();
@@ -68,18 +95,16 @@ export default function AdminLayout() {
               to="/admin"
               className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#162235] hover:text-[#101B2C] dark:hover:text-white"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
+              <ChevronLeft aria-hidden="true" className="h-4 w-4" strokeWidth={1.75} />
               Back to dashboard
             </Link>
           ) : (
             <>
               <p className={sectionLabelClasses}>Admin</p>
               <div className="mt-2 flex flex-col gap-1">
-                {NAV_ITEMS.map(({ to, label, end }) => (
+                {NAV_ITEMS.map(({ to, label, icon, end }) => (
                   <NavLink key={to} to={to} end={end} className={navItemClasses}>
-                    {label}
+                    {({ isActive }) => <NavContent icon={icon} label={label} isActive={isActive} />}
                   </NavLink>
                 ))}
               </div>
@@ -87,7 +112,7 @@ export default function AdminLayout() {
               <p className={`mt-6 ${sectionLabelClasses}`}>Storefront</p>
               <div className="mt-2 flex flex-col gap-1">
                 <NavLink to="/catalog" className={navItemClasses}>
-                  Catalog
+                  {({ isActive }) => <NavContent icon={Store} label="Catalog" isActive={isActive} />}
                 </NavLink>
               </div>
             </>
@@ -105,7 +130,10 @@ export default function AdminLayout() {
                 {user?.first_name || "Account"}
               </span>
             </Link>
-            <ThemeToggle />
+            <div className="flex items-center gap-3">
+              <NotificationBell />
+              <ThemeToggle />
+            </div>
           </div>
           <button
             onClick={handleLogout}
