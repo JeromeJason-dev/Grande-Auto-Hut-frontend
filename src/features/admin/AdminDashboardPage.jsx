@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import * as adminApi from "../../api/admin";
 import Price from "../../components/Price";
 import Spinner from "../../components/Spinner";
+import { extractErrorMessage } from "../../api/client";
+import RevenueAnalytics from "./RevenueAnalytics";
 
 // Status colors pulled from the existing design tokens, cycled if there are
 // more statuses than colors.
@@ -77,33 +79,33 @@ function OrdersDonut({ entries, total }) {
   const stroke = 20;
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
-  let offset = 0;
+
+  // Cumulative start position of each slice, computed up front (no mutation during render).
+  const slices = entries.map(([status, count], i) => {
+    const dash = (total ? count / total : 0) * circumference;
+    return { status, dash, color: STATUS_COLORS[i % STATUS_COLORS.length] };
+  });
+  const offsets = slices.reduce((acc, s) => [...acc, acc[acc.length - 1] + s.dash], [0]);
 
   return (
     <div className="flex flex-col items-center">
       <div className="relative">
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
           <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#FAF7F2" strokeWidth={stroke} className="dark:stroke-[#0B1320]" />
-          {entries.map(([status, count], i) => {
-            const fraction = total ? count / total : 0;
-            const dash = fraction * circumference;
-            const circle = (
-              <circle
-                key={status}
-                cx={size / 2}
-                cy={size / 2}
-                r={r}
-                fill="none"
-                stroke={STATUS_COLORS[i % STATUS_COLORS.length]}
-                strokeWidth={stroke}
-                strokeDasharray={`${dash} ${circumference - dash}`}
-                strokeDashoffset={-offset}
-                strokeLinecap="butt"
-              />
-            );
-            offset += dash;
-            return circle;
-          })}
+          {slices.map((slice, i) => (
+            <circle
+              key={slice.status}
+              cx={size / 2}
+              cy={size / 2}
+              r={r}
+              fill="none"
+              stroke={slice.color}
+              strokeWidth={stroke}
+              strokeDasharray={`${slice.dash} ${circumference - slice.dash}`}
+              strokeDashoffset={-offsets[i]}
+              strokeLinecap="butt"
+            />
+          ))}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-xs text-[#7C7669] dark:text-[#9FA8B8]">Total orders</span>
@@ -129,7 +131,10 @@ function OrdersDonut({ entries, total }) {
 }
 
 export default function AdminDashboardPage() {
-  const { data, isLoading } = useQuery({ queryKey: ["admin-metrics"], queryFn: adminApi.getAdminMetrics });
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["admin-metrics"],
+    queryFn: adminApi.getAdminMetrics,
+  });
 
   if (isLoading) {
     return (
@@ -138,7 +143,24 @@ export default function AdminDashboardPage() {
       </div>
     );
   }
-  if (!data) return null;
+  if (isError || !data) {
+    return (
+      <div className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235] p-6">
+        <p className="text-sm text-red-600 dark:text-red-400">
+          {extractErrorMessage(error, "Couldn't load dashboard metrics.")}
+        </p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="mt-3 rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-3 py-1.5 text-xs font-medium text-[#101B2C] dark:text-white hover:border-[#BF9A63]"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  const lowStockProducts = data.low_stock_products || [];
 
   const statusEntries = Object.entries(data.orders_by_status || {}).sort((a, b) => b[1] - a[1]);
   const totalOrdersForStatus = statusEntries.reduce((sum, [, count]) => sum + count, 0);
@@ -175,12 +197,15 @@ export default function AdminDashboardPage() {
       {/* Stat strip */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Total orders" value={data.total_orders} icon={ICONS.orders} tint="#101B2C" />
-        <StatCard label="Revenue" value={<Price value={data.revenue_confirmed_and_beyond} size="lg" />} icon={ICONS.revenue} tint="#BF9A63" />
+        <StatCard label="Total revenue" value={<Price value={data.revenue_confirmed_and_beyond} size="lg" />} icon={ICONS.revenue} tint="#BF9A63" />
         <StatCard label="Customers" value={data.total_customers} icon={ICONS.customers} tint="#5B7BA6" />
         <StatCard label="Open tickets" value={data.open_tickets} icon={ICONS.tickets} tint="#A9834E" />
         <StatCard label="Pending M-Pesa" value={data.pending_mpesa_payments} icon={ICONS.mpesa} tint="#7C7669" />
         <StatCard label="Low stock parts" value={data.low_stock_count} icon={ICONS.stock} tint="#B5533C" />
       </div>
+
+      {/* Monthly + yearly revenue analytics with bar charts */}
+      <RevenueAnalytics />
 
       {/* Orders by status: bars + donut */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -221,9 +246,9 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          {data.low_stock_products.length > 0 ? (
+          {lowStockProducts.length > 0 ? (
             <div className="mt-3 divide-y divide-[#E7E2D8] dark:divide-[#25344D]">
-              {data.low_stock_products.map((p) => (
+              {lowStockProducts.map((p) => (
                 <div key={p.id} className="flex items-center justify-between py-2.5">
                   <span className="text-sm text-[#1E2430] dark:text-slate-200">
                     {p.name} <span className="font-mono text-xs text-[#7C7669] dark:text-[#9FA8B8]">{p.sku}</span>

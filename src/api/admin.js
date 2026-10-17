@@ -5,6 +5,15 @@ export async function getAdminMetrics() {
   return data;
 }
 
+// Monthly (for `year`) and yearly revenue series plus headline comparisons.
+// Omit `year` to let the server use the current year.
+export async function getRevenueAnalytics(year) {
+  const { data } = await api.get("/admin/revenue-analytics/", {
+    params: year ? { year } : undefined,
+  });
+  return data;
+}
+
 export async function listCustomers() {
   const { data } = await api.get("/auth/admin/customers/");
   return data;
