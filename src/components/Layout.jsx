@@ -77,10 +77,10 @@ export default function Layout() {
   const showFooter = isHome || isAbout || isCatalog;
 
   return (
-    <div className="flex min-h-full flex-col bg-[#FAF7F2] dark:bg-gray-950 text-[#1E2430] dark:text-gray-100 transition-colors">
+    <div className="flex min-h-dvh flex-col bg-[#FAF7F2] dark:bg-gray-950 text-[#1E2430] dark:text-gray-100 transition-colors">
       <Navbar />
 
-      <main className="flex-1">
+      <main className="flex flex-1 flex-col [&>*]:flex-1">
         <Outlet />
       </main>
 
