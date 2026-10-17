@@ -45,14 +45,11 @@ const SOCIAL_LINKS = [
   },
 ];
 
-
-
 // Floating button: shown only on the catalog and about pages.
 function WhatsAppButton() {
-  const href = WHATSAPP_HREF;
   return (
     <a
-      href={href}
+      href={WHATSAPP_HREF}
       target="_blank"
       rel="noreferrer"
       aria-label="Chat with us on WhatsApp"
@@ -68,7 +65,16 @@ function WhatsAppButton() {
 
 export default function Layout() {
   const { pathname } = useLocation();
-  const showFloatingWhatsApp = pathname === "/about" || pathname.startsWith("/catalog");
+
+  // Ignore trailing slashes so "/about/" behaves like "/about"
+  const path = pathname.replace(/\/+$/, "") || "/";
+
+  const isHome = path === "/";
+  const isAbout = path === "/about";
+  const isCatalog = path === "/catalog" || path.startsWith("/catalog/");
+
+  const showFloatingWhatsApp = isAbout || isCatalog;
+  const showFooter = isHome || isAbout || isCatalog;
 
   return (
     <div className="flex min-h-full flex-col bg-[#FAF7F2] dark:bg-gray-950 text-[#1E2430] dark:text-gray-100 transition-colors">
@@ -78,132 +84,134 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="mt-0 border-t border-[#E7E2D8] dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors">
-        <div className="mx-12 px-6 py-10">
-          <div className="grid gap-10 sm:grid-cols-3">
-            {/* Brand */}
-            <div>
-              <h2 className="text-2xl font-semibold text-[#101B2C] dark:text-white">
-                Grande <span className="text-[#BF9A63]">Auto</span> Hut
-              </h2>
-              <p className="mt-3 text-base leading-relaxed text-[#7C7669] dark:text-gray-400">
-                Genuine and aftermarket parts for the Kenyan fleet — matched
-                to your vehicle before an order ever leaves the warehouse.
-              </p>
+      {showFooter && (
+        <footer className="mt-0 border-t border-[#E7E2D8] dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors">
+          <div className="mx-4 px-6 py-10 sm:mx-12">
+            <div className="grid gap-10 sm:grid-cols-3">
+              {/* Brand */}
+              <div>
+                <h2 className="text-2xl font-semibold text-[#101B2C] dark:text-white">
+                  Grande <span className="text-[#BF9A63]">Auto</span> Hut
+                </h2>
+                <p className="mt-3 text-base leading-relaxed text-[#7C7669] dark:text-gray-400">
+                  Genuine and aftermarket parts for the Kenyan fleet — matched
+                  to your vehicle before an order ever leaves the warehouse.
+                </p>
 
-              {/* Social links */}
-              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
-                {SOCIAL_LINKS.map(({ label, href, icon }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 text-base text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
-                  >
-                    {icon}
-                    {label}
-                  </a>
-                ))}
+                {/* Social links */}
+                <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+                  {SOCIAL_LINKS.map(({ label, href, icon }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 text-base text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
+                    >
+                      {icon}
+                      {label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick links */}
+              <div>
+                <h3 className="text-lg font-semibold uppercase tracking-wide text-[#101B2C] dark:text-gray-200">
+                  Quick links
+                </h3>
+                <ul className="mt-4 space-y-3">
+                  {QUICK_LINKS.map(({ label, to }) => (
+                    <li key={to}>
+                      <Link
+                        to={to}
+                        className="text-base text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
+                      >
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Contact info */}
+              <div>
+                <h3 className="text-lg font-semibold uppercase tracking-wide text-[#101B2C] dark:text-gray-200">
+                  Get in touch
+                </h3>
+                <ul className="mt-4 space-y-3">
+                  <li>
+                    <div className="flex items-start gap-3 text-base text-[#7C7669] dark:text-gray-400">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="mt-0.5 h-5 w-5 shrink-0 text-[#BF9A63]"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M12 21s-6.75-6.19-6.75-11.25a6.75 6.75 0 0 1 13.5 0C18.75 14.81 12 21 12 21Z"
+                        />
+                        <circle cx="12" cy="9.75" r="2.25" strokeWidth={1.5} />
+                      </svg>
+                      <span>South B, Industrial Area, Nairobi, Kenya</span>
+                    </div>
+                  </li>
+                  <li>
+                    <a
+                      href="mailto:grandeautohut@gmail.com"
+                      className="flex items-center gap-3 text-base text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="h-5 w-5 shrink-0 text-[#BF9A63]"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M3.75 6.75h16.5v10.5H3.75V6.75Zm0 0 8.25 6 8.25-6"
+                        />
+                      </svg>
+                      grandeautohut@gmail.com
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="tel:+254723113311"
+                      className="flex items-center gap-3 text-base text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="h-5 w-5 shrink-0 text-[#BF9A63]"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M4.5 5.25c0-.83.67-1.5 1.5-1.5h2.02c.7 0 1.3.47 1.46 1.15l.72 3.06a1.5 1.5 0 0 1-.4 1.42l-1.37 1.37a12.02 12.02 0 0 0 5.82 5.82l1.37-1.37a1.5 1.5 0 0 1 1.42-.4l3.06.72c.68.16 1.15.76 1.15 1.46v2.02c0 .83-.67 1.5-1.5 1.5H19.5C10.94 20.5 3.5 13.06 3.5 4.5v-.75"
+                        />
+                      </svg>
+                      +254 723 113311
+                    </a>
+                  </li>
+                </ul>
               </div>
             </div>
 
-            {/* Quick links */}
-            <div>
-              <h3 className="text-lg font-semibold uppercase tracking-wide text-[#101B2C] dark:text-gray-200">
-                Quick links
-              </h3>
-              <ul className="mt-4 space-y-3">
-                {QUICK_LINKS.map(({ label, to }) => (
-                  <li key={to}>
-                    <Link
-                      to={to}
-                      className="text-base text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
-                    >
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Contact info */}
-            <div>
-              <h3 className="text-lg font-semibold uppercase tracking-wide text-[#101B2C] dark:text-gray-200">
-                Get in touch
-              </h3>
-              <ul className="mt-4 space-y-3">
-                <li>
-                  <div className="flex items-start gap-3 text-base text-[#7C7669] dark:text-gray-400">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="h-5 w-5 shrink-0 mt-0.5 text-[#BF9A63]"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M12 21s-6.75-6.19-6.75-11.25a6.75 6.75 0 0 1 13.5 0C18.75 14.81 12 21 12 21Z"
-                      />
-                      <circle cx="12" cy="9.75" r="2.25" strokeWidth={1.5} />
-                    </svg>
-                    <span>South B, Industrial Area, Nairobi, Kenya</span>
-                  </div>
-                </li>
-                <li>
-                  <a
-                    href="mailto:grandeautohut@gmail.com"
-                    className="flex items-center gap-3 text-base text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="h-5 w-5 shrink-0 text-[#BF9A63]"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M3.75 6.75h16.5v10.5H3.75V6.75Zm0 0 8.25 6 8.25-6"
-                      />
-                    </svg>
-                    grandeautohut@gmail.com
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="tel:+254723113311"
-                    className="flex items-center gap-3 text-base text-[#7C7669] dark:text-gray-400 transition-colors hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="h-5 w-5 shrink-0 text-[#BF9A63]"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M4.5 5.25c0-.83.67-1.5 1.5-1.5h2.02c.7 0 1.3.47 1.46 1.15l.72 3.06a1.5 1.5 0 0 1-.4 1.42l-1.37 1.37a12.02 12.02 0 0 0 5.82 5.82l1.37-1.37a1.5 1.5 0 0 1 1.42-.4l3.06.72c.68.16 1.15.76 1.15 1.46v2.02c0 .83-.67 1.5-1.5 1.5H19.5C10.94 20.5 3.5 13.06 3.5 4.5v-.75"
-                      />
-                    </svg>
-                    +254 723 113311
-                  </a>
-                </li>
-              </ul>
+            <div className="mt-10 border-t border-[#E7E2D8] dark:border-gray-800 pt-6 text-center text-sm text-[#7C7669] dark:text-gray-500">
+              &copy; {new Date().getFullYear()} Grande Auto Hut — genuine and
+              aftermarket parts for the Kenyan fleet.
             </div>
           </div>
-
-          <div className="mt-10 border-t border-[#E7E2D8] dark:border-gray-800 pt-6 text-center text-sm text-[#7C7669] dark:text-gray-500">
-            &copy; {new Date().getFullYear()} Grande Auto Hut — genuine and
-            aftermarket parts for the Kenyan fleet.
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
 
       {showFloatingWhatsApp && <WhatsAppButton />}
     </div>
