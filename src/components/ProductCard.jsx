@@ -139,18 +139,19 @@ export default function ProductCard({
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] text-[#1E2430] dark:text-slate-100 transition-all duration-200 hover:-translate-y-1 hover:border-[#BF9A63]/60 hover:shadow-[0_16px_32px_rgba(16,27,44,0.1)] dark:hover:shadow-[0_16px_32px_rgba(0,0,0,0.5)]">
       <Link to={`/catalog/${slug}`} className="contents">
-        <div className="relative aspect-square overflow-hidden bg-white dark:bg-[#0B121F]">
+        {/* Image: shorter 4:3 frame instead of a full square */}
+        <div className="relative aspect-[4/3] overflow-hidden bg-white dark:bg-[#0B121F]">
           {imageSrc ? (
             <img
               src={imageSrc}
               alt={name}
               loading="lazy"
               onError={() => setFailedSrc(imageSrc)}
-              className="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+              className="h-full w-full object-contain p-3 transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-[#D8D2C4] dark:text-white/20">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <circle cx="8.5" cy="8.5" r="1.5" />
                 <path d="m21 15-5-5L5 21" />
@@ -158,32 +159,32 @@ export default function ProductCard({
             </div>
           )}
 
-          <span className="absolute left-2 top-2 rounded border border-[#E7E2D8] dark:border-white/10 bg-white/95 dark:bg-[#101B2C]/95 px-2 py-0.5 font-mono text-[11px] text-[#7C7669] dark:text-slate-300">
+          <span className="absolute left-2 top-2 rounded border border-[#E7E2D8] dark:border-white/10 bg-white/95 dark:bg-[#101B2C]/95 px-2 py-0.5 font-mono text-xs text-[#7C7669] dark:text-slate-300">
             {activeVariant.sku}
           </span>
 
           <div className="absolute right-2 top-2 flex items-center">
-            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${conditionStyle}`}>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${conditionStyle}`}>
               {conditionLabel}
             </span>
           </div>
 
           {isOutOfStock && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-black/75 backdrop-blur-[1px]">
-              <span className="rounded-md bg-[#101B2C] dark:bg-[#101B2C] px-3 py-1 text-xs font-semibold text-white border border-[#BF9A63]/30">
+              <span className="rounded-md bg-[#101B2C] dark:bg-[#101B2C] px-3 py-1 text-sm font-semibold text-white border border-[#BF9A63]/30">
                 Out of stock
               </span>
             </div>
           )}
         </div>
 
-        <div className="flex flex-1 flex-col gap-1.5 p-4">
-          <span className="text-[13px] text-[#7C7669] dark:text-slate-400">
+        <div className="flex flex-1 flex-col gap-1 p-3">
+          <span className="text-sm text-[#7C7669] dark:text-slate-400">
             {brand} · {category}
           </span>
-          <strong className="line-clamp-2 min-h-[2.75rem] leading-snug text-[#101B2C] dark:text-white group-hover:text-[#BF9A63] transition-colors">{name}</strong>
+          <strong className="line-clamp-2 min-h-[3rem] text-base leading-snug text-[#101B2C] dark:text-white group-hover:text-[#BF9A63] transition-colors">{name}</strong>
 
-          <div className="mt-auto flex items-center justify-between pt-2">
+          <div className="mt-auto flex items-center justify-between pt-1.5">
             <Price value={activeVariant.price} />
             
             <div className="flex items-center gap-2">
@@ -222,14 +223,14 @@ export default function ProductCard({
       </Link>
 
       {hasMultipleConditions && (
-        <div className="flex flex-wrap gap-1.5 border-t border-[#E7E2D8] dark:border-white/10 px-3 py-3">
+        <div className="flex flex-wrap gap-1.5 border-t border-[#E7E2D8] dark:border-white/10 px-3 py-2.5">
           {conditionVariants.map((v) => (
             <button
               key={v.condition}
               type="button"
               onClick={() => setSelectedCondition(v.condition)}
               aria-pressed={v.condition === selectedCondition}
-              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+              className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
                 v.condition === selectedCondition
                   ? CONDITION_STYLES[v.condition]
                   : CONDITION_PILL_INACTIVE + " dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:border-[#BF9A63]/30"
@@ -243,10 +244,10 @@ export default function ProductCard({
 
       {/* Actions */}
       {showFooterActions && (
-        <div className="flex items-center gap-2 border-t border-[#E7E2D8] dark:border-white/10 p-3">
+        <div className="flex items-center gap-2 border-t border-[#E7E2D8] dark:border-white/10 p-2.5">
           <Link
             to={`/catalog/${slug}?condition=${activeVariant.condition}`}
-            className="flex-1 rounded-md border border-[#E7E2D8] dark:border-white/20 px-3 py-2 text-center text-sm font-medium text-[#101B2C] dark:text-slate-200 transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63] dark:hover:border-[#BF9A63] dark:hover:text-[#BF9A63]"
+            className="flex-1 rounded-md border border-[#E7E2D8] dark:border-white/20 px-3 py-1.5 text-center text-base font-medium text-[#101B2C] dark:text-slate-200 transition-colors hover:border-[#BF9A63] hover:text-[#BF9A63] dark:hover:border-[#BF9A63] dark:hover:text-[#BF9A63]"
           >
             View details
           </Link>
@@ -254,7 +255,7 @@ export default function ProductCard({
             type="button"
             disabled={isOutOfStock || isAdding}
             onClick={handleAddToCart}
-            className="flex-1 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-3 py-2 text-sm font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] dark:disabled:bg-white/10 disabled:text-[#7C7669] dark:disabled:text-slate-500"
+            className="flex-1 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-3 py-1.5 text-base font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] dark:disabled:bg-white/10 disabled:text-[#7C7669] dark:disabled:text-slate-500"
           >
             {isAdding ? "Adding…" : "Add to cart"}
           </button>
