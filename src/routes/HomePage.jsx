@@ -19,8 +19,8 @@ const TRUST_MARKERS = [
 
 const WHY_US = [
   {
-    title: "M-Pesa & pay on delivery",
-    body: "Secure STK Push checkout, or settle the invoice when your parts arrive — whichever suits your fleet's workflow.",
+    title: "M-Pesa, card & pay on delivery",
+    body: "Secure STK Push or card checkout, or settle the invoice when your parts arrive — whichever suits your fleet's workflow.",
     icon: (
       <path
         strokeLinecap="round"

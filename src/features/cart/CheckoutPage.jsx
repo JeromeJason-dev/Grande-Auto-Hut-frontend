@@ -18,6 +18,12 @@ const fieldClasses =
 
 const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669] dark:text-[#9FA8B8]";
 
+const PAYMENT_OPTIONS = [
+  { value: "mpesa", title: "M-Pesa", desc: "pay now via STK push", button: "pay with M-Pesa" },
+  { value: "card", title: "Card", desc: "Visa or Mastercard on a secure payment page", button: "pay by card" },
+  { value: "cod", title: "Pay on Delivery", desc: "pay cash when your order arrives", button: "pay on delivery" },
+];
+
 
 function CartItemImage({ product }) {
   const [failedSrc, setFailedSrc] = useState(null);
@@ -64,7 +70,8 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState("mpesa");
   const [mpesaPhone, setMpesaPhone] = useState("");
   const [error, setError] = useState("");
-  const [step, setStep] = useState("form"); // form | placing | awaiting-mpesa | done
+  const [step, setStep] = useState("form"); // form | placing | awaiting-mpesa | redirecting-card | card-error | done
+  const [cardError, setCardError] = useState("");
   const [placedOrder, setPlacedOrder] = useState(null);
 
   const addresses = unwrapList(addressesQuery.data);
@@ -86,6 +93,20 @@ export default function CheckoutPage() {
     );
   }
 
+  // Sends the browser to the provider's hosted card page. The order already exists,
+  // so a failure here must never throw the customer back to the checkout form.
+  const startCardPayment = async (orderIdentifier) => {
+    setCardError("");
+    setStep("redirecting-card");
+    try {
+      const { payment_url } = await paymentsApi.initiateCard(orderIdentifier);
+      window.location.assign(payment_url);
+    } catch (err) {
+      setCardError(extractErrorMessage(err));
+      setStep("card-error");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -105,17 +126,20 @@ export default function CheckoutPage() {
 
     // The order exists from here on, so never fall back to the checkout form.
     const isMpesa = paymentMethod === "mpesa";
+    const isCard = paymentMethod === "card";
     const orderIdentifier = order?.id || order?.order_number;
     const orderLabel = order?.order_number ? `Order ${order.order_number}` : "Your order";
 
     setPlacedOrder(order);
-    setStep(isMpesa ? "awaiting-mpesa" : "done");
+    setStep(isMpesa ? "awaiting-mpesa" : isCard ? "redirecting-card" : "done");
 
     showToast({
       type: "order",
       title: "Order placed",
       message: isMpesa
         ? `${orderLabel} has been placed. Check your phone to complete the M-Pesa payment.`
+        : isCard
+        ? `${orderLabel} has been placed. Taking you to the secure card payment page.`
         : `${orderLabel} has been placed and is being prepared.`,
       duration: 8000,
       actions: [
@@ -134,6 +158,11 @@ export default function CheckoutPage() {
       // The cart will resync on the next load.
     }
     refreshNotificationsQuietly();
+
+    if (isCard) {
+      await startCardPayment(orderIdentifier);
+      return;
+    }
 
     if (isMpesa) {
       try {
@@ -155,6 +184,54 @@ export default function CheckoutPage() {
       }
     }
   };
+
+  if (step === "redirecting-card") {
+    return (
+      <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-16 transition-colors">
+        <div className="mx-auto max-w-lg">
+          <div className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-8 text-center shadow-[0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
+            <h1 className="text-xl font-semibold text-[#101B2C] dark:text-white">Redirecting to secure payment…</h1>
+            <p className="mt-3 text-sm leading-relaxed text-[#7C7669] dark:text-[#9FA8B8]">
+              Order <strong className="font-mono text-[#101B2C] dark:text-white">{placedOrder?.order_number}</strong> is placed.
+              Please don't close this page — you'll enter your card details on our payment provider's secure page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "card-error") {
+    const orderIdentifier = placedOrder?.id || placedOrder?.order_number;
+    return (
+      <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-16 transition-colors">
+        <div className="mx-auto max-w-lg">
+          <div className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-8 text-center shadow-[0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
+            <h1 className="text-xl font-semibold text-[#101B2C] dark:text-white">Card payment didn't start</h1>
+            <p className="mt-3 text-sm leading-relaxed text-[#7C7669] dark:text-[#9FA8B8]">
+              Your order <strong className="font-mono text-[#101B2C] dark:text-white">{placedOrder?.order_number}</strong> is saved
+              but not yet paid. {cardError}
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => startCardPayment(orderIdentifier)}
+                className="rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
+              >
+                Try again
+              </button>
+              <Link
+                to={`/orders/${orderIdentifier}`}
+                className="rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-5 py-2.5 text-sm font-medium text-[#101B2C] dark:text-white transition-colors hover:border-[#BF9A63]"
+              >
+                View order
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (step === "awaiting-mpesa") {
     const orderIdentifier = placedOrder?.id || placedOrder?.order_number;
@@ -346,42 +423,27 @@ export default function CheckoutPage() {
             </h2>
 
             <div className="mt-3 flex flex-col gap-2">
-              <label
-                className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-[#FAF7F2] dark:bg-[#162235] p-3.5 text-sm transition-colors ${
-                  paymentMethod === "mpesa"
-                    ? "border-[#101B2C] dark:border-[#BF9A63] ring-1 ring-[#101B2C]/30 dark:ring-[#BF9A63]/30"
-                    : "border-[#E7E2D8] dark:border-[#25344D] hover:border-[#101B2C]/40 dark:hover:border-[#BF9A63]/40"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  checked={paymentMethod === "mpesa"}
-                  onChange={() => setPaymentMethod("mpesa")}
-                  className="h-4 w-4 accent-[#101B2C] dark:accent-[#BF9A63]"
-                />
-                <span className="text-[#374151] dark:text-[#D1D5DB]">
-                  <strong className="text-[#101B2C] dark:text-white">M-Pesa</strong> — pay now via STK push
-                </span>
-              </label>
-              <label
-                className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-[#FAF7F2] dark:bg-[#162235] p-3.5 text-sm transition-colors ${
-                  paymentMethod === "cod"
-                    ? "border-[#101B2C] dark:border-[#BF9A63] ring-1 ring-[#101B2C]/30 dark:ring-[#BF9A63]/30"
-                    : "border-[#E7E2D8] dark:border-[#25344D] hover:border-[#101B2C]/40 dark:hover:border-[#BF9A63]/40"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  checked={paymentMethod === "cod"}
-                  onChange={() => setPaymentMethod("cod")}
-                  className="h-4 w-4 accent-[#101B2C] dark:accent-[#BF9A63]"
-                />
-                <span className="text-[#374151] dark:text-[#D1D5DB]">
-                  <strong className="text-[#101B2C] dark:text-white">Pay on Delivery</strong> — pay cash when your order arrives
-                </span>
-              </label>
+              {PAYMENT_OPTIONS.map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-[#FAF7F2] dark:bg-[#162235] p-3.5 text-sm transition-colors ${
+                    paymentMethod === opt.value
+                      ? "border-[#101B2C] dark:border-[#BF9A63] ring-1 ring-[#101B2C]/30 dark:ring-[#BF9A63]/30"
+                      : "border-[#E7E2D8] dark:border-[#25344D] hover:border-[#101B2C]/40 dark:hover:border-[#BF9A63]/40"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={paymentMethod === opt.value}
+                    onChange={() => setPaymentMethod(opt.value)}
+                    className="h-4 w-4 accent-[#101B2C] dark:accent-[#BF9A63]"
+                  />
+                  <span className="text-[#374151] dark:text-[#D1D5DB]">
+                    <strong className="text-[#101B2C] dark:text-white">{opt.title}</strong> — {opt.desc}
+                  </span>
+                </label>
+              ))}
             </div>
 
             {paymentMethod === "mpesa" && (
@@ -403,7 +465,7 @@ export default function CheckoutPage() {
             >
               {step === "placing"
                 ? "Placing order…"
-                : `Place order — ${paymentMethod === "mpesa" ? "pay with M-Pesa" : "pay on delivery"}`}
+                : `Place order — ${PAYMENT_OPTIONS.find((o) => o.value === paymentMethod)?.button}`}
             </button>
           </form>
 

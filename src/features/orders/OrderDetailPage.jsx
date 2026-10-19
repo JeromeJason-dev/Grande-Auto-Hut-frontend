@@ -1,12 +1,22 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ordersApi from "../../api/orders";
+import * as paymentsApi from "../../api/payments";
+import { extractErrorMessage } from "../../api/client";
 import OrderStatusBadge from "../../components/OrderStatusBadge";
 import Price from "../../components/Price";
 import Spinner from "../../components/Spinner";
 import ErrorAlert from "../../components/ErrorAlert";
 
 const STEPS = ["pending", "confirmed", "processing", "in_transit", "delivered"];
+const PAYMENT_METHOD_LABEL = { mpesa: "M-Pesa", card: "Card", cod: "Pay on Delivery" };
+const PAYMENT_STATUS_STYLE = {
+  paid: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+  pending: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
+  failed: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
+};
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const STEP_LABEL = { pending: "Placed", confirmed: "Confirmed", processing: "Processing", in_transit: "In Transit", delivered: "Delivered" };
 
 function Tracker({ status }) {
@@ -54,11 +64,73 @@ function Tracker({ status }) {
 export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  // The card provider sends the customer back here with ?reference=...&trxref=...
+  const returnedReference = searchParams.get("reference") || searchParams.get("trxref");
+  const [verifying, setVerifying] = useState(Boolean(returnedReference));
+  const [paying, setPaying] = useState(false);
+  const [payError, setPayError] = useState("");
+  const [payNotice, setPayNotice] = useState("");
+  const verifiedOnce = useRef(false);
+
   const { data: order, isLoading, isError } = useQuery({
     queryKey: ["order", id],
     queryFn: () => ordersApi.getOrder(id),
     enabled: Boolean(id),
+    // Keep checking for a short while after a card payment so the page flips to "paid" by itself.
+    refetchInterval: (query) =>
+      returnedReference && query.state.data?.payment_status === "pending" ? 4000 : false,
   });
+
+  useEffect(() => {
+    if (!returnedReference || !id || verifiedOnce.current) return;
+    verifiedOnce.current = true;
+    (async () => {
+      try {
+        let payment = null;
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          payment = await paymentsApi.verifyCard(id, returnedReference);
+          if (payment.status !== "pending") break;
+          await sleep(2500);
+        }
+        if (payment?.status === "failed") setPayError("The card payment was not completed. You can try again below.");
+        if (payment?.status === "pending") setPayNotice("We're still waiting for your bank to confirm the payment. This page will update automatically.");
+      } catch (err) {
+        setPayError(extractErrorMessage(err));
+      } finally {
+        await queryClient.invalidateQueries({ queryKey: ["order", id] });
+        setVerifying(false);
+        setSearchParams({}, { replace: true });
+      }
+    })();
+  }, [returnedReference, id, queryClient, setSearchParams]);
+
+  const payByCard = async () => {
+    setPaying(true);
+    setPayError("");
+    try {
+      const { payment_url } = await paymentsApi.initiateCard(order.id);
+      window.location.assign(payment_url);
+    } catch (err) {
+      setPayError(extractErrorMessage(err));
+      setPaying(false);
+    }
+  };
+
+  const resendMpesa = async () => {
+    setPaying(true);
+    setPayError("");
+    setPayNotice("");
+    try {
+      await paymentsApi.initiateMpesa(order.id, order.phone_number);
+      setPayNotice(`M-Pesa prompt sent to ${order.phone_number}. Enter your PIN to complete payment.`);
+    } catch (err) {
+      setPayError(extractErrorMessage(err));
+    } finally {
+      setPaying(false);
+    }
+  };
 
   if (isLoading)
     return (
@@ -128,6 +200,47 @@ export default function OrderDetailPage() {
             <span className="font-semibold text-[#101B2C] dark:text-white">Total</span>
             <Price value={order.total} size="lg" />
           </div>
+        </div>
+
+        <div className="mb-5 rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] p-5 shadow-sm dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-[#7C7669] dark:text-slate-400">Payment</h3>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <span className="text-[#1E2430] dark:text-slate-200">
+              {PAYMENT_METHOD_LABEL[order.payment_method] || order.payment_method}
+            </span>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                PAYMENT_STATUS_STYLE[order.payment_status] || PAYMENT_STATUS_STYLE.pending
+              }`}
+            >
+              {verifying ? "Confirming…" : order.payment_status}
+            </span>
+          </div>
+
+          {payNotice && <p className="mt-3 text-sm text-[#7C7669] dark:text-slate-400">{payNotice}</p>}
+          {payError && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{payError}</p>}
+
+          {!verifying && order.status === "pending" && order.payment_status !== "paid" && order.payment_method === "card" && (
+            <button
+              type="button"
+              onClick={payByCard}
+              disabled={paying}
+              className="mt-4 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {paying ? "Opening secure payment…" : order.payment_status === "failed" ? "Try card payment again" : "Pay now by card"}
+            </button>
+          )}
+
+          {!verifying && order.status === "pending" && order.payment_status !== "paid" && order.payment_method === "mpesa" && (
+            <button
+              type="button"
+              onClick={resendMpesa}
+              disabled={paying}
+              className="mt-4 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {paying ? "Sending…" : "Resend M-Pesa prompt"}
+            </button>
+          )}
         </div>
 
         <div className="mb-5 rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] p-5 shadow-sm dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
