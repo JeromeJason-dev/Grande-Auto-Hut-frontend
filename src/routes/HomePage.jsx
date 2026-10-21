@@ -11,10 +11,23 @@ const FLEET = ["Toyota", "Nissan", "Subaru", "Mazda", "Isuzu", "Mitsubishi"];
 // How many products the "Recently added" section shows.
 const RECENT_COUNT = 4;
 
-const TRUST_MARKERS = [
-  { value: "12,000+", label: "Genuine OEM SKUs in stock" },
-  { value: "48-Hour", label: "Express freight, door to door" },
-  { value: "100%", label: "Fitment-verified before dispatch" },
+// Hero quick-info cards (icon + small label + bold value), Godown style.
+const HERO_STATS = [
+  {
+    label: "Genuine OEM",
+    value: "12,000+ SKUs in stock",
+    icon: "M21 8 12 3 3 8m18 0-9 5m9-5v8l-9 5m0-8L3 8m9 5v8M3 8v8l9 5",
+  },
+  {
+    label: "Express freight",
+    value: "48-Hour, door to door",
+    icon: "M3 7h11v9H3V7Zm11 3h4l3 3v3h-7v-6Zm-9 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm12 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z",
+  },
+  {
+    label: "Fitment",
+    value: "100% verified pre-dispatch",
+    icon: "M12 3 4 6v6c0 4.5 3.2 7.4 8 9 4.8-1.6 8-4.5 8-9V6l-8-3Zm-2.5 9.5 1.8 1.8L15.5 10",
+  },
 ];
 
 const WHY_US = [
@@ -111,65 +124,104 @@ export default function HomePage() {
 
   return (
     <div className="bg-slate-50 text-base text-slate-900 dark:bg-[#0B121F] dark:text-slate-100 min-h-screen transition-colors duration-200">
-      {/* Hero */}
-      <section
-        className="relative isolate overflow-hidden bg-slate-900 dark:bg-[#101B2C] bg-cover bg-center py-24 md:py-32"
-        style={{ backgroundImage: "url('/grande_auto_hut_shop.jpg')" }}
-      >
-        <div className="absolute inset-0 bg-slate-950/70 dark:bg-gradient-to-b dark:from-[#0B121F]/70 dark:via-[#0B121F]/60 dark:to-[#0B121F]/85" />
+      {/* Hero (Godown-style: full-bleed dimmed photo, centered copy, glass info cards) */}
+      <section className="relative flex min-h-[90vh] items-center justify-center overflow-hidden py-20">
+        {/* Background image + fade into page background */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/grande_auto_hut_shop.jpg"
+            alt="Fitment Konnect parts shop"
+            className="h-full w-full object-cover object-center brightness-[0.35] dark:brightness-[0.25]"
+          />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-slate-50 to-transparent dark:inset-0 dark:h-auto dark:from-[#0B121F] dark:via-transparent" />
+        </div>
 
-        <div className="relative mx-auto flex max-w-[750px] flex-col items-center px-6 text-center">
-          <div className="flex flex-col items-center gap-[1.2rem] rounded-2xl border border-white/[0.15] bg-slate-900/80 dark:bg-[#101B2C]/70 px-6 py-10 shadow-xl backdrop-blur-[12px] md:px-10 md:py-14">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3.5 py-1.5 text-xs font-medium tracking-wide text-white backdrop-blur-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#BF9A63]" />
-              Built for the Kenyan fleet
+        <div className="relative z-10 mx-auto max-w-5xl space-y-9 px-4 text-center sm:px-6 lg:px-8">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#BF9A63]/30 bg-[#BF9A63]/10 px-4 py-2 text-sm font-semibold tracking-wide text-[#D9B97F] backdrop-blur-md">
+            <Icon className="h-4 w-4 fill-current">
+              <path d="M12 2.5l2.9 6 6.6.6-5 4.4 1.5 6.5L12 16.9 6 20l1.5-6.5-5-4.4 6.6-.6L12 2.5Z" />
+            </Icon>
+            <span>Built for the Kenyan fleet</span>
+          </div>
+
+          {/* Headline */}
+          <h1 className="font-['Playfair_Display',serif] text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl lg:text-7xl">
+            Genuine Parts. Precise Fit.
+            <br />
+            <span className="bg-gradient-to-r from-[#BF9A63] to-[#E8CFA0] bg-clip-text text-transparent">
+              Zero Guesswork.
             </span>
+          </h1>
 
-            <h1 className="mt-6 max-w-[20ch] text-[2.5rem] font-semibold leading-tight text-white md:text-[3.25rem]">
-              Genuine Parts. <span className="text-[#BF9A63]">Precise Fit.</span> Zero Guesswork.
-            </h1>
-            <p className="mt-5 max-w-[46ch] text-lg leading-relaxed text-slate-200 dark:text-slate-300">
-              We stock genuine, top-grade components at fair retail pricing —
-              checked against your vehicle's exact specification and backed
-              by counter staff who actually know what's under the hood.
-            </p>
+          {/* Sub-copy */}
+          <p className="mx-auto max-w-3xl text-lg font-light leading-relaxed text-slate-100 sm:text-xl">
+            Genuine, top-grade components at fair retail pricing — checked against
+            your vehicle's exact specification and backed by counter staff who{" "}
+            <strong className="font-semibold text-[#D9B97F]">actually know what's under the hood.</strong>
+          </p>
 
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                to="/catalog"
-                className="rounded-md bg-[#BF9A63] px-6 py-3 text-base font-medium text-slate-900 dark:text-[#101B2C] shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#A9834E]"
+          {/* CTAs */}
+          <div className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
+            <Link
+              to="/catalog"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#BF9A63] px-8 py-4 text-base font-bold text-slate-900 shadow-xl shadow-[#BF9A63]/20 transition-all hover:scale-105 hover:bg-[#A9834E] sm:w-auto"
+            >
+              <Icon className="h-5 w-5">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.8}
+                  d="M4 6h16M4 12h16M4 18h10"
+                />
+              </Icon>
+              View Catalog
+            </Link>
+            <Link
+              to="/register"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-white/30 px-8 py-4 text-base font-bold text-white backdrop-blur-sm transition-all hover:scale-105 hover:border-[#BF9A63] hover:bg-[#BF9A63]/10 sm:w-auto"
+            >
+              <Icon className="h-5 w-5">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.8}
+                  d="M15 19a6 6 0 0 0-12 0m9-11a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm6 1v6m3-3h-6"
+                />
+              </Icon>
+              Get Started
+            </Link>
+          </div>
+
+          {/* Quick info cards */}
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-4 pt-12 text-left md:grid-cols-3">
+            {HERO_STATS.map(({ label, value, icon }) => (
+              <div
+                key={label}
+                className="flex items-center gap-4 rounded-2xl border border-white/10 bg-[#101B2C]/75 p-4 backdrop-blur-md"
               >
-                View Catalog
-              </Link>
-              <Link
-                to="/register"
-                className="rounded-md border border-white/30 bg-white/10 px-6 py-3 text-base font-medium text-white backdrop-blur-sm transition-colors hover:border-white hover:bg-white/20"
-              >
-                Get Started
-              </Link>
-            </div>
+                <div className="rounded-xl bg-[#BF9A63]/20 p-3 text-[#D9B97F]">
+                  <Icon className="h-6 w-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={icon} />
+                  </Icon>
+                </div>
+                <div>
+                  <h4 className="text-xs uppercase tracking-wider text-slate-400">{label}</h4>
+                  <p className="text-sm font-bold text-white">{value}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Stat strip + fitment finder */}
+      {/* Fitment finder */}
       <section className="relative overflow-hidden border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0B121F]">
         <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#BF9A63]/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-slate-200 dark:bg-white/5 blur-3xl" />
 
         <div className="relative max-w-7xl mx-auto px-8 py-14">
-          {/* Stat strip */}
-          <dl className="grid grid-cols-1 divide-y divide-slate-200 dark:divide-white/10 border border-slate-200 dark:border-white/10 bg-white dark:bg-[#101B2C] sm:grid-cols-3 sm:divide-x sm:divide-y-0 rounded-xl overflow-hidden shadow-sm">
-            {TRUST_MARKERS.map(({ value, label }) => (
-              <div key={label} className="px-6 py-5">
-                <dt className="text-2xl font-semibold text-slate-900 dark:text-white">{value}</dt>
-                <dd className="mt-1 text-base text-slate-600 dark:text-slate-400">{label}</dd>
-              </div>
-            ))}
-          </dl>
-
-          {/* Fitment finder */}
-          <div className="mt-10 rounded-xl border-2 border-[#BF9A63]/30 bg-white dark:bg-[#101B2C] p-6 shadow-md transition-shadow hover:shadow-lg md:p-7">
+          <div className="rounded-xl border-2 border-[#BF9A63]/30 bg-white dark:bg-[#101B2C] p-6 shadow-md transition-shadow hover:shadow-lg md:p-7">
             <div className="mb-5 flex items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-[#BF9A63]">
                 Flagship feature
