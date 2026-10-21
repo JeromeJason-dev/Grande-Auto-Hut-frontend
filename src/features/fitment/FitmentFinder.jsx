@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import * as fitmentApi from "../../api/fitment";
@@ -9,12 +9,34 @@ const selectClasses =
   "focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/20 " +
   "disabled:cursor-not-allowed disabled:bg-[#FAF7F2] disabled:text-[#B8B2A4]";
 
+// Same look as the admin products-page toolbar controls (light + dark).
+const toolbarSelectClasses =
+  "w-full rounded-md border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#0B1320] px-3 py-2 text-sm " +
+  "text-[#1E2430] dark:text-white focus:border-[#BF9A63] focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/20 " +
+  "disabled:cursor-not-allowed disabled:opacity-60";
+
 const labelClasses = "mb-1.5 block text-xs font-medium text-[#7C7669]";
 
-export default function FitmentFinder({ compact = false }) {
-  const [make, setMake] = useState("");
-  const [model, setModel] = useState("");
-  const [year, setYear] = useState("");
+function SearchIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  );
+}
+
+/**
+ * Make / model / year vehicle search.
+ *
+ * variant="card"    – the original boxed form (home + fitment pages)
+ * variant="toolbar" – a single inline row, used as the search bar of the results table
+ * initial           – optional { make, model, year } slugs/values to pre-select (e.g. from the URL)
+ */
+export default function FitmentFinder({ compact = false, variant = "card", initial = {} }) {
+  const [make, setMake] = useState(initial.make || "");
+  const [model, setModel] = useState(initial.model || "");
+  const [year, setYear] = useState(initial.year ? String(initial.year) : "");
   const navigate = useNavigate();
 
   const makesQuery = useQuery({ queryKey: ["makes"], queryFn: fitmentApi.listMakes });
@@ -33,14 +55,76 @@ export default function FitmentFinder({ compact = false }) {
   const models = unwrapList(modelsQuery.data);
   const years = unwrapList(yearsQuery.data);
 
-  useEffect(() => { setModel(""); setYear(""); }, [make]);
-  useEffect(() => { setYear(""); }, [model]);
+  // Reset dependent selects in the handlers (not in effects) so pre-selected
+  // values from `initial` survive the first render.
+  const handleMake = (value) => { setMake(value); setModel(""); setYear(""); };
+  const handleModel = (value) => { setModel(value); setYear(""); };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!make || !model || !year) return;
     navigate(`/fitment/results?make=${make}&model=${model}&year=${year}`);
   };
+
+  const isToolbar = variant === "toolbar";
+  const selects = isToolbar ? toolbarSelectClasses : selectClasses;
+
+  const makeSelect = (
+    <select
+      id="ff-make"
+      aria-label="Vehicle make"
+      value={make}
+      onChange={(e) => handleMake(e.target.value)}
+      disabled={makesQuery.isLoading}
+      className={selects}
+    >
+      <option value="">Select make</option>
+      {makes.map((m) => <option key={m.id} value={m.slug}>{m.name}</option>)}
+    </select>
+  );
+  const modelSelect = (
+    <select
+      id="ff-model"
+      aria-label="Vehicle model"
+      value={model}
+      onChange={(e) => handleModel(e.target.value)}
+      disabled={!make || modelsQuery.isLoading}
+      className={selects}
+    >
+      <option value="">{make ? "Select model" : "Choose a make first"}</option>
+      {models.map((m) => <option key={m.id} value={m.slug}>{m.name}</option>)}
+    </select>
+  );
+  const yearSelect = (
+    <select
+      id="ff-year"
+      aria-label="Vehicle year"
+      value={year}
+      onChange={(e) => setYear(e.target.value)}
+      disabled={!model || yearsQuery.isLoading}
+      className={selects}
+    >
+      <option value="">{model ? "Select year" : "Choose a model first"}</option>
+      {years.map((y) => <option key={y.id} value={y.year}>{y.year}</option>)}
+    </select>
+  );
+
+  if (isToolbar) {
+    return (
+      <form onSubmit={handleSubmit} role="search" className="flex flex-wrap items-center gap-3">
+        <div className="min-w-[170px] flex-1 sm:max-w-[220px]">{makeSelect}</div>
+        <div className="min-w-[170px] flex-1 sm:max-w-[220px]">{modelSelect}</div>
+        <div className="min-w-[140px] flex-1 sm:max-w-[160px]">{yearSelect}</div>
+        <button
+          type="submit"
+          disabled={!make || !model || !year}
+          className="inline-flex items-center gap-2 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77] disabled:cursor-not-allowed disabled:bg-[#E7E2D8] dark:disabled:bg-[#25344D] disabled:text-[#7C7669] dark:disabled:text-[#9FA8B8]"
+        >
+          <SearchIcon /> Find parts
+        </button>
+      </form>
+    );
+  }
 
   return (
     <form
@@ -59,50 +143,15 @@ export default function FitmentFinder({ compact = false }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-end">
         <div>
           <label htmlFor="ff-make" className={labelClasses}>Make</label>
-          <select
-            id="ff-make"
-            value={make}
-            onChange={(e) => setMake(e.target.value)}
-            disabled={makesQuery.isLoading}
-            className={selectClasses}
-          >
-            <option value="">Select make</option>
-            {makes.map((m) => (
-              <option key={m.id} value={m.slug}>{m.name}</option>
-            ))}
-          </select>
+          {makeSelect}
         </div>
-
         <div>
           <label htmlFor="ff-model" className={labelClasses}>Model</label>
-          <select
-            id="ff-model"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            disabled={!make || modelsQuery.isLoading}
-            className={selectClasses}
-          >
-            <option value="">{make ? "Select model" : "Choose a make first"}</option>
-            {models.map((m) => (
-              <option key={m.id} value={m.slug}>{m.name}</option>
-            ))}
-          </select>
+          {modelSelect}
         </div>
-
         <div>
           <label htmlFor="ff-year" className={labelClasses}>Year</label>
-          <select
-            id="ff-year"
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            disabled={!model || yearsQuery.isLoading}
-            className={selectClasses}
-          >
-            <option value="">{model ? "Select year" : "Choose a model first"}</option>
-            {years.map((y) => (
-              <option key={y.id} value={y.year}>{y.year}</option>
-            ))}
-          </select>
+          {yearSelect}
         </div>
       </div>
 
