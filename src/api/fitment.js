@@ -66,3 +66,29 @@ export async function deleteYear(id) {
   const { data } = await api.delete(`/vehicles/years/${id}/`);
   return data;
 }
+
+// Admin: product <-> vehicle fitment assignments
+export async function listFitments(params = {}) {
+  const { data } = await api.get("/fitments/", { params });
+  return data;
+}
+
+export async function createFitment(payload) {
+  const { data } = await api.post("/fitments/", payload);
+  return data;
+}
+
+// Assign one product to many vehicle years at once: { product, vehicle_years: [ids], notes }
+export async function bulkCreateFitments(payload) {
+  const { data } = await api.post("/fitments/bulk/", payload);
+  return data;
+}
+
+export async function updateFitment(id, payload) {
+  const { data } = await api.patch(`/fitments/${id}/`, payload);
+  return data;
+}
+
+export async function deleteFitment(id) {
+  await api.delete(`/fitments/${id}/`);
+}

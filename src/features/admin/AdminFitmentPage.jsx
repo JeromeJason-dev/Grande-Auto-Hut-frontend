@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as fitmentApi from "../../api/fitment";
 import { unwrapList, extractErrorMessage } from "../../api/client";
 import ErrorAlert from "../../components/ErrorAlert";
+import ProductFitmentAssigner from "./ProductFitmentAssigner";
 
 const inputClasses =
   "h-11 w-full rounded-md border border-[#E7E2D8] bg-white px-3 text-sm text-[#101B2C] " +
@@ -275,14 +276,14 @@ export default function AdminFitmentPage() {
       <div>
         <h1 className="text-xl font-semibold text-[#101B2C] dark:text-white">Vehicle Fitment Catalog</h1>
         <p className="mt-1 text-sm text-[#7C7669] dark:text-[#9FA8B8]">
-          Manage the master list of makes, models, and years used for part compatibility checks.
+          Manage the master list of makes, models and years, then assign products to the vehicles they fit.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* 1. Makes Section */}
         <div className="rounded-xl border border-[#E7E2D8] bg-white p-5 dark:border-slate-800 dark:bg-[#162235]">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#7C7669] dark:text-[#9FA8B8]">1. Vehicle Makes</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#7C7669] dark:text-[#9FA8B8]"> Vehicle Makes</h2>
 
           <form
             onSubmit={(e) => {
@@ -346,7 +347,7 @@ export default function AdminFitmentPage() {
 
         {/* 2. Models Section */}
         <div className="rounded-xl border border-[#E7E2D8] bg-white p-5 dark:border-slate-800 dark:bg-[#162235]">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#7C7669] dark:text-[#9FA8B8]">2. Models</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#7C7669] dark:text-[#9FA8B8]"> Models</h2>
 
           <form
             onSubmit={(e) => {
@@ -416,7 +417,7 @@ export default function AdminFitmentPage() {
 
         {/* 3. Years Section */}
         <div className="rounded-xl border border-[#E7E2D8] bg-white p-5 dark:border-slate-800 dark:bg-[#162235]">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#7C7669] dark:text-[#9FA8B8]">3. Years</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#7C7669] dark:text-[#9FA8B8]"> Years</h2>
 
           <form
             onSubmit={(e) => {
@@ -473,6 +474,8 @@ export default function AdminFitmentPage() {
           </div>
         </div>
       </div>
+
+      <ProductFitmentAssigner />
 
       {editTarget && (
         <EditModal
