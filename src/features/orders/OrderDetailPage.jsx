@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ordersApi from "../../api/orders";
@@ -83,14 +83,16 @@ export default function OrderDetailPage() {
       returnedReference && query.state.data?.payment_status === "pending" ? 4000 : false,
   });
 
-  useEffect(() => {
-    if (!returnedReference || !id || verifiedOnce.current) return;
-    verifiedOnce.current = true;
-    (async () => {
+  // Asks the provider for the transaction result and refreshes the order. Safe to repeat.
+  const confirmCardPayment = useCallback(
+    async (reference) => {
+      setVerifying(true);
+      setPayError("");
+      setPayNotice("");
       try {
         let payment = null;
         for (let attempt = 0; attempt < 5; attempt += 1) {
-          payment = await paymentsApi.verifyCard(id, returnedReference);
+          payment = await paymentsApi.verifyCard(id, reference);
           if (payment.status !== "pending") break;
           await sleep(2500);
         }
@@ -101,20 +103,41 @@ export default function OrderDetailPage() {
       } finally {
         await queryClient.invalidateQueries({ queryKey: ["order", id] });
         setVerifying(false);
-        setSearchParams({}, { replace: true });
       }
-    })();
-  }, [returnedReference, id, queryClient, setSearchParams]);
+    },
+    [id, queryClient]
+  );
+
+  // Arriving with ?reference=... (popup success from checkout, or return from the hosted page).
+  useEffect(() => {
+    if (!returnedReference || !id || verifiedOnce.current) return;
+    verifiedOnce.current = true;
+    confirmCardPayment(returnedReference).finally(() => setSearchParams({}, { replace: true }));
+  }, [returnedReference, id, confirmCardPayment, setSearchParams]);
 
   const payByCard = async () => {
     setPaying(true);
     setPayError("");
+    setPayNotice("");
+    let init;
     try {
-      const { payment_url } = await paymentsApi.initiateCard(order.id);
-      window.location.assign(payment_url);
+      init = await paymentsApi.initiateCard(order.id);
     } catch (err) {
       setPayError(extractErrorMessage(err));
       setPaying(false);
+      return;
+    }
+    try {
+      const result = await paymentsApi.openCardPopup(init.access_code);
+      setPaying(false);
+      if (result.status === "success") {
+        await confirmCardPayment(result.reference || init.reference);
+      } else {
+        setPayNotice("The payment window was closed before the payment was completed. You can try again when you're ready.");
+      }
+    } catch {
+      // Popup couldn't load - fall back to the hosted payment page.
+      window.location.assign(init.payment_url);
     }
   };
 

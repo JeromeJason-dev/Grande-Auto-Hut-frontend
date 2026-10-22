@@ -20,7 +20,7 @@ const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide
 
 const PAYMENT_OPTIONS = [
   { value: "mpesa", title: "M-Pesa", desc: "pay now via STK push", button: "pay with M-Pesa" },
-  { value: "card", title: "Card", desc: "Visa or Mastercard on a secure payment page", button: "pay by card" },
+  { value: "card", title: "Card", desc: "Visa or Mastercard, entered in a secure payment window", button: "pay by card" },
   { value: "cod", title: "Pay on Delivery", desc: "pay cash when your order arrives", button: "pay on delivery" },
 ];
 
@@ -93,17 +93,31 @@ export default function CheckoutPage() {
     );
   }
 
-  // Sends the browser to the provider's hosted card page. The order already exists,
-  // so a failure here must never throw the customer back to the checkout form.
+
   const startCardPayment = async (orderIdentifier) => {
     setCardError("");
     setStep("redirecting-card");
+    let init;
     try {
-      const { payment_url } = await paymentsApi.initiateCard(orderIdentifier);
-      window.location.assign(payment_url);
+      init = await paymentsApi.initiateCard(orderIdentifier);
     } catch (err) {
       setCardError(extractErrorMessage(err));
       setStep("card-error");
+      return;
+    }
+
+    try {
+      const result = await paymentsApi.openCardPopup(init.access_code);
+      if (result.status === "success") {
+        // The order page verifies the payment with the provider and shows the outcome.
+        navigate(`/orders/${orderIdentifier}?reference=${encodeURIComponent(result.reference || init.reference)}`);
+        return;
+      }
+      setCardError("The payment window was closed before the payment was completed.");
+      setStep("card-error");
+    } catch {
+      // The popup couldn't load (blocked script, offline...) - use the hosted page instead.
+      window.location.assign(init.payment_url);
     }
   };
 
@@ -139,7 +153,7 @@ export default function CheckoutPage() {
       message: isMpesa
         ? `${orderLabel} has been placed. Check your phone to complete the M-Pesa payment.`
         : isCard
-        ? `${orderLabel} has been placed. Taking you to the secure card payment page.`
+        ? `${orderLabel} has been placed. Opening the secure card payment window.`
         : `${orderLabel} has been placed and is being prepared.`,
       duration: 8000,
       actions: [
@@ -190,10 +204,10 @@ export default function CheckoutPage() {
       <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-16 transition-colors">
         <div className="mx-auto max-w-lg">
           <div className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-8 text-center shadow-[0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
-            <h1 className="text-xl font-semibold text-[#101B2C] dark:text-white">Redirecting to secure payment…</h1>
+            <h1 className="text-xl font-semibold text-[#101B2C] dark:text-white">Complete your card payment</h1>
             <p className="mt-3 text-sm leading-relaxed text-[#7C7669] dark:text-[#9FA8B8]">
               Order <strong className="font-mono text-[#101B2C] dark:text-white">{placedOrder?.order_number}</strong> is placed.
-              Please don't close this page — you'll enter your card details on our payment provider's secure page.
+              Enter your card details in the secure payment window. Please don't close this page.
             </p>
           </div>
         </div>
