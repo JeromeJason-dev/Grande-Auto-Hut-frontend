@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ordersApi from "../../api/orders";
 import * as paymentsApi from "../../api/payments";
@@ -8,6 +8,7 @@ import OrderStatusBadge from "../../components/OrderStatusBadge";
 import Price from "../../components/Price";
 import Spinner from "../../components/Spinner";
 import ErrorAlert from "../../components/ErrorAlert";
+import NewTicketModal from "../support/NewTicketModal";
 
 const STEPS = ["pending", "confirmed", "processing", "in_transit", "delivered"];
 const PAYMENT_METHOD_LABEL = { mpesa: "M-Pesa", card: "Card", cod: "Pay on Delivery" };
@@ -73,6 +74,7 @@ export default function OrderDetailPage() {
   const [payError, setPayError] = useState("");
   const [payNotice, setPayNotice] = useState("");
   const verifiedOnce = useRef(false);
+  const [showTicketModal, setShowTicketModal] = useState(false);
 
   const { data: order, isLoading, isError } = useQuery({
     queryKey: ["order", id],
@@ -295,12 +297,18 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        <Link
-          to={`/support/new?order=${order.id}`}
+        <button
+          type="button"
+          onClick={() => setShowTicketModal(true)}
           className="inline-block rounded-md border border-transparent bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-slate-950 transition-colors hover:bg-[#A9834E]"
         >
           Get help with this order
-        </Link>
+        </button>
+        <NewTicketModal
+          open={showTicketModal}
+          onClose={() => setShowTicketModal(false)}
+          orderId={order.id}
+        />
       </div>
     </div>
   );

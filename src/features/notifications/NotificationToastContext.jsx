@@ -9,7 +9,7 @@ const NotificationToastContext = createContext(null);
 
 // Support alerts for the team: keep them up a little longer than the default,
 // and refresh the ticket queue / dashboard counts behind them.
-const TICKET_ALERT_TYPES = new Set(["new_ticket", "ticket_message"]);
+const TICKET_ALERT_TYPES = new Set(["new_ticket", "ticket_message", "ticket_assigned"]);
 const TICKET_ALERT_DURATION_MS = 10_000;
 
 export function NotificationToastProvider({ children }) {
@@ -51,6 +51,12 @@ export function NotificationToastProvider({ children }) {
         queryClient.invalidateQueries({ queryKey: ["tickets"] });
         queryClient.invalidateQueries({ queryKey: ["ticket"] });
         queryClient.invalidateQueries({ queryKey: ["admin-metrics"] });
+      }
+
+      // A newly assigned task changes workloads on the Staff page.
+      if (fresh.some((n) => n.notification_type === "task_assigned")) {
+        queryClient.invalidateQueries({ queryKey: ["admin-tasks"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-staff"] });
       }
     }
 

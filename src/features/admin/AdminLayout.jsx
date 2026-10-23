@@ -1,12 +1,14 @@
 import {
   CarFront,
   ChevronLeft,
+  ClipboardList,
   LayoutDashboard,
   LifeBuoy,
   Package,
   ShoppingCart,
   Store,
   Users,
+  UsersRound,
 } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/AuthContext";
@@ -65,6 +67,14 @@ export default function AdminLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Admins manage the team; staff get a "My tasks" view of the same page.
+  const isAdmin = user?.role === "admin";
+  const navItems = NAV_ITEMS.flatMap((item) =>
+    item.to === "/admin/tickets"
+      ? [item, { to: "/admin/staff", label: isAdmin ? "Staff" : "My tasks", icon: isAdmin ? UsersRound : ClipboardList }]
+      : [item],
+  );
+
   const handleLogout = async () => {
     await logout();
     navigate("/");
@@ -102,7 +112,7 @@ export default function AdminLayout() {
             <>
               <p className={sectionLabelClasses}>Admin</p>
               <div className="mt-2 flex flex-col gap-1">
-                {NAV_ITEMS.map(({ to, label, icon, end }) => (
+                {navItems.map(({ to, label, icon, end }) => (
                   <NavLink key={to} to={to} end={end} className={navItemClasses}>
                     {({ isActive }) => <NavContent icon={icon} label={label} isActive={isActive} />}
                   </NavLink>
