@@ -27,6 +27,30 @@ const TYPE_META = {
     fg: "text-emerald-600 dark:text-emerald-300",
     icon: "💬",
   },
+  new_ticket: {
+    label: "New ticket",
+    bg: "bg-amber-100 dark:bg-amber-500/15",
+    fg: "text-amber-700 dark:text-amber-300",
+    icon: "🎫",
+  },
+  ticket_message: {
+    label: "Customer reply",
+    bg: "bg-emerald-100 dark:bg-emerald-500/15",
+    fg: "text-emerald-600 dark:text-emerald-300",
+    icon: "💬",
+  },
+  ticket_assigned: {
+    label: "Assigned",
+    bg: "bg-blue-100 dark:bg-blue-500/15",
+    fg: "text-blue-600 dark:text-blue-300",
+    icon: "📌",
+  },
+  task_assigned: {
+    label: "Task",
+    bg: "bg-purple-100 dark:bg-purple-500/15",
+    fg: "text-purple-600 dark:text-purple-300",
+    icon: "✅",
+  },
   general: {
     label: "General",
     bg: "bg-slate-100 dark:bg-white/10",

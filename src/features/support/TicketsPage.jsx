@@ -5,6 +5,7 @@ import * as supportApi from "../../api/support";
 import { unwrapList } from "../../api/client";
 import Spinner from "../../components/Spinner";
 import EmptyState from "../../components/EmptyState";
+import NewTicketModal from "./NewTicketModal";
 
 const STATUS_STYLES = {
   open: "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300",
@@ -96,8 +97,9 @@ export default function TicketsPage() {
   const [sort, setSort] = useState({ key: "date", dir: "desc" });
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
+  const [showNewTicket, setShowNewTicket] = useState(false);
 
-  const { data, isLoading } = useQuery({ queryKey: ["tickets"], queryFn: supportApi.listTickets });
+  const { data, isLoading } = useQuery({ queryKey: ["tickets"], queryFn: () => supportApi.listTickets({ page_size: 100 }) });
   const tickets = unwrapList(data);
 
   const visible = useMemo(() => {
@@ -137,13 +139,14 @@ export default function TicketsPage() {
       <div className="w-full p-8">
         {/* CTA — outside the card, top right */}
         <div className="mb-4 flex justify-end">
-          <Link
-            to="/support/new"
+          <button
+            type="button"
+            onClick={() => setShowNewTicket(true)}
             className="inline-flex h-10 items-center gap-2 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 text-sm font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E]"
           >
             <PlusIcon />
             New ticket
-          </Link>
+          </button>
         </div>
 
         <div className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-white dark:bg-[#162235]">
@@ -328,6 +331,7 @@ export default function TicketsPage() {
           )}
         </div>
       </div>
+      <NewTicketModal open={showNewTicket} onClose={() => setShowNewTicket(false)} />
     </div>
   );
 }

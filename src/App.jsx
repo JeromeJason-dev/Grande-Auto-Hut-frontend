@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { NotificationToastProvider } from "./features/notifications/NotificationToastContext";
@@ -25,7 +25,6 @@ import OrderDetailPage from "./features/orders/OrderDetailPage";
 import WishlistPage from "./features/wishlist/WishlistPage";
 
 import TicketsPage from "./features/support/TicketsPage";
-import NewTicketPage from "./features/support/NewTicketPage";
 import TicketDetailPage from "./features/support/TicketDetailPage";
 
 import NotificationsPage from "./features/notifications/NotificationsPage";
@@ -37,6 +36,8 @@ import AdminProductsPage from "./features/admin/AdminProductsPage";
 import AdminOrdersPage from "./features/admin/AdminOrdersPage";
 import AdminCustomersPage from "./features/admin/AdminCustomersPage";
 import AdminTicketsPage from "./features/admin/AdminTicketsPage";
+import AdminTicketDetailPage from "./features/admin/AdminTicketDetailPage";
+import AdminStaffPage from "./features/admin/AdminStaffPage";
 import AdminFitmentPage from "./features/admin/AdminFitmentPage";
 import AdminAccountPage from "./features/admin/AdminAccountPage";
 
@@ -67,7 +68,7 @@ export default function App() {
           <Route path="wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
 
           <Route path="support" element={<ProtectedRoute><TicketsPage /></ProtectedRoute>} />
-          <Route path="support/new" element={<ProtectedRoute><NewTicketPage /></ProtectedRoute>} />
+          <Route path="support/new" element={<Navigate to="/support" replace />} />
           <Route path="support/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
 
           <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
@@ -83,6 +84,8 @@ export default function App() {
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
           <Route path="tickets" element={<AdminTicketsPage />} />
+          <Route path="tickets/:id" element={<AdminTicketDetailPage />} />
+          <Route path="staff" element={<AdminStaffPage />} />
           <Route path="fitment" element={<AdminFitmentPage />} />
           <Route path="account" element={<AdminAccountPage />} />
         </Route>
