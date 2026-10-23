@@ -5,7 +5,7 @@ import { Archive, Clock, Inbox, Mail, Search, ShieldAlert, UserRound } from "luc
 import * as supportApi from "../../api/support";
 import * as staffApi from "../../api/staff";
 import Spinner from "../../components/Spinner";
-import { Avatar, Badge, Pagination } from "./adminUi";
+import { Avatar, Badge, Pagination } from "./AdminUi";
 import {
   CATEGORY_OPTIONS, PRIORITY_OPTIONS, PRIORITY_STYLES, STATUS_STYLES, TICKET_STATUS_OPTIONS,
   cardClasses, controlClasses, labelOf, timeAgo,

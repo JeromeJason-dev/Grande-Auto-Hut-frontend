@@ -5,7 +5,7 @@ import * as staffApi from "../../api/staff";
 import { extractErrorMessage } from "../../api/client";
 import ErrorAlert from "../../components/ErrorAlert";
 import { useNotificationToastContext } from "../notifications/NotificationToastContext";
-import { Modal } from "./adminUi";
+import { Modal } from "./AdminUi";
 import {
   controlClasses, dangerButton, generatePassword, ghostButton, labelClasses, personName, primaryButton,
 } from "./adminConstants";

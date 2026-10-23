@@ -10,7 +10,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useNotificationToastContext } from "../notifications/NotificationToastContext";
 import TaskModal from "./TaskModal";
 import { DeleteStaffModal, StaffFormModal } from "./StaffModals";
-import { Avatar, Badge, Pagination } from "./adminUi";
+import { Avatar, Badge, Pagination } from "./AdminUi";
 import {
   PRIORITY_OPTIONS, PRIORITY_STYLES, STATUS_STYLES, TASK_STATUS_OPTIONS, TASK_STATUS_STYLES, TICKET_STATUS_OPTIONS,
   cardClasses, controlClasses, formatDate, labelOf, personName, primaryButton, ghostButton, timeAgo,

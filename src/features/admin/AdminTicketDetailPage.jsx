@@ -14,7 +14,7 @@ import Spinner from "../../components/Spinner";
 import { useAuth } from "../auth/AuthContext";
 import { useNotificationToastContext } from "../notifications/NotificationToastContext";
 import TaskModal from "./TaskModal";
-import { Avatar, Badge, Dropdown, Linkify, MenuItem } from "./adminUi";
+import { Avatar, Badge, Dropdown, Linkify, MenuItem } from "./AdminUi";
 import {
   PRIORITY_OPTIONS, PRIORITY_STYLES, STATUS_STYLES, CATEGORY_OPTIONS, TICKET_STATUS_OPTIONS, TASK_STATUS_STYLES, cardClasses, controlClasses, formatBytes, formatDate, formatDateTime, formatShortTime, ghostButton, labelOf, labelClasses, primaryButton, shortId, timeAgo, TASK_STATUS_OPTIONS, useNow,
 } from "./adminConstants";

@@ -5,7 +5,7 @@ import { extractErrorMessage } from "../../api/client";
 import ErrorAlert from "../../components/ErrorAlert";
 import { useAuth } from "../auth/AuthContext";
 import { useNotificationToastContext } from "../notifications/NotificationToastContext";
-import { Modal } from "./adminUi";
+import { Modal } from "./AdminUi";
 import {
   PRIORITY_OPTIONS, controlClasses, labelClasses, primaryButton, ghostButton, personName, shortId,
 } from "./adminConstants";
