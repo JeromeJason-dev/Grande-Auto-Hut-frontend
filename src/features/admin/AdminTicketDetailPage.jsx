@@ -469,9 +469,11 @@ function LinkedTasks({ ticket, user, isAdmin, onAdd }) {
     <section>
       <SidebarHeading
         action={
-          <button type="button" onClick={onAdd} className="inline-flex items-center gap-1 text-xs font-semibold text-[#A9834E] hover:underline dark:text-[#D4AF77]">
-            <Plus className="h-3.5 w-3.5" /> Add
-          </button>
+          isAdmin && (
+            <button type="button" onClick={onAdd} className="inline-flex items-center gap-1 text-xs font-semibold text-[#A9834E] hover:underline dark:text-[#D4AF77]">
+              <Plus className="h-3.5 w-3.5" /> Assign
+            </button>
+          )
         }
       >
         Tasks
@@ -758,9 +760,11 @@ export default function AdminTicketDetailPage() {
               <Mail className="h-4 w-4" strokeWidth={1.75} /> Unread
             </button>
 
-            <button type="button" className={toolbarButton} onClick={() => setShowTask(true)}>
-              <ListPlus className="h-4 w-4" strokeWidth={1.75} /> Add Task
-            </button>
+            {isAdmin && (
+              <button type="button" className={toolbarButton} onClick={() => setShowTask(true)}>
+                <ListPlus className="h-4 w-4" strokeWidth={1.75} /> Assign Task
+              </button>
+            )}
 
             <Dropdown
               align="left" panelClassName="w-56"
@@ -915,7 +919,7 @@ export default function AdminTicketDetailPage() {
         </aside>
       </div>
 
-      {showTask && (
+      {isAdmin && showTask && (
         <TaskModal
           ticket={{ id: ticket.id, subject: ticket.subject, assigned_to: ticket.assigned_to }}
           onClose={() => setShowTask(false)}

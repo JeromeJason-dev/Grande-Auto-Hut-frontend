@@ -270,12 +270,12 @@ function MemberPanel({ member, team, isAdmin, currentUser, onRemoved }) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => setShowTask(true)} className={primaryButton}>
-              <Plus aria-hidden="true" className="h-4 w-4" />
-              {isAdmin && !isOwn ? "Assign task" : "New task"}
-            </button>
             {isAdmin && (
               <>
+                <button type="button" onClick={() => setShowTask(true)} className={primaryButton}>
+                  <Plus aria-hidden="true" className="h-4 w-4" />
+                  {isOwn ? "New task" : "Assign task"}
+                </button>
                 <button type="button" onClick={() => setShowEdit(true)} className={ghostButton}>
                   <Pencil aria-hidden="true" className="h-4 w-4" strokeWidth={1.75} /> Edit
                 </button>
@@ -328,7 +328,7 @@ function MemberPanel({ member, team, isAdmin, currentUser, onRemoved }) {
         )}
       </div>
 
-      {showTask && <TaskModal defaultAssignee={member.id} onClose={() => setShowTask(false)} />}
+      {isAdmin && showTask && <TaskModal defaultAssignee={member.id} onClose={() => setShowTask(false)} />}
       {showEdit && <StaffFormModal member={member} currentUserId={currentUser?.id} onClose={() => setShowEdit(false)} />}
       {showDelete && (
         <DeleteStaffModal
@@ -381,7 +381,7 @@ export default function AdminStaffPage() {
         <div>
           <h1 className="text-2xl font-semibold text-[#101B2C] dark:text-white">{isAdmin ? "Staff" : "My tasks"}</h1>
           <p className="mt-1 text-sm text-[#7C7669] dark:text-[#9FA8B8]">
-            {isAdmin ? "See what everyone is working on, assign tasks, and manage your team." : "Work assigned to you, and anything you add for yourself."}
+            {isAdmin ? "See what everyone is working on, assign tasks, and manage your team." : "Work your admin has assigned to you. Update the status as you go."}
           </p>
         </div>
         {isAdmin && (

@@ -10,14 +10,7 @@ import {
   PRIORITY_OPTIONS, controlClasses, labelClasses, primaryButton, ghostButton, personName, shortId,
 } from "./adminConstants";
 
-/**
- * Create a task (optionally tied to a ticket) or, when `task` is given, edit one (admins only).
- * Mount it only while open: `{open && <TaskModal ... />}` so the form starts fresh every time.
- *
- *  - ticket:          { id, subject, assigned_to } — links the new task to that ticket
- *  - defaultAssignee: user id to preselect (e.g. the staff member whose page is open)
- *  - task:            existing task to edit
- */
+
 export default function TaskModal({ onClose, ticket = null, defaultAssignee = "", task = null }) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -25,7 +18,9 @@ export default function TaskModal({ onClose, ticket = null, defaultAssignee = ""
   const toast = useNotificationToastContext();
   const editing = Boolean(task);
 
-  const { data: staff = [] } = useQuery({ queryKey: ["admin-staff"], queryFn: staffApi.listStaff });
+  const { data: staff = [] } = useQuery({
+    queryKey: ["admin-staff"], queryFn: staffApi.listStaff, enabled: isAdmin,
+  });
 
   const [form, setForm] = useState(() => ({
     title: task?.title ?? (ticket ? `Follow up: ${ticket.subject}` : ""),
@@ -37,8 +32,7 @@ export default function TaskModal({ onClose, ticket = null, defaultAssignee = ""
   const [error, setError] = useState("");
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  // Staff can only create tasks for themselves; the server enforces it too.
-  const assignee = isAdmin ? form.assigned_to || user?.id : user?.id;
+  const assignee = form.assigned_to || user?.id;
 
   const save = useMutation({
     mutationFn: () => {
@@ -57,7 +51,7 @@ export default function TaskModal({ onClose, ticket = null, defaultAssignee = ""
       if (ticket || task?.ticket) queryClient.invalidateQueries({ queryKey: ["ticket"] });
       toast?.showToast({
         type: "success",
-        title: editing ? "Task updated" : "Task created",
+        title: editing ? "Task updated" : "Task assigned",
         message:
           !editing && saved.assigned_to !== user?.id
             ? `Assigned to ${saved.assigned_to_name}.`
@@ -74,10 +68,12 @@ export default function TaskModal({ onClose, ticket = null, defaultAssignee = ""
     save.mutate();
   };
 
+  if (!isAdmin) return null;
+
   const linked = ticket || (task?.ticket ? { id: task.ticket, subject: task.ticket_subject } : null);
 
   return (
-    <Modal title={editing ? "Edit task" : "Add task"} onClose={() => onClose(null)} busy={save.isPending}>
+    <Modal title={editing ? "Edit task" : "Assign task"} onClose={() => onClose(null)} busy={save.isPending}>
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
         {error && <ErrorAlert message={error} />}
 
@@ -111,7 +107,7 @@ export default function TaskModal({ onClose, ticket = null, defaultAssignee = ""
             <label htmlFor="task-assignee" className={labelClasses}>Assign to</label>
             <select
               id="task-assignee" value={assignee} onChange={set("assigned_to")}
-              disabled={!isAdmin} className={controlClasses}
+              className={controlClasses}
             >
               {staff.length === 0 && <option value={assignee}>{personName(user) || "Me"}</option>}
               {staff.map((s) => (
@@ -120,9 +116,6 @@ export default function TaskModal({ onClose, ticket = null, defaultAssignee = ""
                 </option>
               ))}
             </select>
-            {!isAdmin && (
-              <p className="mt-1 text-xs text-[#7C7669] dark:text-[#9FA8B8]">Only admins can assign tasks to others.</p>
-            )}
           </div>
           <div>
             <label htmlFor="task-priority" className={labelClasses}>Priority</label>
@@ -144,7 +137,7 @@ export default function TaskModal({ onClose, ticket = null, defaultAssignee = ""
             Cancel
           </button>
           <button type="submit" disabled={save.isPending || !form.title.trim()} className={`${primaryButton} flex-1`}>
-            {save.isPending ? "Saving…" : editing ? "Save changes" : "Create task"}
+            {save.isPending ? "Saving…" : editing ? "Save changes" : "Assign task"}
           </button>
         </div>
       </form>
