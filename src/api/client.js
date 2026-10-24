@@ -59,6 +59,7 @@ api.interceptors.response.use(
     
     const isAuthEndpoint = 
       requestUrl.includes("/auth/login") || 
+      requestUrl.includes("/auth/google") || 
       requestUrl.includes("/auth/register") || 
       requestUrl.includes("/auth/refresh");
 
@@ -78,11 +79,12 @@ api.interceptors.response.use(
   }
 );
 
-/** Pulls DRF's error shape into a single readable string for toasts/alerts. */
+/** Pulls DRF's error shape into a list format. */
 export function unwrapList(data) {
   return data?.results ?? (Array.isArray(data) ? data : []);
 }
 
+/** Pulls DRF's error shape into a single readable string for toasts/alerts. */
 export function extractErrorMessage(error, fallback = "Something went wrong. Please try again.") {
   const data = error?.response?.data;
   if (!data) return error?.message || fallback;

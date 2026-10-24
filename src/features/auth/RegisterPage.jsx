@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { extractErrorMessage } from "../../api/client";
 import ErrorAlert from "../../components/ErrorAlert";
+import GoogleButton, { OrDivider } from "./GoogleButton";
 
 const EMPTY = {
   email: "", username: "", first_name: "", last_name: "", phone_number: "",
@@ -56,114 +57,115 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] p-8 shadow-[0_1px_2px_rgba(16,27,44,0.04)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)] sm:p-12"
-        >
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="first_name" className={labelClasses}>
-                First name
+        <div className="rounded-xl border border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] p-8 shadow-[0_1px_2px_rgba(16,27,44,0.04)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)] sm:p-12">
+          <GoogleButton onError={setError} label="Sign up with Google" />
+          <OrDivider />
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="first_name" className={labelClasses}>
+                  First name
+                </label>
+                <input
+                  id="first_name"
+                  required
+                  value={form.first_name}
+                  onChange={set("first_name")}
+                  className={inputClasses}
+                />
+              </div>
+              <div>
+                <label htmlFor="last_name" className={labelClasses}>
+                  Last name
+                </label>
+                <input
+                  id="last_name"
+                  required
+                  value={form.last_name}
+                  onChange={set("last_name")}
+                  className={inputClasses}
+                />
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <label htmlFor="username" className={labelClasses}>
+                Username
               </label>
               <input
-                id="first_name"
+                id="username"
                 required
-                value={form.first_name}
-                onChange={set("first_name")}
+                value={form.username}
+                onChange={set("username")}
                 className={inputClasses}
               />
             </div>
-            <div>
-              <label htmlFor="last_name" className={labelClasses}>
-                Last name
+
+            <div className="mt-5">
+              <label htmlFor="email" className={labelClasses}>
+                Email
               </label>
               <input
-                id="last_name"
+                id="email"
+                type="email"
                 required
-                value={form.last_name}
-                onChange={set("last_name")}
+                value={form.email}
+                onChange={set("email")}
                 className={inputClasses}
               />
             </div>
-          </div>
 
-          <div className="mt-5">
-            <label htmlFor="username" className={labelClasses}>
-              Username
-            </label>
-            <input
-              id="username"
-              required
-              value={form.username}
-              onChange={set("username")}
-              className={inputClasses}
-            />
-          </div>
-
-          <div className="mt-5">
-            <label htmlFor="email" className={labelClasses}>
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={form.email}
-              onChange={set("email")}
-              className={inputClasses}
-            />
-          </div>
-
-          <div className="mt-5">
-            <label htmlFor="phone_number" className={labelClasses}>
-              Phone number
-            </label>
-            <input
-              id="phone_number"
-              placeholder="0712345678"
-              value={form.phone_number}
-              onChange={set("phone_number")}
-              className={inputClasses}
-            />
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div>
-              <label htmlFor="password" className={labelClasses}>
-                Password
+            <div className="mt-5">
+              <label htmlFor="phone_number" className={labelClasses}>
+                Phone number
               </label>
               <input
-                id="password"
-                type="password"
-                required
-                value={form.password}
-                onChange={set("password")}
+                id="phone_number"
+                placeholder="0712345678"
+                value={form.phone_number}
+                onChange={set("phone_number")}
                 className={inputClasses}
               />
             </div>
-            <div>
-              <label htmlFor="password_confirm" className={labelClasses}>
-                Confirm password
-              </label>
-              <input
-                id="password_confirm"
-                type="password"
-                required
-                value={form.password_confirm}
-                onChange={set("password_confirm")}
-                className={inputClasses}
-              />
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="mt-8 w-full rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-3 text-base font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E] disabled:cursor-not-allowed disabled:bg-[#7C7669] dark:disabled:bg-slate-700"
-          >
-            {submitting ? "Creating account…" : "Create account"}
-          </button>
-        </form>
+            <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="password" className={labelClasses}>
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={form.password}
+                  onChange={set("password")}
+                  className={inputClasses}
+                />
+              </div>
+              <div>
+                <label htmlFor="password_confirm" className={labelClasses}>
+                  Confirm password
+                </label>
+                <input
+                  id="password_confirm"
+                  type="password"
+                  required
+                  value={form.password_confirm}
+                  onChange={set("password_confirm")}
+                  className={inputClasses}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="mt-8 w-full rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-4 py-3 text-base font-medium text-white dark:text-slate-950 transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#A9834E] disabled:cursor-not-allowed disabled:bg-[#7C7669] dark:disabled:bg-slate-700"
+            >
+              {submitting ? "Creating account…" : "Create account"}
+            </button>
+          </form>
+        </div>
 
         <p className="mt-6 text-center text-base text-[#7C7669] dark:text-slate-400">
           Already have an account?{" "}

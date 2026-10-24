@@ -17,12 +17,7 @@ export function AuthProvider({ children }) {
     setOnAuthLost(clearSession);
   }, [clearSession]);
 
-  // On first load there's no access token in memory yet (a hard refresh
-  // clears JS memory). fetchMe() will 401 with no Authorization header;
-  // client.js's response interceptor catches that, silently refreshes off
-  // the httpOnly cookie, and retries this same request - so we don't call
-  // any explicit refresh() here, we just ask for the user and let the
-  // interceptor do its job.
+  
   useEffect(() => {
     (async () => {
       try {
@@ -37,6 +32,14 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     await authApi.login(email, password);
+    const me = await authApi.fetchMe();
+    setUser(me);
+    setStatus("authenticated");
+    return me;
+  }, []);
+
+  const loginWithGoogle = useCallback(async () => {
+    await authApi.loginWithGoogle();
     const me = await authApi.fetchMe();
     setUser(me);
     setStatus("authenticated");
@@ -66,7 +69,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, status, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, status, login, loginWithGoogle, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,5 @@
 import { api, setAccessToken } from "./client";
+import { getGoogleIdToken } from "../api/firebase";
 
 export async function login(email, password) {
   const { data } = await api.post("/auth/login/", { email, password });
@@ -7,13 +8,16 @@ export async function login(email, password) {
 }
 
 export async function register(payload) {
-  // RegisterView only creates the account - it doesn't issue tokens or set
-  // the refresh cookie ("Please log in to get your token" in its response).
-  // So a signup has to be followed by a real login to actually establish a
-  // session; otherwise the new user looks logged out immediately after
-  // registering.
   const { data } = await api.post("/auth/register/", payload);
   await login(payload.email, payload.password);
+  return data;
+}
+
+/** Google sign-in via Firebase. Registers the user on first use, logs in after that. */
+export async function loginWithGoogle() {
+  const idToken = await getGoogleIdToken();
+  const { data } = await api.post("/auth/google/", { id_token: idToken });
+  setAccessToken(data.access);
   return data;
 }
 
