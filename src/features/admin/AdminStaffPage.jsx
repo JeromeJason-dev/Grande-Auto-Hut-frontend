@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ClipboardList, Pencil, Plus, Search, Trash2, UserPlus } from "lucide-react";
@@ -47,6 +47,16 @@ function TaskRow({ task, canManage, canChangeStatus, onEdit }) {
     queryClient.invalidateQueries({ queryKey: ["ticket"] });
   };
   const onError = (err) => toast?.showToast({ type: "error", title: "Couldn't update task", message: extractErrorMessage(err) });
+  const confirmToastRef = useRef(null);
+  const dismissToast = toast?.dismissToast;
+
+  // Don't leave a pending "Delete task?" prompt behind if the row goes away.
+  useEffect(
+    () => () => {
+      if (confirmToastRef.current) dismissToast?.(confirmToastRef.current);
+    },
+    [dismissToast]
+  );
 
   const setStatus = useMutation({
     mutationFn: (status) => staffApi.updateTask(task.id, { status }),
@@ -61,6 +71,21 @@ function TaskRow({ task, canManage, canChangeStatus, onEdit }) {
     },
     onError,
   });
+
+  // Deleting is irreversible, so ask first, in a toast rather than a browser dialog.
+  const confirmDelete = () => {
+    if (confirmToastRef.current) dismissToast?.(confirmToastRef.current);
+    confirmToastRef.current = toast?.showToast({
+      type: "warning",
+      title: "Delete task?",
+      message: `“${task.title}” will be permanently deleted. This can't be undone.`,
+      persistent: true,
+      actions: [
+        { label: "Delete", variant: "danger", onClick: () => remove.mutate() },
+        { label: "Keep task", variant: "secondary" },
+      ],
+    });
+  };
 
   const done = task.status === "done";
   const busy = setStatus.isPending || remove.isPending;
@@ -122,7 +147,7 @@ function TaskRow({ task, canManage, canChangeStatus, onEdit }) {
             </button>
             <button
               type="button" disabled={busy} aria-label={`Delete ${task.title}`} title="Delete task"
-              onClick={() => window.confirm(`Delete “${task.title}”?`) && remove.mutate()}
+              onClick={confirmDelete}
               className="rounded-md p-1.5 text-[#7C7669] transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-[#9FA8B8] dark:hover:bg-red-950/30 dark:hover:text-red-400"
             >
               <Trash2 className="h-4 w-4" strokeWidth={1.75} />

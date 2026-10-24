@@ -529,6 +529,16 @@ export default function AdminTicketDetailPage() {
   const bottomRef = useRef(null);
   const markedRead = useRef("");
   const lastCount = useRef(null);
+  const confirmToastRef = useRef(null);
+  const dismissToast = toast?.dismissToast;
+
+  // Don't leave a pending "Delete ticket?" prompt behind when leaving the page.
+  useEffect(
+    () => () => {
+      if (confirmToastRef.current) dismissToast?.(confirmToastRef.current);
+    },
+    [dismissToast]
+  );
 
   const [draft, setDraft] = useState({});
   const [showTask, setShowTask] = useState(false);
@@ -656,8 +666,7 @@ export default function AdminTicketDetailPage() {
     }
   };
 
-  const remove = async () => {
-    if (!window.confirm("Delete this ticket and all its messages? This can't be undone.")) return;
+  const performRemove = async () => {
     try {
       await supportApi.deleteTicket(ticket.id);
       queryClient.removeQueries({ queryKey: TICKET_KEY(ticket.id) });
@@ -667,6 +676,21 @@ export default function AdminTicketDetailPage() {
     } catch (err) {
       setError(extractErrorMessage(err));
     }
+  };
+
+  // Deleting is irreversible, so ask first, in a toast rather than a browser dialog.
+  const remove = () => {
+    if (confirmToastRef.current) dismissToast?.(confirmToastRef.current);
+    confirmToastRef.current = toast?.showToast({
+      type: "warning",
+      title: "Delete this ticket?",
+      message: "The ticket and all its messages will be permanently deleted. This can't be undone.",
+      persistent: true,
+      actions: [
+        { label: "Delete ticket", variant: "danger", onClick: performRemove },
+        { label: "Keep ticket", variant: "secondary" },
+      ],
+    });
   };
 
   const toolbarButton = `${ghostButton} !px-3 !py-1.5`;
