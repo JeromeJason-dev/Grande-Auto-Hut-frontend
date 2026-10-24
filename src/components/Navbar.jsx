@@ -179,7 +179,9 @@ export default function Navbar({ minimal = false }) {
 
   const isAuthed = status === "authenticated";
   const isAdmin = user?.role !== "customer" && isAuthed;
-  const accountPath = minimal || isAdmin ? "/admin/account" : "/account";
+  const backOfficeHome = user?.role === "staff" ? "/staff" : "/admin";
+  const backOfficeLabel = user?.role === "staff" ? "Staff" : "Admin";
+  const accountPath = minimal || isAdmin ? `${backOfficeHome}/account` : "/account";
 
   const { data: wishlistData } = useQuery({
     queryKey: ["wishlist"],
@@ -277,7 +279,7 @@ export default function Navbar({ minimal = false }) {
             </>
           )}
           {isAdmin && (
-            <NavLink to="/admin" className={navLinkClasses}>Admin</NavLink>
+            <NavLink to={backOfficeHome} className={navLinkClasses}>{backOfficeLabel}</NavLink>
           )}
         </nav>
 
@@ -452,7 +454,7 @@ export default function Navbar({ minimal = false }) {
             <MobileSectionLabel>Browse</MobileSectionLabel>
             <MobileLink to="/catalog" icon="catalog" label="Catalog" />
             {!minimal && <MobileLink to="/about" icon="about" label="About" />}
-            {isAdmin && <MobileLink to="/admin" end icon="admin" label="Admin" />}
+            {isAdmin && <MobileLink to={backOfficeHome} end icon="admin" label={backOfficeLabel} />}
 
             {/* Customer features */}
             {!minimal && !isAdmin && isAuthed && (

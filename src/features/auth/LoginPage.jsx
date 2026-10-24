@@ -26,8 +26,11 @@ export default function LoginPage() {
 
       // Determine default route based on admin privileges
       const isAdmin = user?.is_staff || user?.is_superuser || user?.role === "admin";
-      const defaultRedirect = isAdmin ? "/admin" : "/";
-      const targetPath = location.state?.from?.pathname || defaultRedirect;
+      const defaultRedirect = user?.role === "staff" ? "/staff" : isAdmin ? "/admin" : "/";
+      // Staff and admins always land in their own area; only customers return to where they were.
+      const isBackOffice = user?.role === "staff" || isAdmin;
+      const from = location.state?.from?.pathname;
+      const targetPath = !isBackOffice && from ? from : defaultRedirect;
 
       navigate(targetPath, { replace: true });
     } catch (err) {

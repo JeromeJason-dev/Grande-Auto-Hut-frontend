@@ -73,7 +73,7 @@ export default function TicketDetailPage() {
     enabled: !isStaff,
   });
 
-  if (isStaff) return <Navigate to={`/admin/tickets/${id}`} replace />;
+  if (isStaff) return <Navigate to={`${user?.role === "staff" ? "/staff" : "/admin"}/tickets/${id}`} replace />;
 
   if (isLoading)
     return (

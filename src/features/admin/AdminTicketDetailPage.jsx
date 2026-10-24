@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useBasePath } from "../staff/useBasePath";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, CircleCheck, Clock, Copy, Download, EllipsisVertical,
@@ -514,6 +515,7 @@ function LinkedTasks({ ticket, user, isAdmin, onAdd }) {
 /* ------------------------------------------------------------------ page */
 
 export default function AdminTicketDetailPage() {
+  const base = useBasePath();
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -600,7 +602,7 @@ export default function AdminTicketDetailPage() {
     return (
       <div className={`${cardClasses} p-8 text-center`}>
         <p className="text-sm text-[#7C7669] dark:text-[#9FA8B8]">We couldn't find that ticket. It may have been deleted.</p>
-        <Link to="/admin/tickets" className={`${primaryButton} mt-4`}>Back to tickets</Link>
+        <Link to={`${base}/tickets`} className={`${primaryButton} mt-4`}>Back to tickets</Link>
       </div>
     );
   }
@@ -609,7 +611,7 @@ export default function AdminTicketDetailPage() {
   const setField = (field) => (e) => setDraft((d) => ({ ...d, [field]: e.target.value }));
   const active = ticket.status === "open" || ticket.status === "in_progress";
 
-  const backToList = () => navigate("/admin/tickets");
+  const backToList = () => navigate(`${base}/tickets`);
 
   const run = (changes, { successTitle, successMessage, then } = {}) =>
     update.mutate(changes, {
@@ -670,7 +672,7 @@ export default function AdminTicketDetailPage() {
   return (
     <div>
       <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-1.5 text-sm text-[#7C7669] dark:text-[#9FA8B8]">
-        <Link to="/admin/tickets" className="inline-flex items-center gap-1 hover:text-[#101B2C] dark:hover:text-white">
+        <Link to={`${base}/tickets`} className="inline-flex items-center gap-1 hover:text-[#101B2C] dark:hover:text-white">
           <ChevronLeft aria-hidden="true" className="h-4 w-4" /> Tickets
         </Link>
         <span aria-hidden="true">/</span>

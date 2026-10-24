@@ -1,6 +1,7 @@
 import {
   CarFront,
   ChevronLeft,
+  MessageSquareText,
   ClipboardList,
   LayoutDashboard,
   LifeBuoy,
@@ -15,11 +16,22 @@ import { useAuth } from "../../features/auth/AuthContext";
 import ThemeToggle from "../../components/ThemeToggle";
 import NotificationBell from "../../components/NotificationBell";
 
+// Staff get a focused workspace: their tasks, the catalog/order tools, reviews and tickets.
+const STAFF_NAV_ITEMS = [
+  { to: "/staff", label: "My tasks", icon: ClipboardList, end: true },
+  { to: "/staff/products", label: "Products", icon: Package },
+  { to: "/staff/orders", label: "Orders", icon: ShoppingCart },
+  { to: "/staff/reviews", label: "Reviews", icon: MessageSquareText },
+  { to: "/staff/tickets", label: "Tickets", icon: LifeBuoy },
+  { to: "/staff/fitment", label: "Fitment Catalog", icon: CarFront },
+];
+
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { to: "/admin/customers", label: "Customers", icon: Users },
+  { to: "/admin/reviews", label: "Reviews", icon: MessageSquareText },
   { to: "/admin/tickets", label: "Tickets", icon: LifeBuoy },
   { to: "/admin/fitment", label: "Fitment Catalog", icon: CarFront },
 ];
@@ -61,19 +73,23 @@ function NavContent({ icon: Icon, label, isActive }) {
   );
 }
 
-export default function AdminLayout() {
+export default function AdminLayout({ variant = "admin" }) {
   const { pathname } = useLocation();
-  const isAccountPage = pathname === "/admin/account";
+  const isStaffArea = variant === "staff";
+  const base = isStaffArea ? "/staff" : "/admin";
+  const isAccountPage = pathname === `${base}/account`;
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   // Admins manage the team; staff get a "My tasks" view of the same page.
   const isAdmin = user?.role === "admin";
-  const navItems = NAV_ITEMS.flatMap((item) =>
-    item.to === "/admin/tickets"
-      ? [item, { to: "/admin/staff", label: isAdmin ? "Staff" : "My tasks", icon: isAdmin ? UsersRound : ClipboardList }]
-      : [item],
-  );
+  const navItems = isStaffArea
+    ? STAFF_NAV_ITEMS
+    : NAV_ITEMS.flatMap((item) =>
+        item.to === "/admin/tickets"
+          ? [item, { to: "/admin/staff", label: isAdmin ? "Staff" : "My tasks", icon: isAdmin ? UsersRound : ClipboardList }]
+          : [item],
+      );
 
   const handleLogout = async () => {
     await logout();
@@ -102,15 +118,15 @@ export default function AdminLayout() {
         <nav className="flex-1 overflow-y-auto px-3 py-5">
           {isAccountPage ? (
             <Link
-              to="/admin"
+              to={base}
               className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#162235] hover:text-[#101B2C] dark:hover:text-white"
             >
               <ChevronLeft aria-hidden="true" className="h-4 w-4" strokeWidth={1.75} />
-              Back to dashboard
+              {isStaffArea ? "Back to my tasks" : "Back to dashboard"}
             </Link>
           ) : (
             <>
-              <p className={sectionLabelClasses}>Admin</p>
+              <p className={sectionLabelClasses}>{isStaffArea ? "Staff" : "Admin"}</p>
               <div className="mt-2 flex flex-col gap-1">
                 {navItems.map(({ to, label, icon, end }) => (
                   <NavLink key={to} to={to} end={end} className={navItemClasses}>
@@ -132,7 +148,7 @@ export default function AdminLayout() {
         {/* Account footer */}
         <div className="border-t border-[#E7E2D8] dark:border-[#25344D] p-4">
           <div className="flex items-center justify-between gap-2">
-            <Link to="/admin/account" className="flex min-w-0 items-center gap-2.5">
+            <Link to={`${base}/account`} className="flex min-w-0 items-center gap-2.5">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#101B2C] dark:bg-[#BF9A63] text-xs font-semibold text-white dark:text-slate-950">
                 {initials}
               </span>

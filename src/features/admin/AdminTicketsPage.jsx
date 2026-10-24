@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useBasePath } from "../staff/useBasePath";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Archive, Clock, Inbox, Mail, Search, ShieldAlert, UserRound } from "lucide-react";
 import * as supportApi from "../../api/support";
@@ -38,6 +39,7 @@ const defaultStatusFor = (folder) => (folder === "archived" || folder === "spam"
 const selectClasses = `${controlClasses} !w-auto min-w-[9rem] !py-2`;
 
 export default function AdminTicketsPage() {
+  const base = useBasePath();
   const navigate = useNavigate();
   const [folder, setFolder] = useState("inbox");
   const [status, setStatus] = useState("active");
@@ -184,7 +186,7 @@ export default function AdminTicketsPage() {
                 {tickets.map((t) => (
                   <tr
                     key={t.id}
-                    onClick={() => navigate(`/admin/tickets/${t.id}`)}
+                    onClick={() => navigate(`${base}/tickets/${t.id}`)}
                     className="cursor-pointer transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#0B1320]"
                   >
                     <td className="max-w-[26rem] px-4 py-3">
@@ -195,7 +197,7 @@ export default function AdminTicketsPage() {
                         />
                         <div className="min-w-0">
                           <Link
-                            to={`/admin/tickets/${t.id}`} onClick={(e) => e.stopPropagation()}
+                            to={`${base}/tickets/${t.id}`} onClick={(e) => e.stopPropagation()}
                             className={`block truncate text-sm text-[#101B2C] hover:underline dark:text-white ${t.is_unread ? "font-semibold" : "font-medium"}`}
                           >
                             {t.subject}

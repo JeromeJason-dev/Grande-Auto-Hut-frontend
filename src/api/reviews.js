@@ -9,3 +9,9 @@ export async function createReview(productId, payload) {
   const { data } = await api.post(`/products/${productId}/reviews/`, payload);
   return data;
 }
+
+
+export async function listAllReviews(params) {
+  const { data } = await api.get("/reviews/", { params });
+  return data;
+}

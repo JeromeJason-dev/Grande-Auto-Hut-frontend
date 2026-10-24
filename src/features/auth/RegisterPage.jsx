@@ -30,7 +30,7 @@ export default function RegisterPage() {
     try {
       const user = await register(form);
       const isAdmin = user?.is_staff || user?.is_superuser || user?.role === "admin";
-      navigate(isAdmin ? "/admin" : "/", { replace: true });
+      navigate(user?.role === "staff" ? "/staff" : isAdmin ? "/admin" : "/", { replace: true });
     } catch (err) {
       setError(extractErrorMessage(err, "Couldn't create your account."));
     } finally {

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RoleGate from "./components/RoleGate";
 import { NotificationToastProvider } from "./features/notifications/NotificationToastContext";
 
 import HomePage from "./routes/HomePage";
@@ -41,6 +42,11 @@ import AdminStaffPage from "./features/admin/AdminStaffPage";
 import AdminFitmentPage from "./features/admin/AdminFitmentPage";
 import AdminAccountPage from "./features/admin/AdminAccountPage";
 
+import StaffTasksPage from "./features/staff/StaffTasksPage";
+import StaffReviewsPage from "./features/staff/StaffReviewsPage";
+
+const StaffLayout = () => <AdminLayout variant="staff" />;
+
 export default function App() {
   return (
     <NotificationToastProvider>
@@ -77,8 +83,8 @@ export default function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
-        {/* Staff/Admin Protected Routes */}
-        <Route path="admin" element={<ProtectedRoute staffOnly><AdminLayout /></ProtectedRoute>}>
+        {/* Admin area: admins only (staff are redirected to the same page under /staff) */}
+        <Route path="admin" element={<ProtectedRoute staffOnly><RoleGate area="admin"><AdminLayout /></RoleGate></ProtectedRoute>}>
           <Route index element={<AdminDashboardPage />} />
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
@@ -87,7 +93,22 @@ export default function App() {
           <Route path="tickets/:id" element={<AdminTicketDetailPage />} />
           <Route path="staff" element={<AdminStaffPage />} />
           <Route path="fitment" element={<AdminFitmentPage />} />
+          <Route path="reviews" element={<StaffReviewsPage />} />
           <Route path="account" element={<AdminAccountPage />} />
+        </Route>
+
+        {/* Staff area: tasks, products, orders, reviews, tickets and the fitment catalog */}
+        <Route path="staff" element={<ProtectedRoute staffOnly><RoleGate area="staff"><StaffLayout /></RoleGate></ProtectedRoute>}>
+          <Route index element={<StaffTasksPage />} />
+          <Route path="products" element={<AdminProductsPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="reviews" element={<StaffReviewsPage />} />
+          <Route path="tickets" element={<AdminTicketsPage />} />
+          <Route path="tickets/:id" element={<AdminTicketDetailPage />} />
+          <Route path="fitment" element={<AdminFitmentPage />} />
+          <Route path="account" element={<AdminAccountPage />} />
+          {/* Admin-only pages (e.g. customers) or typos land staff back on their tasks */}
+          <Route path="*" element={<Navigate to="/staff" replace />} />
         </Route>
       </Routes>
     </NotificationToastProvider>
