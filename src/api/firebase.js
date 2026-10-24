@@ -1,52 +1,44 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Env var names: the corrected names are read first; the old misspelled ones
+// are kept as fallbacks so existing Vercel/.env settings keep working.
+const env = import.meta.env;
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PRODUCT_ID,
-  storageBucket: import.meta.env.VITE_FIRBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: env.VITE_FIREBASE_API_KEY,
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: env.VITE_FIREBASE_PROJECT_ID || env.VITE_FIREBASE_PRODUCT_ID,
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || env.VITE_FIRBASE_STORAGE_BUCKET,
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: env.VITE_FIREBASE_APP_ID,
+  measurementId: env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Check if Firebase is properly configured
-export const isFirebaseConfigured = Boolean(
-  firebaseConfig.apiKey && 
-  firebaseConfig.apiKey !== "undefined" && 
-  firebaseConfig.apiKey !== ""
-);
+const isSet = (v) => Boolean(v) && v !== "undefined";
 
-// Initialize Firebase only if configured (or initialize anyway depending on your setup)
-const app = initializeApp(firebaseConfig);
+// Google sign-in needs at least these three values.
+export const isFirebaseConfigured =
+  isSet(firebaseConfig.apiKey) &&
+  isSet(firebaseConfig.authDomain) &&
+  isSet(firebaseConfig.projectId);
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+let auth = null;
+if (isFirebaseConfigured) {
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  auth = getAuth(app);
+}
+export { auth };
 
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
+
 
 export async function getGoogleIdToken() {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    
-    // Get the Google credential which contains the idToken
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    const idToken = credential?.idToken;
-
-    if (!idToken) {
-      throw new Error("Failed to retrieve Google ID token from credentials.");
-    }
-
-    return idToken;
-  } catch (error) {
-    console.error("Error signing in with Google:", error);
-    throw error;
+  if (!auth) {
+    throw new Error("Google sign-in is not configured.");
   }
+  const result = await signInWithPopup(auth, googleProvider);
+  return result.user.getIdToken();
 }

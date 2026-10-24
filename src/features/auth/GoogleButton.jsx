@@ -35,11 +35,13 @@ export default function GoogleButton({ onError, label = "Continue with Google" }
       // Closing the popup isn't an error worth showing.
       const code = err?.code;
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") return;
-      onError?.(
-        code === "auth/popup-blocked"
-          ? "Your browser blocked the Google popup. Please allow popups and try again."
-          : extractErrorMessage(err, "Couldn't sign in with Google.")
-      );
+      const messages = {
+        "auth/popup-blocked": "Your browser blocked the Google popup. Please allow popups and try again.",
+        "auth/unauthorized-domain": "This website's domain isn't authorised for Google sign-in. Add it under Firebase Console > Authentication > Settings > Authorized domains.",
+        "auth/operation-not-allowed": "Google sign-in isn't enabled in the Firebase console.",
+        "auth/network-request-failed": "Network error. Check your connection and try again.",
+      };
+      onError?.(messages[code] || extractErrorMessage(err, "Couldn't sign in with Google."));
     } finally {
       setBusy(false);
     }

@@ -48,13 +48,13 @@ function WrenchMark() {
 }
 
 const sectionLabelClasses =
-  "px-3 text-[11px] font-semibold uppercase tracking-wider text-[#7C7669] dark:text-[#9FA8B8]";
+  "px-3 text-[11px] font-semibold uppercase tracking-wider text-black dark:text-[#9FA8B8]";
 
 const navItemClasses = ({ isActive }) =>
-  `group flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
+  `group flex items-center gap-3 rounded-md border-l-4 px-3 py-2 text-sm transition-colors ${
     isActive
-      ? "border-[#BF9A63] bg-[#FAF7F2] dark:bg-[#162235] text-[#101B2C] dark:text-white"
-      : "border-transparent text-[#7C7669] dark:text-[#9FA8B8] hover:bg-[#FAF7F2] dark:hover:bg-[#162235] hover:text-[#101B2C] dark:hover:text-white"
+      ? "border-[#BF9A63] bg-[#BF9A63]/25 dark:bg-[#BF9A63]/20 font-bold text-black dark:text-white shadow-sm"
+      : "border-transparent font-medium text-black dark:text-[#9FA8B8] hover:bg-[#FAF7F2] dark:hover:bg-[#162235] hover:text-black dark:hover:text-white"
   }`;
 
 // Icon + label for a sidebar link. The icon takes the gold accent when its page is active.
@@ -109,7 +109,7 @@ export default function AdminLayout({ variant = "admin" }) {
           className="flex items-center gap-2 border-b border-[#E7E2D8] dark:border-[#25344D] px-5 py-5"
         >
           <WrenchMark />
-          <span className="text-[1.05rem] font-bold tracking-tight text-[#101B2C] dark:text-white">
+          <span className="text-[1.05rem] font-bold tracking-tight text-black dark:text-white">
             Grande Auto Hut
           </span>
         </Link>
@@ -119,7 +119,7 @@ export default function AdminLayout({ variant = "admin" }) {
           {isAccountPage ? (
             <Link
               to={base}
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#162235] hover:text-[#101B2C] dark:hover:text-white"
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-black dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#162235] hover:text-black dark:hover:text-white"
             >
               <ChevronLeft aria-hidden="true" className="h-4 w-4" strokeWidth={1.75} />
               {isStaffArea ? "Back to my tasks" : "Back to dashboard"}
@@ -152,7 +152,7 @@ export default function AdminLayout({ variant = "admin" }) {
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#101B2C] dark:bg-[#BF9A63] text-xs font-semibold text-white dark:text-slate-950">
                 {initials}
               </span>
-              <span className="truncate text-sm font-medium text-[#101B2C] dark:text-white">
+              <span className="truncate text-sm font-medium text-black dark:text-white">
                 {user?.first_name || "Account"}
               </span>
             </Link>
@@ -163,7 +163,7 @@ export default function AdminLayout({ variant = "admin" }) {
           </div>
           <button
             onClick={handleLogout}
-            className="mt-3 w-full rounded-md px-3 py-1.5 text-left text-sm font-medium text-[#7C7669] dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#162235] hover:text-[#101B2C] dark:hover:text-white"
+            className="mt-3 w-full rounded-md px-3 py-1.5 text-left text-sm font-medium text-black dark:text-[#9FA8B8] transition-colors hover:bg-[#FAF7F2] dark:hover:bg-[#162235] hover:text-black dark:hover:text-white"
           >
             Log out
           </button>
