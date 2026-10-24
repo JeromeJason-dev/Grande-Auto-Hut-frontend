@@ -8,6 +8,7 @@ import OrderStatusBadge from "../../components/OrderStatusBadge";
 import Price from "../../components/Price";
 import Spinner from "../../components/Spinner";
 import ErrorAlert from "../../components/ErrorAlert";
+import { useMpesaPayment } from "./useMpesaPayment";
 import NewTicketModal from "../support/NewTicketModal";
 
 const STEPS = ["pending", "confirmed", "processing", "in_transit", "delivered"];
@@ -74,6 +75,8 @@ export default function OrderDetailPage() {
   const [payError, setPayError] = useState("");
   const [payNotice, setPayNotice] = useState("");
   const verifiedOnce = useRef(false);
+  const mpesa = useMpesaPayment();
+  const resumedMpesa = useRef(false);
   const [showTicketModal, setShowTicketModal] = useState(false);
 
   const { data: order, isLoading, isError } = useQuery({
@@ -117,6 +120,22 @@ export default function OrderDetailPage() {
     confirmCardPayment(returnedReference).finally(() => setSearchParams({}, { replace: true }));
   }, [returnedReference, id, confirmCardPayment, setSearchParams]);
 
+  // Opening an unpaid M-Pesa order: ask Safaricom what became of the last prompt, and keep
+  // watching if it's still open, so the badge flips to paid/failed without a manual refresh.
+  useEffect(() => {
+    // StrictMode's dev-only fake unmount cancels the poll; resetting the flag lets the re-run restart it.
+    return () => {
+      resumedMpesa.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (resumedMpesa.current || !order) return;
+    if (order.payment_method !== "mpesa" || order.status !== "pending" || order.payment_status !== "pending") return;
+    resumedMpesa.current = true;
+    mpesa.check(order.id, { immediate: true });
+  }, [order, mpesa]);
+
   const payByCard = async () => {
     setPaying(true);
     setPayError("");
@@ -143,18 +162,11 @@ export default function OrderDetailPage() {
     }
   };
 
+  const mpesaBusy = mpesa.state === "sending" || mpesa.state === "waiting";
   const resendMpesa = async () => {
-    setPaying(true);
     setPayError("");
     setPayNotice("");
-    try {
-      await paymentsApi.initiateMpesa(order.id, order.phone_number);
-      setPayNotice(`M-Pesa prompt sent to ${order.phone_number}. Enter your PIN to complete payment.`);
-    } catch (err) {
-      setPayError(extractErrorMessage(err));
-    } finally {
-      setPaying(false);
-    }
+    await mpesa.start(order.id, order.phone_number);
   };
 
   if (isLoading)
@@ -238,11 +250,37 @@ export default function OrderDetailPage() {
                 PAYMENT_STATUS_STYLE[order.payment_status] || PAYMENT_STATUS_STYLE.pending
               }`}
             >
-              {verifying ? "Confirming…" : order.payment_status}
+              {verifying ? "Confirming…" : mpesaBusy ? "Awaiting M-Pesa…" : order.payment_status}
             </span>
           </div>
 
           {payNotice && <p className="mt-3 text-sm text-[#7C7669] dark:text-slate-400">{payNotice}</p>}
+          {mpesa.state === "sending" && (
+            <p className="mt-3 text-sm text-[#7C7669] dark:text-slate-400">Sending an M-Pesa prompt to {order.phone_number}…</p>
+          )}
+          {mpesa.state === "waiting" && (
+            <p className="mt-3 text-sm text-[#7C7669] dark:text-slate-400">
+              Waiting for you to approve the M-Pesa prompt on your phone. This page will update by itself.
+            </p>
+          )}
+          {mpesa.state === "failed" && order.payment_status !== "paid" && (
+            <p className="mt-3 text-sm text-red-600 dark:text-red-400">
+              The M-Pesa payment was cancelled or didn't go through, so you haven't been charged. You can try again below.
+            </p>
+          )}
+          {mpesa.state === "timeout" && order.payment_status !== "paid" && (
+            <p className="mt-3 text-sm text-[#7C7669] dark:text-slate-400">
+              We haven't heard back from M-Pesa yet. If you've already entered your PIN, the payment may still come through.{" "}
+              <button
+                type="button"
+                onClick={() => mpesa.check(order.id, { immediate: true })}
+                className="font-medium text-[#101B2C] dark:text-white underline underline-offset-2"
+              >
+                Check again
+              </button>
+            </p>
+          )}
+          {mpesa.state === "error" && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{mpesa.error}</p>}
           {payError && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{payError}</p>}
 
           {!verifying && order.status === "pending" && order.payment_status !== "paid" && order.payment_method === "card" && (
@@ -256,14 +294,13 @@ export default function OrderDetailPage() {
             </button>
           )}
 
-          {!verifying && order.status === "pending" && order.payment_status !== "paid" && order.payment_method === "mpesa" && (
+          {!verifying && !mpesaBusy && order.status === "pending" && order.payment_status !== "paid" && order.payment_method === "mpesa" && (
             <button
               type="button"
               onClick={resendMpesa}
-              disabled={paying}
               className="mt-4 rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {paying ? "Sending…" : "Resend M-Pesa prompt"}
+              {order.payment_status === "failed" || mpesa.state === "failed" ? "Try M-Pesa again" : "Resend M-Pesa prompt"}
             </button>
           )}
         </div>

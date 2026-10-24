@@ -6,6 +6,7 @@ import { useNotificationToastContext } from "../notifications/NotificationToastC
 import * as authApi from "../../api/auth";
 import * as ordersApi from "../../api/orders";
 import * as paymentsApi from "../../api/payments";
+import { useMpesaPayment } from "../orders/useMpesaPayment";
 import { unwrapList, extractErrorMessage } from "../../api/client";
 import Price from "../../components/Price";
 import ErrorAlert from "../../components/ErrorAlert";
@@ -73,8 +74,12 @@ export default function CheckoutPage() {
   const [step, setStep] = useState("form"); // form | placing | awaiting-mpesa | redirecting-card | card-error | done
   const [cardError, setCardError] = useState("");
   const [placedOrder, setPlacedOrder] = useState(null);
+  const mpesa = useMpesaPayment();
 
   const addresses = unwrapList(addressesQuery.data);
+  const selectedAddress = addresses.find((a) => a.id === addressId);
+  // Which number gets the M-Pesa prompt: the one typed in, else the chosen address's, else the new address's.
+  const mpesaPhoneNumber = mpesaPhone || selectedAddress?.phone_number || newAddress.phone_number;
 
   // Once an order is placed the cart is emptied; don't let that hide the confirmation screen.
   if (!placedOrder && (!cart || cart.items.length === 0)) {
@@ -179,22 +184,16 @@ export default function CheckoutPage() {
     }
 
     if (isMpesa) {
-      try {
-        await paymentsApi.initiateMpesa(orderIdentifier, mpesaPhone || newAddress.phone_number);
-      } catch (err) {
+      // Sends the prompt, then follows it until it is paid, cancelled or times out.
+      const outcome = await mpesa.start(orderIdentifier, mpesaPhoneNumber);
+      if (outcome === "paid") {
         showToast({
-          type: "warning",
-          title: "M-Pesa prompt not sent",
-          message: `${extractErrorMessage(err)} Your order is saved. You can retry payment from your order page.`,
-          persistent: true,
-          actions: [
-            {
-              label: "Open order",
-              variant: "primary",
-              onClick: () => navigate(`/orders/${orderIdentifier}`),
-            },
-          ],
+          type: "order",
+          title: "Payment received",
+          message: `${orderLabel} is paid and confirmed.`,
+          duration: 8000,
         });
+        refreshNotificationsQuietly();
       }
     }
   };
@@ -249,29 +248,113 @@ export default function CheckoutPage() {
 
   if (step === "awaiting-mpesa") {
     const orderIdentifier = placedOrder?.id || placedOrder?.order_number;
+    const { state } = mpesa;
+    const waiting = state === "idle" || state === "sending" || state === "waiting";
+    const orderNumber = (
+      <strong className="font-mono text-[#101B2C] dark:text-white">{placedOrder?.order_number}</strong>
+    );
+    const primaryBtn =
+      "rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]";
+    const secondaryBtn =
+      "rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-5 py-2.5 text-sm font-medium text-[#101B2C] dark:text-white transition-colors hover:border-[#BF9A63]";
+    const copy = {
+      paid: {
+        title: "Payment received",
+        body: <>Thank you! Order {orderNumber} is paid and confirmed. Our team will prepare it for dispatch.</>,
+      },
+      failed: {
+        title: "Payment not completed",
+        body: (
+          <>
+            The M-Pesa payment for order {orderNumber} was cancelled or didn't go through, so you haven't been charged.
+            Your order is saved &mdash; you can try again now or pay later from your order page.
+          </>
+        ),
+      },
+      timeout: {
+        title: "Still waiting for M-Pesa",
+        body: (
+          <>
+            We haven't heard back from Safaricom for order {orderNumber} yet. If you've already entered your PIN, the
+            payment may still come through &mdash; check again in a moment.
+          </>
+        ),
+      },
+      error: {
+        title: "Couldn't confirm your payment",
+        body: (
+          <>
+            {mpesa.error || "Something went wrong talking to M-Pesa."} Your order {orderNumber} is saved and not yet
+            paid.
+          </>
+        ),
+      },
+    }[state];
+
     return (
       <div className="min-h-full bg-white dark:bg-[#0B1320] px-6 py-16 transition-colors">
         <div className="mx-auto max-w-lg">
-          <div className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-8 text-center shadow-[0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
+          <div
+            role="status"
+            aria-live="polite"
+            className="rounded-xl border border-[#E7E2D8] dark:border-[#25344D] bg-[#FAF7F2] dark:bg-[#162235] p-8 text-center shadow-[0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.3)]"
+          >
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#BF9A63]/15 text-[#BF9A63]">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="6" y="2" width="12" height="20" rx="2" />
-                <path d="M11 18h2" />
-              </svg>
+              {state === "paid" ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M4 12.6 9 17l11-11" />
+                </svg>
+              ) : waiting ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="6" y="2" width="12" height="20" rx="2" />
+                  <path d="M11 18h2" />
+                </svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v6M12 16.5v.5" />
+                </svg>
+              )}
             </span>
-            <h1 className="mt-4 text-xl font-semibold text-[#101B2C] dark:text-white">Check your phone</h1>
-            <p className="mt-3 text-sm leading-relaxed text-[#7C7669] dark:text-[#9FA8B8]">
-              We've sent an M-Pesa prompt to{" "}
-              <strong className="text-[#101B2C] dark:text-white">{mpesaPhone || newAddress.phone_number}</strong> for order{" "}
-              <strong className="font-mono text-[#101B2C] dark:text-white">{placedOrder?.order_number}</strong>. Enter your M-Pesa
-              PIN to complete payment — your order will confirm automatically once we hear back from Safaricom.
-            </p>
-            <Link
-              to={`/orders/${orderIdentifier}`}
-              className="mt-6 inline-block rounded-md bg-[#101B2C] dark:bg-[#BF9A63] px-5 py-2.5 text-sm font-medium text-white dark:text-[#0B1320] transition-colors hover:bg-[#1B2C46] dark:hover:bg-[#D4AF77]"
-            >
-              Track this order
-            </Link>
+
+            {waiting ? (
+              <>
+                <h1 className="mt-4 text-xl font-semibold text-[#101B2C] dark:text-white">Check your phone</h1>
+                <p className="mt-3 text-sm leading-relaxed text-[#7C7669] dark:text-[#9FA8B8]">
+                  {state === "sending" ? "Sending an M-Pesa prompt to " : "We've sent an M-Pesa prompt to "}
+                  <strong className="text-[#101B2C] dark:text-white">{mpesaPhoneNumber}</strong> for order {orderNumber}.
+                  Enter your M-Pesa PIN to complete payment.
+                </p>
+                <p className="mt-3 text-xs text-[#7C7669] dark:text-[#9FA8B8]">
+                  Waiting for confirmation &mdash; this page updates by itself.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="mt-4 text-xl font-semibold text-[#101B2C] dark:text-white">{copy.title}</h1>
+                <p className="mt-3 text-sm leading-relaxed text-[#7C7669] dark:text-[#9FA8B8]">{copy.body}</p>
+              </>
+            )}
+
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              {state === "timeout" && (
+                <button type="button" onClick={() => mpesa.check(orderIdentifier, { immediate: true })} className={primaryBtn}>
+                  Check again
+                </button>
+              )}
+              {(state === "failed" || state === "error" || state === "timeout") && (
+                <button
+                  type="button"
+                  onClick={() => mpesa.start(orderIdentifier, mpesaPhoneNumber)}
+                  className={state === "timeout" ? secondaryBtn : primaryBtn}
+                >
+                  {state === "timeout" ? "Send a new prompt" : "Try M-Pesa again"}
+                </button>
+              )}
+              <Link to={`/orders/${orderIdentifier}`} className={state === "paid" ? primaryBtn : secondaryBtn}>
+                {state === "paid" ? "Track this order" : "View order"}
+              </Link>
+            </div>
           </div>
         </div>
       </div>

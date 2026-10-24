@@ -19,8 +19,3 @@ export async function updateOrderStatus(id, status, note = "") {
   const { data } = await api.patch(`/orders/${id}/status/`, { status, note });
   return data;
 }
-
-export async function updatePaymentStatus(id, paymentStatus, note = "") {
-  const { data } = await api.patch(`/orders/${id}/payment-status/`, { payment_status: paymentStatus, note });
-  return data;
-}

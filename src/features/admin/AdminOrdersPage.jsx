@@ -8,6 +8,7 @@ import Price from "../../components/Price";
 import Spinner from "../../components/Spinner";
 import ErrorAlert from "../../components/ErrorAlert";
 import { useNotificationToastContext } from "../notifications/NotificationToastContext";
+import PaymentManagerModal from "../orders/PaymentManagerModal";
 
 const NEXT_STATUS = {
   pending: ["confirmed", "cancelled"],
@@ -19,7 +20,6 @@ const NEXT_STATUS = {
 };
 
 const ALL_STATUSES = ["pending", "confirmed", "processing", "in_transit", "delivered", "cancelled"];
-const PAYMENT_OPTIONS = ["pending", "paid", "failed"];
 const PAGE_SIZES = [10, 25, 50];
 
 // States in which stock has been deducted, so a cancellation puts it back.
@@ -163,20 +163,22 @@ function OrderStatusEditor({ order, busy, onChange }) {
   );
 }
 
-function PaymentStatusEditor({ order, busy, onChange }) {
+// Payment status is a record of money, so it's read-only here. "Manage" opens the audited
+// actions: re-check with the gateway (staff + admin), manual payment / refund (admin only).
+function PaymentStatusCell({ order, onManage }) {
   const pay = (order.payment_status || "pending").toLowerCase();
   return (
-    <select
-      value={pay}
-      disabled={busy}
-      onChange={(e) => onChange(e.target.value)}
-      aria-label={`Payment status for ${order.order_number}`}
-      className={`${selectBase} border-[#E7E2D8] dark:border-[#25344D] ${PAYMENT_STYLES[pay] || ""}`}
-    >
-      {PAYMENT_OPTIONS.map((s) => (
-        <option key={s} value={s} className={optionClasses}>{capitalize(s)}</option>
-      ))}
-    </select>
+    <div className="flex items-center gap-2">
+      <span className={`text-xs font-medium capitalize ${PAYMENT_STYLES[pay] || ""}`}>{pay}</span>
+      <button
+        type="button"
+        onClick={onManage}
+        aria-label={`Manage payment for ${order.order_number}`}
+        className="rounded-md border border-[#E7E2D8] dark:border-[#25344D] px-2 py-1 text-[11px] font-medium text-[#101B2C] dark:text-white transition-colors hover:border-[#BF9A63] hover:text-[#A9834E] dark:hover:text-[#BF9A63]"
+      >
+        Manage
+      </button>
+    </div>
   );
 }
 
@@ -228,7 +230,8 @@ export default function AdminOrdersPage() {
   );
 
   // Which row/field is mid-save, so only that dropdown is disabled.
-  const [saving, setSaving] = useState(null); // `${orderId}:status` | `${orderId}:payment`
+  const [saving, setSaving] = useState(null); // `${orderId}:status`
+  const [paymentOrder, setPaymentOrder] = useState(null); // order whose payments are open in the modal
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
@@ -284,7 +287,7 @@ export default function AdminOrdersPage() {
       "This can't be undone.",
       reserved && "Reserved stock goes back to inventory.",
       "The customer will be notified.",
-      paid && "This order is already paid, so remember to refund the customer.",
+      paid && "This order is already paid, so remember to refund the customer and record it under Payment > Manage.",
     ]
       .filter(Boolean)
       .join(" ");
@@ -308,17 +311,6 @@ export default function AdminOrdersPage() {
       return;
     }
     performStatusChange(order, status);
-  };
-
-  const changePayment = (order, paymentStatus) => {
-    if (paymentStatus === (order.payment_status || "").toLowerCase()) return;
-    runUpdate(`${order.id}:payment`, () => ordersApi.updatePaymentStatus(order.id, paymentStatus), {
-      failureTitle: "Couldn't update payment",
-      success: {
-        title: "Payment updated",
-        message: `Payment for ${order.order_number} marked as ${capitalize(paymentStatus)}.`,
-      },
-    });
   };
 
   const visible = useMemo(() => {
@@ -464,11 +456,7 @@ export default function AdminOrdersPage() {
                       <td className="px-5 py-4"><Price value={o.total} /></td>
                       <td className="px-5 py-4">{o.total_quantity ?? o.items_count}</td>
                       <td className="px-5 py-4">
-                        <PaymentStatusEditor
-                          order={o}
-                          busy={saving === `${o.id}:payment`}
-                          onChange={(v) => changePayment(o, v)}
-                        />
+                        <PaymentStatusCell order={o} onManage={() => setPaymentOrder(o)} />
                       </td>
                       <td className="px-5 py-4">
                         <OrderStatusEditor
@@ -546,6 +534,14 @@ export default function AdminOrdersPage() {
             </div>
           </div>
         </>
+      )}
+
+      {paymentOrder && (
+        <PaymentManagerModal
+          order={paymentOrder}
+          onClose={() => setPaymentOrder(null)}
+          onChanged={refresh}
+        />
       )}
     </div>
   );

@@ -5,10 +5,13 @@ export async function initiateMpesa(orderId, phoneNumber) {
   return data;
 }
 
-/**
- * Starts a card payment. Resolves to { access_code, reference, payment_url, payment }.
- * Open the popup with access_code (see openCardPopup); payment_url is the redirect fallback.
- */
+
+export async function getMpesaStatus(orderId) {
+  const { data } = await api.post("/payments/mpesa/status/", { order_id: orderId });
+  return data;
+}
+
+
 export async function initiateCard(orderId) {
   const { data } = await api.post("/payments/card/initiate/", { order_id: orderId });
   return data;
@@ -32,4 +35,29 @@ export async function openCardPopup(accessCode) {
       onError: (err) => reject(new Error(err?.message || "The card payment window could not load.")),
     });
   });
+}
+
+
+export async function getOrderPayments(orderId) {
+  const { data } = await api.get(`/payments/orders/${orderId}/`);
+  return data;
+}
+
+export async function recheckOrderPayment(orderId) {
+  const { data } = await api.post(`/payments/orders/${orderId}/recheck/`);
+  return data;
+}
+
+export async function markOrderPaid(orderId, { reason, reference = "" }) {
+  const { data } = await api.post(`/payments/orders/${orderId}/mark-paid/`, { reason, reference });
+  return data;
+}
+
+export async function refundOrderPayment(orderId, { reason, reference = "", paymentId }) {
+  const { data } = await api.post(`/payments/orders/${orderId}/refund/`, {
+    reason,
+    reference,
+    ...(paymentId ? { payment_id: paymentId } : {}),
+  });
+  return data;
 }
