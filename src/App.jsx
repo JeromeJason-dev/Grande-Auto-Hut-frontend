@@ -6,6 +6,7 @@ import { NotificationToastProvider } from "./features/notifications/Notification
 
 import HomePage from "./routes/HomePage";
 import AboutPage from "./routes/AboutPage";
+import FaqPage from "./routes/FaqPage";
 import NotFoundPage from "./routes/NotFoundPage";
 
 import LoginPage from "./features/auth/LoginPage";
@@ -55,6 +56,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="about" element={<AboutPage />} />
+          <Route path="faq" element={<FaqPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
 

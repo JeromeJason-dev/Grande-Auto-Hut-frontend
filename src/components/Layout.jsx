@@ -5,6 +5,7 @@ const QUICK_LINKS = [
   { label: "Home", to: "/" },
   { label: "Products", to: "/catalog" },
   { label: "About", to: "/about" },
+  { label: "FAQs", to: "/faq" },
 ];
 
 const WHATSAPP_NUMBER = "254723113311"; // international format, no "+" or spaces
@@ -71,10 +72,11 @@ export default function Layout() {
 
   const isHome = path === "/";
   const isAbout = path === "/about";
+  const isFaq = path === "/faq";
   const isCatalog = path === "/catalog" || path.startsWith("/catalog/");
 
   const showFloatingWhatsApp = isAbout || isCatalog;
-  const showFooter = isHome || isAbout || isCatalog;
+  const showFooter = isHome || isAbout || isCatalog || isFaq;
 
   return (
     <div className="flex min-h-dvh flex-col bg-[#FAF7F2] dark:bg-gray-950 text-[#1E2430] dark:text-gray-100 transition-colors">
