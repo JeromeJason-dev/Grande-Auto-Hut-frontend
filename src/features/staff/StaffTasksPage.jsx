@@ -10,7 +10,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useNotificationToastContext } from "../notifications/NotificationToastContext";
 import { Badge, Pagination } from "../admin/AdminUi";
 import {
-  PRIORITY_OPTIONS, PRIORITY_STYLES, TASK_STATUS_OPTIONS, TASK_STATUS_STYLES,
+  PRIORITY_OPTIONS, PRIORITY_STYLES, TASK_STATUS_OPTIONS, TASK_STATUS_STYLES, TICKET_STATUS_OPTIONS,
   cardClasses, controlClasses, formatDate, labelOf, timeAgo,
 } from "../admin/adminConstants";
 
@@ -39,10 +39,20 @@ function TaskRow({ task }) {
   // Staff can only change the status of their tasks; the server enforces this too.
   const setStatus = useMutation({
     mutationFn: (status) => staffApi.updateTask(task.id, { status }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["staff-workload"] });
       queryClient.invalidateQueries({ queryKey: ["ticket"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-metrics"] });
+      // The server moves the linked ticket along with its tasks; let the person know.
+      if (data?.ticket && data.ticket_status && data.ticket_status !== task.ticket_status) {
+        toast?.showToast({
+          type: "success",
+          title: `Ticket marked ${labelOf(TICKET_STATUS_OPTIONS, data.ticket_status).toLowerCase()}`,
+          message: data.ticket_subject,
+        });
+      }
     },
     onError: (err) =>
       toast?.showToast({ type: "error", title: "Couldn't update task", message: extractErrorMessage(err) }),

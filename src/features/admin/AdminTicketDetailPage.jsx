@@ -455,12 +455,23 @@ function SlaValue({ due, doneAt, doneLabel, active, now }) {
 function LinkedTasks({ ticket, user, isAdmin, onAdd }) {
   const queryClient = useQueryClient();
   const toast = useNotificationToastContext();
-  const toggle = useMutation({
-    mutationFn: (t) => staffApi.updateTask(t.id, { status: t.status === "done" ? "todo" : "done" }),
-    onSuccess: () => {
+  // One mutation for both the checkbox (quick toggle) and the dropdown (manual choice).
+  // The server keeps the ticket in step with its tasks, so we just refresh and say so.
+  const setStatus = useMutation({
+    mutationFn: ({ task, status }) => staffApi.updateTask(task.id, { status }),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["ticket"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-metrics"] });
       queryClient.invalidateQueries({ queryKey: ["admin-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["admin-staff"] });
+      if (data?.ticket_status && data.ticket_status !== ticket.status) {
+        toast?.showToast({
+          type: "success",
+          title: `Ticket marked ${labelOf(TICKET_STATUS_OPTIONS, data.ticket_status).toLowerCase()}`,
+          message: data.ticket_status === "resolved" ? "All linked tasks are done." : "Updated from its tasks.",
+        });
+      }
     },
     onError: (err) => toast?.showToast({ type: "error", title: "Couldn't update task", message: extractErrorMessage(err) }),
   });
@@ -488,7 +499,7 @@ function LinkedTasks({ ticket, user, isAdmin, onAdd }) {
             return (
               <li key={t.id} className="flex items-start gap-2.5 rounded-lg border border-[#E7E2D8] px-3 py-2 dark:border-[#25344D]">
                 <button
-                  type="button" disabled={!canToggle || toggle.isPending} onClick={() => toggle.mutate(t)}
+                  type="button" disabled={!canToggle || setStatus.isPending} onClick={() => setStatus.mutate({ task: t, status: done ? "todo" : "done" })}
                   aria-label={done ? "Mark as to do" : "Mark as done"}
                   title={canToggle ? (done ? "Mark as to do" : "Mark as done") : "Only the assignee or an admin can change this"}
                   className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors disabled:cursor-not-allowed ${
@@ -502,7 +513,17 @@ function LinkedTasks({ ticket, user, isAdmin, onAdd }) {
                   <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-[#7C7669] dark:text-[#9FA8B8]">
                     <span>{t.assigned_to_name}</span>
                     {t.due_date && <span className={t.is_overdue ? "font-semibold text-red-600 dark:text-red-400" : ""}>Due {formatDate(t.due_date)}</span>}
-                    <Badge className={`!px-2 !py-0 ${TASK_STATUS_STYLES[t.status]}`}>{labelOf(TASK_STATUS_OPTIONS, t.status)}</Badge>
+                    {canToggle ? (
+                      <select
+                        aria-label={`Status of ${t.title}`} value={t.status} disabled={setStatus.isPending}
+                        onChange={(e) => setStatus.mutate({ task: t, status: e.target.value })}
+                        className={`rounded-full border-0 px-2 py-0 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/40 ${TASK_STATUS_STYLES[t.status]}`}
+                      >
+                        {TASK_STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    ) : (
+                      <Badge className={`!px-2 !py-0 ${TASK_STATUS_STYLES[t.status]}`}>{labelOf(TASK_STATUS_OPTIONS, t.status)}</Badge>
+                    )}
                   </p>
                 </div>
               </li>
@@ -555,6 +576,7 @@ export default function AdminTicketDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["admin-tickets"] });
     queryClient.invalidateQueries({ queryKey: ["admin-metrics"] });
     queryClient.invalidateQueries({ queryKey: ["admin-staff"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-tasks"] }); // resolving a ticket completes its tasks
   };
 
   const update = useMutation({

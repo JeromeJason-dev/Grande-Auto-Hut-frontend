@@ -45,6 +45,8 @@ function TaskRow({ task, canManage, canChangeStatus, onEdit }) {
     queryClient.invalidateQueries({ queryKey: ["admin-tasks"] });
     queryClient.invalidateQueries({ queryKey: ["admin-staff"] });
     queryClient.invalidateQueries({ queryKey: ["ticket"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-tickets"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-metrics"] });
   };
   const onError = (err) => toast?.showToast({ type: "error", title: "Couldn't update task", message: extractErrorMessage(err) });
   const confirmToastRef = useRef(null);
