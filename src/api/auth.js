@@ -54,3 +54,23 @@ export async function createAddress(payload) {
 export async function deleteAddress(id) {
   await api.delete(`/auth/addresses/${id}/`);
 }
+
+export async function requestPasswordReset(email) {
+  const { data } = await api.post("/auth/password-reset/", { email });
+  return data;
+}
+
+export async function confirmPasswordReset({ uid, token, new_password }) {
+  const { data } = await api.post("/auth/password-reset/confirm/", { uid, token, new_password });
+  return data;
+}
+
+export async function verifyEmail(token) {
+  const { data } = await api.post("/auth/verify-email/", { token });
+  return data;
+}
+
+export async function resendVerification() {
+  const { data } = await api.post("/auth/resend-verification/");
+  return data;
+}

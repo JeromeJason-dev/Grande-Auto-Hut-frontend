@@ -198,6 +198,12 @@ export default function PaymentManagerModal({ order, onClose, onChanged }) {
               </span>
             </div>
 
+            {data.attention_note && (
+              <p role="alert" className="rounded-md border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-3 py-2 text-sm text-red-800 dark:text-red-300">
+                <span className="font-semibold">Needs attention: </span>{data.attention_note}
+              </p>
+            )}
+
             {notice && (
               <p role="status" className="rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
                 {notice}
@@ -243,6 +249,11 @@ export default function PaymentManagerModal({ order, onClose, onChanged }) {
                     </button>
                   )}
                 </div>
+                {data.can_refund && (
+                  <p className="rounded-md bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+                    {data.refund_note || "Recording a refund does not send money. Send the refund through M-Pesa or Paystack yourself, then record it here."}
+                  </p>
+                )}
                 {!isAdmin && (
                   <p className="text-xs text-[#7C7669] dark:text-[#9FA8B8]">
                     Recording a manual payment or a refund is limited to admins. Use re-check to pull the latest result from M-Pesa or card.

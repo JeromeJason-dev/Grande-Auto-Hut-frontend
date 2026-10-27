@@ -6,7 +6,8 @@ const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
   const { status } = useAuth();
-  const [cart, setCart] = useState(null);
+  const [fetchedCart, setCart] = useState(null);
+  const cart = status === "anonymous" ? null : fetchedCart;
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -21,8 +22,9 @@ export function CartProvider({ children }) {
   }, [status]);
 
   useEffect(() => {
+    // Loading the cart when the user signs in is a genuine "sync with the server" effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (status === "authenticated") refresh();
-    if (status === "anonymous") setCart(null);
   }, [status, refresh]);
 
   // Accepts either a bare product id, or a product-like object carrying

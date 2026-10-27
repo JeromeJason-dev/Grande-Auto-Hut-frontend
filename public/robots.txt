@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /staff
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /account
+Disallow: /support
+Disallow: /notifications
+Disallow: /wishlist
+Disallow: /reset-password
+Disallow: /verify-email
+
+Sitemap: https://grande-auto-hut-frontend-sigma.vercel.app/sitemap.xml

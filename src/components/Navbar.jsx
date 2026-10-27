@@ -196,10 +196,12 @@ export default function Navbar({ minimal = false }) {
   const initial = (user?.first_name || user?.email || "A").charAt(0).toUpperCase();
 
   // Close both menus whenever the route changes
-  useEffect(() => {
+  const [seenPathname, setSeenPathname] = useState(pathname);
+  if (seenPathname !== pathname) {
+    setSeenPathname(pathname);
     setMenuOpen(false);
     setAccountOpen(false);
-  }, [pathname]);
+  }
 
   // Mobile menu: close on Escape / desktop width, and lock page scroll while open
   useEffect(() => {

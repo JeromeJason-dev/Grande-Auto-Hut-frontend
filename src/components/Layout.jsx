@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
+import VerifyEmailBanner from "./VerifyEmailBanner";
 
 const QUICK_LINKS = [
   { label: "Home", to: "/" },
@@ -81,6 +82,7 @@ export default function Layout() {
   return (
     <div className="flex min-h-dvh flex-col bg-[#FAF7F2] dark:bg-gray-950 text-[#1E2430] dark:text-gray-100 transition-colors">
       <Navbar />
+      <VerifyEmailBanner />
 
       <main className="flex flex-1 flex-col [&>*]:flex-1">
         <Outlet />

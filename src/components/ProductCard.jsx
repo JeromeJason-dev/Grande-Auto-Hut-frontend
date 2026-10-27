@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../features/auth/AuthContext";
@@ -41,10 +41,12 @@ export default function ProductCard({
   const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
 
   const [wishlisted, setWishlisted] = useState(isWishlisted);
-
-  useEffect(() => {
+  // Follow the prop when it changes (React's recommended alternative to a syncing effect).
+  const [seenWishlisted, setSeenWishlisted] = useState(isWishlisted);
+  if (seenWishlisted !== isWishlisted) {
+    setSeenWishlisted(isWishlisted);
     setWishlisted(isWishlisted);
-  }, [isWishlisted]);
+  }
 
   const conditionVariants = useMemo(
     () => getConditionVariants(product),

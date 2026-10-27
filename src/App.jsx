@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -5,52 +6,63 @@ import RoleGate from "./components/RoleGate";
 import { NotificationToastProvider } from "./features/notifications/NotificationToastContext";
 
 import HomePage from "./routes/HomePage";
-import AboutPage from "./routes/AboutPage";
-import FaqPage from "./routes/FaqPage";
+const AboutPage = lazy(() => import("./routes/AboutPage"));
+const FaqPage = lazy(() => import("./routes/FaqPage"));
 import NotFoundPage from "./routes/NotFoundPage";
 
-import LoginPage from "./features/auth/LoginPage";
-import RegisterPage from "./features/auth/RegisterPage";
+const LoginPage = lazy(() => import("./features/auth/LoginPage"));
+const RegisterPage = lazy(() => import("./features/auth/RegisterPage"));
 
-import CatalogPage from "./features/catalog/CatalogPage";
-import ProductDetailPage from "./features/catalog/ProductDetailPage";
+const CatalogPage = lazy(() => import("./features/catalog/CatalogPage"));
+const ProductDetailPage = lazy(() => import("./features/catalog/ProductDetailPage"));
 
-import FitmentPage from "./features/fitment/FitmentPage";
-import FitmentResultsPage from "./features/fitment/FitmentResultsPage";
+const FitmentPage = lazy(() => import("./features/fitment/FitmentPage"));
+const FitmentResultsPage = lazy(() => import("./features/fitment/FitmentResultsPage"));
 
-import CartPage from "./features/cart/CartPage";
-import CheckoutPage from "./features/cart/CheckoutPage";
+const CartPage = lazy(() => import("./features/cart/CartPage"));
+const CheckoutPage = lazy(() => import("./features/cart/CheckoutPage"));
 
-import OrdersListPage from "./features/orders/OrdersListPage";
-import OrderDetailPage from "./features/orders/OrderDetailPage";
+const OrdersListPage = lazy(() => import("./features/orders/OrdersListPage"));
+const OrderDetailPage = lazy(() => import("./features/orders/OrderDetailPage"));
 
-import WishlistPage from "./features/wishlist/WishlistPage";
+const WishlistPage = lazy(() => import("./features/wishlist/WishlistPage"));
 
-import TicketsPage from "./features/support/TicketsPage";
-import TicketDetailPage from "./features/support/TicketDetailPage";
+const TicketsPage = lazy(() => import("./features/support/TicketsPage"));
+const TicketDetailPage = lazy(() => import("./features/support/TicketDetailPage"));
 
-import NotificationsPage from "./features/notifications/NotificationsPage";
-import AccountPage from "./features/account/AccountPage";
+const NotificationsPage = lazy(() => import("./features/notifications/NotificationsPage"));
+const AccountPage = lazy(() => import("./features/account/AccountPage"));
 
-import AdminLayout from "./features/admin/AdminLayout";
-import AdminDashboardPage from "./features/admin/AdminDashboardPage";
-import AdminProductsPage from "./features/admin/AdminProductsPage";
-import AdminOrdersPage from "./features/admin/AdminOrdersPage";
-import AdminCustomersPage from "./features/admin/AdminCustomersPage";
-import AdminTicketsPage from "./features/admin/AdminTicketsPage";
-import AdminTicketDetailPage from "./features/admin/AdminTicketDetailPage";
-import AdminStaffPage from "./features/admin/AdminStaffPage";
-import AdminFitmentPage from "./features/admin/AdminFitmentPage";
-import AdminAccountPage from "./features/admin/AdminAccountPage";
+const AdminLayout = lazy(() => import("./features/admin/AdminLayout"));
+const AdminDashboardPage = lazy(() => import("./features/admin/AdminDashboardPage"));
+const AdminProductsPage = lazy(() => import("./features/admin/AdminProductsPage"));
+const AdminOrdersPage = lazy(() => import("./features/admin/AdminOrdersPage"));
+const AdminCustomersPage = lazy(() => import("./features/admin/AdminCustomersPage"));
+const AdminTicketsPage = lazy(() => import("./features/admin/AdminTicketsPage"));
+const AdminTicketDetailPage = lazy(() => import("./features/admin/AdminTicketDetailPage"));
+const AdminStaffPage = lazy(() => import("./features/admin/AdminStaffPage"));
+const AdminFitmentPage = lazy(() => import("./features/admin/AdminFitmentPage"));
+const AdminAccountPage = lazy(() => import("./features/admin/AdminAccountPage"));
 
-import StaffTasksPage from "./features/staff/StaffTasksPage";
-import StaffReviewsPage from "./features/staff/StaffReviewsPage";
+const StaffTasksPage = lazy(() => import("./features/staff/StaffTasksPage"));
+const StaffReviewsPage = lazy(() => import("./features/staff/StaffReviewsPage"));
+
+const ForgotPasswordPage = lazy(() => import("./features/auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./features/auth/ResetPasswordPage"));
+const VerifyEmailPage = lazy(() => import("./features/auth/VerifyEmailPage"));
+
+const PageLoading = () => (
+  <div role="status" aria-live="polite" className="flex min-h-[50vh] items-center justify-center text-sm text-[#7C7669] dark:text-slate-400">
+    Loading…
+  </div>
+);
 
 const StaffLayout = () => <AdminLayout variant="staff" />;
 
 export default function App() {
   return (
     <NotificationToastProvider>
+      <Suspense fallback={<PageLoading />}>
       <Routes>
         {/* Public & Customer Routes */}
         <Route element={<Layout />}>
@@ -59,6 +71,9 @@ export default function App() {
           <Route path="faq" element={<FaqPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="reset-password" element={<ResetPasswordPage />} />
+          <Route path="verify-email" element={<VerifyEmailPage />} />
 
           <Route path="catalog" element={<CatalogPage />} />
           <Route path="catalog/:slug" element={<ProductDetailPage />} />
@@ -113,6 +128,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/staff" replace />} />
         </Route>
       </Routes>
+      </Suspense>
     </NotificationToastProvider>
   );
 }

@@ -283,6 +283,16 @@ export default function OrderDetailPage() {
           {mpesa.state === "error" && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{mpesa.error}</p>}
           {payError && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{payError}</p>}
 
+          {order.status === "pending" && order.payment_status !== "paid" && order.reservation_expires_at && (
+            <p className="mt-3 text-sm text-[#7C7669] dark:text-slate-400">
+              We&apos;re holding your items until{" "}
+              <span className="font-medium text-[#101B2C] dark:text-white">
+                {new Date(order.reservation_expires_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+              . Complete payment before then or the order is cancelled and the items go back on sale.
+            </p>
+          )}
+
           {!verifying && order.status === "pending" && order.payment_status !== "paid" && order.payment_method === "card" && (
             <button
               type="button"
