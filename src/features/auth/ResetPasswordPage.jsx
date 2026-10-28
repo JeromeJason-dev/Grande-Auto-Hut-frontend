@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { confirmPasswordReset } from "../../api/auth";
 import { extractErrorMessage } from "../../api/client";
 import ErrorAlert from "../../components/ErrorAlert";
-import { cardClasses, inputClasses, labelClasses, linkClasses, pageClasses, primaryButton } from "./authStyles";
+import { cardClasses, inputClasses, labelClasses, linkClasses, pageClasses, primaryButton } from "/src/api/authstyles.js";
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();

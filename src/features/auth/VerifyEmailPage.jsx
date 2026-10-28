@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { verifyEmail } from "../../api/auth";
 import { extractErrorMessage } from "../../api/client";
 import { useAuth } from "./AuthContext";
-import { cardClasses, linkClasses, pageClasses, primaryButton } from "./authStyles";
+import { cardClasses, linkClasses, pageClasses, primaryButton } from "/src/api/authstyles.js";
 
 export default function VerifyEmailPage() {
   const [params] = useSearchParams();
