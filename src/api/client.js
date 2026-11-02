@@ -1,9 +1,11 @@
 import axios from "axios";
 
-export const API_BASE_URL = 
-  import.meta.env.VITE_API_BASE_URL || 
-  import.meta.env.VITE_API_URL || 
-  "http://localhost:8000/api";
+// In production the API is reached through the same-origin "/api" rewrite in vercel.json, which keeps
+// the httpOnly refresh cookie first-party. (Falling back to localhost there would break the whole site.)
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? "/api" : "http://localhost:8000/api");
 
 let accessToken = null;
 let onAuthLost = () => {};

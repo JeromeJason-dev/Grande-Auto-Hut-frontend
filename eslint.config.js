@@ -17,5 +17,7 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    // Context files intentionally export a provider + hook; this only affects dev hot-reload.
+    rules: { 'react-refresh/only-export-components': 'warn' },
   },
 ])
