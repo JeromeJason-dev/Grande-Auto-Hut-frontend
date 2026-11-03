@@ -15,7 +15,7 @@ const selectClasses =
 const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669] dark:text-slate-400";
 
 // Products shown per page. This must match PAGE_SIZE in the backend's
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 21;
 
 const pageButtonBase =
   "inline-flex h-9 min-w-9 items-center justify-center rounded-md border px-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/40 disabled:cursor-not-allowed disabled:opacity-40";
