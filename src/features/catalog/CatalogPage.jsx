@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import * as catalogApi from "../../api/catalog";
 import { unwrapList } from "../../api/client";
 import ProductCard from "../../components/ProductCard";
@@ -14,6 +14,73 @@ const selectClasses =
 
 const labelClasses = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7C7669] dark:text-slate-400";
 
+// Products shown per page. This must match PAGE_SIZE in the backend's
+const PAGE_SIZE = 20;
+
+const pageButtonBase =
+  "inline-flex h-9 min-w-9 items-center justify-center rounded-md border px-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#BF9A63]/40 disabled:cursor-not-allowed disabled:opacity-40";
+const pageButtonIdle =
+  "border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] text-[#1E2430] dark:text-slate-100 hover:border-[#BF9A63] hover:text-[#A9834E] dark:hover:text-[#BF9A63] disabled:hover:border-[#E7E2D8] dark:disabled:hover:border-white/10 disabled:hover:text-inherit";
+const pageButtonActive = "border-[#BF9A63] bg-[#BF9A63] text-[#101B2C]";
+
+/** 1 ... 4 5 6 ... 12 style list of page numbers ("gap" renders as an ellipsis). */
+function getPageItems(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = new Set([1, total, current - 1, current, current + 1]);
+  if (current <= 3) [2, 3, 4].forEach((n) => pages.add(n));
+  if (current >= total - 2) [total - 3, total - 2, total - 1].forEach((n) => pages.add(n));
+  const sorted = [...pages].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const items = [];
+  sorted.forEach((n, i) => {
+    if (i > 0 && n - sorted[i - 1] > 1) items.push("gap");
+    items.push(n);
+  });
+  return items;
+}
+
+function CatalogPagination({ page, totalPages, onPage }) {
+  if (totalPages <= 1) return null;
+  const items = getPageItems(page, totalPages);
+  return (
+    <nav aria-label="Catalog pages" className="mt-8 flex flex-wrap items-center justify-center gap-2">
+      <button
+        type="button"
+        disabled={page <= 1}
+        onClick={() => onPage(page - 1)}
+        className={`${pageButtonBase} ${pageButtonIdle}`}
+      >
+        Previous
+      </button>
+      {items.map((item, i) =>
+        item === "gap" ? (
+          <span key={`gap-${i}`} aria-hidden="true" className="px-1 text-[#7C7669] dark:text-slate-400">
+            …
+          </span>
+        ) : (
+          <button
+            key={item}
+            type="button"
+            onClick={() => onPage(item)}
+            aria-label={`Page ${item}`}
+            aria-current={item === page ? "page" : undefined}
+            className={`${pageButtonBase} ${item === page ? pageButtonActive : pageButtonIdle}`}
+          >
+            {item}
+          </button>
+        )
+      )}
+      <button
+        type="button"
+        disabled={page >= totalPages}
+        onClick={() => onPage(page + 1)}
+        className={`${pageButtonBase} ${pageButtonIdle}`}
+      >
+        Next
+      </button>
+    </nav>
+  );
+}
+
 export default function CatalogPage() {
   const [params, setParams] = useSearchParams();
   const [search, setSearch] = useState(params.get("search") || "");
@@ -22,15 +89,45 @@ export default function CatalogPage() {
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: catalogApi.listCategories });
   const brandsQuery = useQuery({ queryKey: ["brands"], queryFn: catalogApi.listBrands });
 
+  // Current page comes from the URL (?page=2) so it survives refresh, back/forward and shared links.
+  const page = Math.max(1, parseInt(params.get("page"), 10) || 1);
   const filters = Object.fromEntries(params.entries());
+  if (page > 1) filters.page = String(page);
+  else delete filters.page;
+
   const productsQuery = useQuery({
     queryKey: ["products", filters],
     queryFn: () => catalogApi.listProducts(filters),
+    placeholderData: keepPreviousData, // keep showing the old page while the next one loads
   });
+
+  const count = productsQuery.data?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
+
+  const goToPage = (n) => {
+    const next = new URLSearchParams(params);
+    if (n > 1) next.set("page", String(n)); else next.delete("page");
+    setParams(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // If the URL asks for a page that doesn't exist (e.g. ?page=99, or fewer results after
+  // a product was removed), fall back to the last valid page instead of showing an error.
+  const notFound = productsQuery.isError && productsQuery.error?.response?.status === 404;
+  useEffect(() => {
+    if (page <= 1) return;
+    const outOfRange = productsQuery.data && !productsQuery.isPlaceholderData && count > 0 && page > totalPages;
+    if (!notFound && !outOfRange) return;
+    const next = new URLSearchParams(params);
+    const target = notFound ? 1 : totalPages;
+    if (target > 1) next.set("page", String(target)); else next.delete("page");
+    setParams(next, { replace: true });
+  }, [notFound, page, count, totalPages, productsQuery.data, productsQuery.isPlaceholderData, params, setParams]);
 
   const setFilter = (key, value) => {
     const next = new URLSearchParams(params);
     if (value) next.set(key, value); else next.delete(key);
+    next.delete("page"); // a new filter/search/sort always starts back on page 1
     setParams(next);
   };
 
@@ -45,7 +142,7 @@ export default function CatalogPage() {
 
   const clearFilters = () => {
     const next = new URLSearchParams(params);
-    ["category", "brand", "condition", "search"].forEach((key) => next.delete(key));
+    ["category", "brand", "condition", "search", "page"].forEach((key) => next.delete(key));
     setParams(next);
     setSearch("");
   };
@@ -64,7 +161,9 @@ export default function CatalogPage() {
           </div>
           {productsQuery.data && (
             <span className="text-sm text-[#7C7669] dark:text-slate-400">
-              {productsQuery.data.count ?? products.length} parts
+              {count > PAGE_SIZE
+                ? `Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(count, page * PAGE_SIZE)} of ${count} parts`
+                : `${count || products.length} parts`}
             </span>
           )}
         </div>
@@ -196,12 +295,28 @@ export default function CatalogPage() {
               </div>
             )}
 
-            {products.length > 0 && (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {products.map((p) => (
-                  <ProductCard key={p.id} product={p} onAddToCart={addItem} />
-                ))}
+            {productsQuery.isError && !notFound && (
+              <div className="rounded-xl border border-dashed border-[#E7E2D8] dark:border-white/10 bg-white dark:bg-[#101B2C] px-6 py-16">
+                <EmptyState
+                  title="Couldn't load parts"
+                  body="Please check your connection and try again."
+                />
               </div>
+            )}
+
+            {products.length > 0 && (
+              <>
+                <div
+                  className={`grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 transition-opacity ${
+                    productsQuery.isPlaceholderData ? "opacity-60" : "opacity-100"
+                  }`}
+                >
+                  {products.map((p) => (
+                    <ProductCard key={p.id} product={p} onAddToCart={addItem} />
+                  ))}
+                </div>
+                <CatalogPagination page={page} totalPages={totalPages} onPage={goToPage} />
+              </>
             )}
           </div>
         </div>
